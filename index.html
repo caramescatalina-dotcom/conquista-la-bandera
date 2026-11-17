@@ -38,7 +38,7 @@
         }
     </script>
 
-    <!-- Leaflet CSS & JS (Mapas) -->
+    <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -46,7 +46,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* VARIABLES DE IDENTIDAD VISUAL - MODO CLARO (DEFAULT) */
         :root {
             --bg-general: #F4F2EB;
             --bg-panel: #FFFFFF;
@@ -54,10 +53,9 @@
             --text-main: #202820;
             --text-sec: #777D75;
             --border-color: #DFE1D8;
-            --map-filter: saturate(0.85) contrast(0.98);
+            --map-filter: saturate(0.88) contrast(0.98);
         }
 
-        /* VARIABLES DE IDENTIDAD VISUAL - MODO OSCURO */
         [data-theme="dark"] {
             --bg-general: #171D1A;
             --bg-panel: #222B26;
@@ -87,9 +85,12 @@
         .leaflet-control-attribution {
             display: none !important;
         }
+
+        .tab-panel {
+            transition: opacity 0.2s ease;
+        }
     </style>
 
-    <!-- Script temprano para evitar destello de tema al cargar -->
     <script>
         (function() {
             const savedTheme = localStorage.getItem('clb_theme_pref') || 'auto';
@@ -101,87 +102,87 @@
 </head>
 <body class="font-sans min-h-screen flex flex-col select-none">
 
-    <!-- PANTALLA DE CARGA (SPLASH SCREEN) -->
-    <div id="splash-screen" class="fixed inset-0 z-50 bg-theme-bg flex flex-col items-center justify-center transition-opacity duration-400">
-        <div class="w-20 h-20 rounded-2xl bg-brandGreen-dark border border-brandGreen-mid flex items-center justify-center mb-5 shadow-sm">
+    <!-- PANTALLA DE CARGA -->
+    <div id="splash-screen" class="fixed inset-0 z-50 bg-theme-bg flex flex-col items-center justify-center transition-opacity duration-300">
+        <div class="w-20 h-20 rounded-2xl bg-brandGreen-dark border border-brandGreen-mid flex items-center justify-center mb-4">
             <svg class="w-11 h-11 text-[#F2F1E9]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
                 <line x1="4" y1="22" x2="4" y2="15"></line>
             </svg>
         </div>
         <h1 class="text-lg font-black tracking-wider text-theme-text">CONQUISTA <span class="text-brandGreen-mid">LA BANDERA</span></h1>
-        <p class="text-xs text-theme-textSec mt-1.5 tracking-widest uppercase font-medium">Preparando sector deportivo...</p>
+        <p class="text-xs text-theme-textSec mt-1 uppercase tracking-widest font-semibold">Cargando territorio...</p>
     </div>
 
     <!-- HEADER SUPERIOR -->
-    <header class="px-4 py-3 border-b border-theme-border flex justify-between items-center bg-theme-panel z-20">
-        <div class="flex items-center space-x-2.5">
-            <div class="w-8 h-8 rounded-lg bg-brandGreen-dark flex items-center justify-center text-[#F2F1E9]">
+    <header class="px-3.5 py-2.5 border-b border-theme-border flex justify-between items-center bg-theme-panel z-30 sticky top-0">
+        <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 rounded-lg bg-brandGreen-dark flex items-center justify-center text-[#F2F1E9] shrink-0">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
                     <line x1="4" y1="22" x2="4" y2="15"></line>
                 </svg>
             </div>
-            <div>
-                <h1 class="font-extrabold tracking-tight text-xs leading-none text-theme-text">
+            <div class="min-w-0">
+                <h1 class="font-extrabold tracking-tight text-xs leading-none text-theme-text truncate">
                     CONQUISTA <span class="text-brandGreen-mid">LA BANDERA</span>
                 </h1>
-                <span id="user-display-header" class="text-[11px] text-theme-textSec font-medium">Sin sesión activa</span>
+                <span id="user-display-header" class="text-[10px] text-theme-textSec font-semibold block truncate mt-0.5">Sin sesión</span>
             </div>
         </div>
 
-        <div class="flex items-center space-x-2">
-            <!-- SELECTOR DE APARIENCIA (3 OPCIONES) -->
-            <div class="flex items-center bg-theme-panelSec border border-theme-border rounded-lg p-0.5" title="Apariencia">
-                <button onclick="setThemePreference('light')" id="theme-btn-light" class="p-1.5 rounded-md text-theme-textSec hover:text-theme-text transition" aria-label="Modo claro">
+        <div class="flex items-center space-x-1.5 shrink-0">
+            <!-- SELECTOR DE APARIENCIA: CLARO / AUTO / OSCURO -->
+            <div class="flex items-center bg-theme-panelSec border border-theme-border rounded-lg p-0.5" title="Tema visual">
+                <button type="button" onclick="setThemePreference('light')" id="theme-btn-light" class="p-1.5 rounded-md text-theme-textSec hover:text-theme-text transition" aria-label="Modo claro">
                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
                 </button>
-                <button onclick="setThemePreference('auto')" id="theme-btn-auto" class="px-1.5 py-1 rounded-md text-[10px] font-bold text-theme-textSec hover:text-theme-text transition" aria-label="Automático">
+                <button type="button" onclick="setThemePreference('auto')" id="theme-btn-auto" class="px-1.5 py-1 rounded-md text-[10px] font-bold text-theme-textSec hover:text-theme-text transition" aria-label="Automático">
                     AUTO
                 </button>
-                <button onclick="setThemePreference('dark')" id="theme-btn-dark" class="p-1.5 rounded-md text-theme-textSec hover:text-theme-text transition" aria-label="Modo oscuro">
+                <button type="button" onclick="setThemePreference('dark')" id="theme-btn-dark" class="p-1.5 rounded-md text-theme-textSec hover:text-theme-text transition" aria-label="Modo oscuro">
                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
                 </button>
             </div>
 
             <span id="env-badge" class="text-[10px] font-bold px-2 py-1 rounded bg-theme-panelSec text-theme-textSec border border-theme-border">PROD</span>
-            <button id="btn-logout" onclick="cerrarSesion()" class="hidden text-xs font-semibold text-theme-textSec hover:text-theme-text px-2.5 py-1 rounded-lg bg-theme-panelSec border border-theme-border">Salir</button>
+            <button type="button" id="btn-logout" onclick="cerrarSesion()" class="hidden text-[11px] font-bold text-theme-textSec hover:text-theme-text px-2 py-1 rounded-lg bg-theme-panelSec border border-theme-border">Salir</button>
         </div>
     </header>
 
-    <!-- VISTA DE AUTENTICACIÓN (LOGIN CON USUARIO O CORREO / REGISTRO) -->
+    <!-- ========================================================= -->
+    <!-- VISTA DE AUTENTICACIÓN (LOGIN CON USUARIO O CORREO)       -->
+    <!-- ========================================================= -->
     <section id="auth-view" class="flex-1 flex flex-col justify-center p-5 max-w-md w-full mx-auto">
-        <div class="bg-theme-panel border border-theme-border rounded-2xl p-6 shadow-sm">
+        <div class="bg-theme-panel border border-theme-border rounded-2xl p-6">
             <div class="mb-5">
-                <span class="inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded bg-brandOrange-bg text-[#202820] border border-brandOrange-soft mb-2">Acceso Jugadores</span>
+                <span class="inline-block text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded bg-brandOrange-bg text-[#202820] border border-brandOrange-soft mb-2">Acceso Jugadores</span>
                 <h2 id="auth-heading" class="text-lg font-extrabold text-theme-text">Bienvenido de nuevo</h2>
                 <p id="auth-subheading" class="text-xs text-theme-textSec mt-0.5">Ingresá con tu usuario o correo electrónico.</p>
             </div>
 
             <div class="flex bg-theme-panelSec p-1 rounded-xl mb-5 border border-theme-border">
-                <button id="tab-login" onclick="switchAuthTab('login')" class="flex-1 py-2 text-xs font-bold rounded-lg bg-brandOrange text-[#202820] transition">Iniciar sesión</button>
-                <button id="tab-register" onclick="switchAuthTab('register')" class="flex-1 py-2 text-xs font-bold rounded-lg text-theme-textSec hover:text-theme-text transition">Crear cuenta</button>
+                <button type="button" id="tab-login" onclick="switchAuthTab('login')" class="flex-1 py-2 text-xs font-extrabold rounded-lg bg-brandOrange text-[#202820] transition">Iniciar sesión</button>
+                <button type="button" id="tab-register" onclick="switchAuthTab('register')" class="flex-1 py-2 text-xs font-bold rounded-lg text-theme-textSec hover:text-theme-text transition">Crear cuenta</button>
             </div>
 
             <form id="auth-form" onsubmit="manejarAuth(event)" class="space-y-4">
-                <!-- Campo exclusivo para Registro -->
                 <div id="register-username-field" class="hidden">
-                    <label class="block text-xs font-semibold text-theme-text mb-1">Nombre de Jugador (Usuario)</label>
+                    <label class="block text-xs font-bold text-theme-text mb-1">Nombre de Jugador (Usuario)</label>
                     <input type="text" id="reg-username" placeholder="Ej: chachi2k" class="w-full bg-theme-bg border border-theme-border text-theme-text rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-brandGreen-mid">
                 </div>
 
-                <!-- Campo adaptable: Usuario o Correo en Login / Correo en Registro -->
                 <div>
-                    <label id="identifier-label" class="block text-xs font-semibold text-theme-text mb-1">Usuario o correo electrónico</label>
+                    <label id="identifier-label" class="block text-xs font-bold text-theme-text mb-1">Usuario o correo electrónico</label>
                     <input type="text" id="auth-identifier" required placeholder="chachi2k o jugador@correo.com" class="w-full bg-theme-bg border border-theme-border text-theme-text rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-brandGreen-mid">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-theme-text mb-1">Contraseña</label>
+                    <label class="block text-xs font-bold text-theme-text mb-1">Contraseña</label>
                     <input type="password" id="auth-password" required placeholder="••••••••" class="w-full bg-theme-bg border border-theme-border text-theme-text rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-brandGreen-mid">
                 </div>
 
-                <div id="auth-error" class="hidden text-xs text-[#202820] bg-brandOrange-bg border border-brandOrange p-3 rounded-xl font-medium"></div>
+                <div id="auth-error" class="hidden text-xs text-[#202820] bg-brandOrange-bg border border-brandOrange p-3 rounded-xl font-semibold"></div>
 
                 <button type="submit" id="auth-submit-btn" class="w-full bg-brandOrange hover:bg-brandOrange-hover text-[#202820] font-extrabold py-3 rounded-xl text-sm transition">
                     Continuar
@@ -190,106 +191,272 @@
         </div>
     </section>
 
-    <!-- VISTA PRINCIPAL DE LA APP (MAPA + SOCIAL + ANTICHEAT) -->
-    <main id="app-view" class="hidden flex-1 flex flex-col relative">
-        
-        <!-- PANEL SUPERIOR: CONTRINCANTE, DESAFÍO Y ESTADO GPS -->
-        <div class="p-3 z-10 bg-theme-bg">
-            <div class="bg-theme-panel border border-theme-border rounded-2xl p-3.5 max-w-md mx-auto shadow-sm">
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 rounded-xl bg-brandOrange-bg border border-brandOrange-soft flex items-center justify-center text-[#202820] font-black text-xs">
-                            VS
+    <!-- ========================================================= -->
+    <!-- APLICACIÓN PRINCIPAL (4 PESTAÑAS + JUEGO COMPLETO)        -->
+    <!-- ========================================================= -->
+    <main id="app-view" class="hidden flex-1 flex flex-col pb-16">
+
+        <!-- ===================================================== -->
+        <!-- PESTAÑA 1: RADAR Y JUEGO EN VIVO (MAPA + RECORRIDO)   -->
+        <!-- ===================================================== -->
+        <section id="panel-mapa" class="tab-panel flex-1 flex flex-col">
+            
+            <!-- BARRA SUPERIOR DE PARTIDA: CONTRINCANTE + AMIGO + ANTICHEAT -->
+            <div class="p-3 bg-theme-bg border-b border-theme-border">
+                <div class="max-w-lg mx-auto bg-theme-panel border border-theme-border rounded-2xl p-3 space-y-2.5">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center space-x-2.5">
+                            <div class="w-9 h-9 rounded-xl bg-brandOrange-bg border border-brandOrange-soft flex items-center justify-center text-[#202820] font-black text-xs">
+                                VS
+                            </div>
+                            <div>
+                                <span class="text-[10px] font-extrabold text-brandOrange uppercase tracking-wider block">Contrincante en zona</span>
+                                <h2 id="rival-username" class="text-sm font-extrabold text-theme-text">GhostRunner_99</h2>
+                            </div>
                         </div>
-                        <div>
-                            <span class="text-[10px] font-bold text-brandOrange uppercase tracking-wider block">Contrincante Activo</span>
-                            <h2 id="rival-username" class="text-sm font-extrabold text-theme-text">Buscando rival...</h2>
-                        </div>
+                        <button type="button" id="btn-add-friend" onclick="enviarSolicitudAmistad()" class="bg-brandOrange hover:bg-brandOrange-hover text-[#202820] text-xs font-extrabold px-3 py-1.5 rounded-xl transition">
+                            + Agregar Amigo
+                        </button>
                     </div>
-                    <button id="btn-add-friend" onclick="enviarSolicitudAmistad()" class="bg-brandOrange hover:bg-brandOrange-hover text-[#202820] text-xs font-extrabold px-3.5 py-2 rounded-xl transition">
-                        + Agregar Amigo
+
+                    <!-- SELECTOR DE MODO DE JUEGO -->
+                    <div class="grid grid-cols-4 gap-1.5 pt-2 border-t border-theme-border">
+                        <button type="button" onclick="seleccionarModo('Libre')" id="mode-Libre" class="mode-btn py-1.5 px-1 rounded-lg text-[10px] font-extrabold bg-brandGreen-dark text-[#F2F1E9] transition">Libre</button>
+                        <button type="button" onclick="seleccionarModo('Duelo 1v1')" id="mode-Duelo 1v1" class="mode-btn py-1.5 px-1 rounded-lg text-[10px] font-bold bg-theme-panelSec text-theme-textSec hover:text-theme-text transition">Duelo 1v1</button>
+                        <button type="button" onclick="seleccionarModo('Territorio')" id="mode-Territorio" class="mode-btn py-1.5 px-1 rounded-lg text-[10px] font-bold bg-theme-panelSec text-theme-textSec hover:text-theme-text transition">Territorio</button>
+                        <button type="button" onclick="seleccionarModo('Contrarreloj')" id="mode-Contrarreloj" class="mode-btn py-1.5 px-1 rounded-lg text-[10px] font-bold bg-theme-panelSec text-theme-textSec hover:text-theme-text transition">Tiempo</button>
+                    </div>
+
+                    <!-- INDICADORES ANTICHEAT Y PROGRESO GPS -->
+                    <div class="flex justify-between items-center text-[11px] pt-1">
+                        <span id="anticheat-badge" class="text-brandGreen-mid flex items-center gap-1.5 font-bold">
+                            <span class="w-2 h-2 rounded-full bg-brandGreen-mid inline-block"></span>
+                            GPS Verificado
+                        </span>
+                        <span id="game-status-pill" class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-theme-panelSec text-theme-textSec border border-theme-border">
+                            LISTO PARA INICIAR
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MAPA INTERACTIVO -->
+            <div class="relative flex-1 min-h-[300px] w-full">
+                <div id="map"></div>
+
+                <!-- PROXIMIDAD A LA BANDERA OBJETIVO -->
+                <div class="absolute top-3 left-3 right-3 z-10 max-w-lg mx-auto pointer-events-none">
+                    <div class="bg-theme-panel border border-theme-border rounded-xl px-3.5 py-2 flex items-center justify-between pointer-events-auto">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-brandOrange"></span>
+                            <div>
+                                <p class="text-[11px] font-extrabold text-theme-text leading-tight">Bandera Objetivo: Sector Central</p>
+                                <p class="text-[10px] text-theme-textSec">Distancia al objetivo: <strong id="flag-distance" class="text-theme-text">120 m</strong></p>
+                            </div>
+                        </div>
+                        <button type="button" id="btn-capture-flag" onclick="intentarCapturarBandera()" class="bg-brandOrange hover:bg-brandOrange-hover text-[#202820] text-[11px] font-extrabold px-3 py-1.5 rounded-lg transition">
+                            Capturar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CONTROLES DE SIMULACIÓN DEV -->
+                <div id="dev-controls" class="hidden absolute bottom-3 left-3 z-20 bg-theme-panel border border-theme-border p-2.5 rounded-xl space-y-1.5 max-w-[190px]">
+                    <div class="text-[10px] font-extrabold text-brandOrange uppercase">Simulador DEV</div>
+                    <button type="button" onclick="simularAcercamientoBandera()" class="w-full text-left text-[11px] font-bold bg-theme-panelSec px-2.5 py-1.5 rounded-lg text-brandGreen-mid border border-theme-border">
+                        ▶ Avanzar hacia bandera
+                    </button>
+                    <button type="button" onclick="simularTeletransporte()" class="w-full text-left text-[11px] font-bold bg-brandOrange-bg px-2.5 py-1.5 rounded-lg text-[#202820] border border-brandOrange-soft">
+                        ⚡ Probar trampa GPS
                     </button>
                 </div>
-
-                <!-- BARRA DE INDICADORES DE PROGRESO Y ACTIVIDAD GPS (VERDE INSTITUCIONAL) -->
-                <div class="mt-3 pt-2.5 border-t border-theme-border flex justify-between items-center text-[11px] font-medium">
-                    <span id="anticheat-badge" class="text-brandGreen-mid flex items-center gap-1.5 font-semibold">
-                        <span class="w-2 h-2 rounded-full bg-brandGreen-mid inline-block"></span>
-                        GPS Verificado
-                    </span>
-                    <div class="flex items-center space-x-2">
-                        <span class="text-[10px] px-2 py-0.5 rounded bg-theme-panelSec text-brandGreen-mid font-bold border border-theme-border">ACTIVIDAD ACTIVA</span>
-                        <span id="gps-speed-display" class="text-theme-textSec font-mono">0.0 km/h</span>
-                    </div>
-                </div>
             </div>
-        </div>
 
-        <!-- CONTENEDOR DEL MAPA -->
-        <div class="flex-1 relative w-full min-h-[380px] border-t border-theme-border">
-            <div id="map"></div>
-
-            <!-- TARJETA FLOTANTE DE DESAFÍO / RECOMPENSA (NARANJA INSTITUCIONAL) -->
-            <div class="absolute top-3 left-3 right-3 z-10 max-w-md mx-auto pointer-events-none">
-                <div class="bg-theme-panel border border-theme-border rounded-xl px-3.5 py-2.5 flex items-center justify-between shadow-sm pointer-events-auto">
-                    <div class="flex items-center space-x-2.5">
-                        <span class="w-2.5 h-2.5 rounded-full bg-brandOrange"></span>
-                        <div>
-                            <p class="text-[11px] font-extrabold text-theme-text leading-tight">Desafío de Zona: Captura Rápida</p>
-                            <p class="text-[10px] text-theme-textSec">Recompensa: +150 pts de División</p>
+            <!-- PANEL DE MÉTRICAS Y CONTROLES DE PARTIDA -->
+            <div class="p-3 bg-theme-panel border-t border-theme-border z-20">
+                <div class="max-w-lg mx-auto space-y-3">
+                    <!-- MÉTRICAS DE RECORRIDO -->
+                    <div class="grid grid-cols-4 gap-2 text-center">
+                        <div class="bg-theme-panelSec rounded-xl p-2 border border-theme-border">
+                            <span class="text-[10px] text-theme-textSec block font-semibold">Distancia</span>
+                            <strong id="stat-distance" class="text-sm font-black text-brandGreen-mid">0.00 km</strong>
+                        </div>
+                        <div class="bg-theme-panelSec rounded-xl p-2 border border-theme-border">
+                            <span class="text-[10px] text-theme-textSec block font-semibold">Tiempo</span>
+                            <strong id="stat-time" class="text-sm font-black text-theme-text">00:00</strong>
+                        </div>
+                        <div class="bg-theme-panelSec rounded-xl p-2 border border-theme-border">
+                            <span class="text-[10px] text-theme-textSec block font-semibold">Ritmo</span>
+                            <strong id="stat-speed" class="text-sm font-black text-theme-text">0.0 km/h</strong>
+                        </div>
+                        <div class="bg-theme-panelSec rounded-xl p-2 border border-theme-border">
+                            <span class="text-[10px] text-theme-textSec block font-semibold">Puntos</span>
+                            <strong id="stat-points" class="text-sm font-black text-brandOrange">0</strong>
                         </div>
                     </div>
-                    <span class="text-[10px] font-extrabold px-2 py-1 rounded-lg bg-brandOrange-bg text-[#202820] border border-brandOrange-soft">ACTIVO</span>
+
+                    <!-- BOTONES DE CONTROL DEL JUEGO -->
+                    <div class="flex gap-2">
+                        <button type="button" id="btn-start-run" onclick="iniciarPartida()" class="flex-1 bg-brandOrange hover:bg-brandOrange-hover text-[#202820] font-extrabold py-3 rounded-xl text-sm transition">
+                            Comenzar Recorrido
+                        </button>
+                        <button type="button" id="btn-pause-run" onclick="pausarPartida()" class="hidden flex-1 bg-theme-panelSec text-theme-text border border-theme-border font-extrabold py-3 rounded-xl text-sm transition">
+                            Pausar
+                        </button>
+                        <button type="button" id="btn-stop-run" onclick="finalizarPartida()" class="hidden px-4 bg-brandGreen-dark text-[#F2F1E9] font-extrabold py-3 rounded-xl text-sm transition">
+                            Finalizar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================================================== -->
+        <!-- PESTAÑA 2: DESAFÍOS Y RECOMPENSAS                      -->
+        <!-- ===================================================== -->
+        <section id="panel-desafios" class="tab-panel hidden flex-1 p-4 max-w-lg w-full mx-auto space-y-4">
+            <div>
+                <h2 class="text-lg font-extrabold text-theme-text">Desafíos Activos</h2>
+                <p class="text-xs text-theme-textSec">Completá objetivos deportivos para sumar puntos de división.</p>
+            </div>
+
+            <!-- DESAFÍO ESPECIAL (NARANJA INSTITUCIONAL) -->
+            <div class="bg-theme-panel border border-brandOrange rounded-2xl p-4 space-y-3">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-brandOrange text-[#202820]">Desafío Especial</span>
+                        <h3 class="text-base font-extrabold text-theme-text mt-1.5">Conquistador Urbano</h3>
+                        <p class="text-xs text-theme-textSec mt-0.5">Capturá 2 banderas en una misma sesión de entrenamiento.</p>
+                    </div>
+                    <span class="text-xs font-black text-brandOrange">+300 PTS</span>
+                </div>
+                <div class="w-full bg-theme-panelSec h-2.5 rounded-full overflow-hidden border border-theme-border">
+                    <div id="challenge-prog-1" class="bg-brandGreen-mid h-full transition-all" style="width: 50%"></div>
+                </div>
+                <div class="flex justify-between text-[11px] font-bold">
+                    <span class="text-brandGreen-mid">Progreso: 1 / 2 banderas</span>
+                    <span class="text-theme-textSec">Expira en 14h</span>
                 </div>
             </div>
 
-            <!-- CONTROLES DE SIMULACIÓN (SOLO VISIBLES EN ?env=dev) -->
-            <div id="dev-controls" class="hidden absolute bottom-4 left-4 z-20 bg-theme-panel border border-theme-border p-3 rounded-xl shadow-sm space-y-2 max-w-[200px]">
-                <div class="text-[10px] font-extrabold text-brandOrange uppercase tracking-wider">Herramientas DEV</div>
-                <button onclick="simularMovimientoNormal()" class="w-full text-left text-[11px] font-semibold bg-theme-panelSec hover:opacity-90 px-2.5 py-1.5 rounded-lg text-brandGreen-mid border border-theme-border">
-                    ▶ Simular paso normal
-                </button>
-                <button onclick="simularTeletransporte()" class="w-full text-left text-[11px] font-semibold bg-brandOrange-bg hover:opacity-90 px-2.5 py-1.5 rounded-lg text-[#202820] border border-brandOrange-soft">
-                    ⚡ Simular salto GPS
-                </button>
+            <!-- DESAFÍO DIARIO -->
+            <div class="bg-theme-panel border border-theme-border rounded-2xl p-4 space-y-3">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-brandOrange-bg text-[#202820] border border-brandOrange-soft">Recompensa Diaria</span>
+                        <h3 class="text-base font-extrabold text-theme-text mt-1.5">Kilómetros de Territorio</h3>
+                        <p class="text-xs text-theme-textSec mt-0.5">Recorré 3.0 km con GPS verificado.</p>
+                    </div>
+                    <span class="text-xs font-black text-brandOrange">+150 PTS</span>
+                </div>
+                <div class="w-full bg-theme-panelSec h-2.5 rounded-full overflow-hidden border border-theme-border">
+                    <div id="challenge-prog-km" class="bg-brandGreen-mid h-full transition-all" style="width: 20%"></div>
+                </div>
+                <div class="flex justify-between text-[11px] font-bold">
+                    <span id="challenge-km-text" class="text-brandGreen-mid">0.00 / 3.00 km</span>
+                    <span class="text-theme-textSec">Activo</span>
+                </div>
             </div>
-        </div>
+        </section>
 
-        <!-- BARRA DE NAVEGACIÓN INFERIOR -->
-        <nav class="bg-theme-panel border-t border-theme-border px-6 py-2.5 flex justify-around items-center z-20">
-            <button onclick="cambiarPestana('mapa')" class="flex flex-col items-center text-brandGreen-mid text-xs font-extrabold py-1 px-4 rounded-lg bg-theme-panelSec">
-                <span>Radar</span>
-            </button>
-            <button onclick="abrirModalAmigos()" class="flex flex-col items-center text-theme-textSec hover:text-theme-text text-xs font-bold py-1 px-4 rounded-lg relative transition">
-                <span>Amigos</span>
-                <span id="friend-req-dot" class="hidden absolute top-1 right-3 w-2 h-2 bg-brandOrange rounded-full"></span>
-            </button>
-        </nav>
+        <!-- ===================================================== -->
+        <!-- PESTAÑA 3: RANKING, CLUB Y DIVISIONES                 -->
+        <!-- ===================================================== -->
+        <section id="panel-ranking" class="tab-panel hidden flex-1 p-4 max-w-lg w-full mx-auto space-y-4">
+            <div class="bg-brandGreen-dark text-[#F2F1E9] rounded-2xl p-4 flex justify-between items-center">
+                <div>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-brandGreen-soft">Tu División Actual</span>
+                    <h2 class="text-lg font-black mt-0.5">División Bosque I</h2>
+                    <p class="text-xs text-brandGreen-soft mt-0.5">Club Atlético Norte • Top 15%</p>
+                </div>
+                <div class="text-right">
+                    <span id="total-user-points" class="text-2xl font-black text-brandOrange">1,240</span>
+                    <span class="text-[10px] block uppercase tracking-wider text-brandGreen-soft">Puntos Totales</span>
+                </div>
+            </div>
+
+            <div class="bg-theme-panel border border-theme-border rounded-2xl p-4 space-y-3">
+                <h3 class="text-sm font-extrabold text-theme-text">Tabla de Líderes de Zona</h3>
+                <div class="space-y-2 text-xs">
+                    <div class="flex justify-between items-center p-2.5 rounded-xl bg-theme-panelSec border border-theme-border">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-6 h-6 rounded-lg bg-brandOrange text-[#202820] font-black flex items-center justify-center">1</span>
+                            <span class="font-extrabold text-theme-text">ValenRunner</span>
+                        </div>
+                        <span class="font-black text-brandGreen-mid">2,890 pts</span>
+                    </div>
+                    <div class="flex justify-between items-center p-2.5 rounded-xl bg-theme-panelSec border border-theme-border">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-6 h-6 rounded-lg bg-brandGreen-dark text-[#F2F1E9] font-black flex items-center justify-center">2</span>
+                            <span class="font-extrabold text-theme-text">GhostRunner_99</span>
+                        </div>
+                        <span class="font-black text-brandGreen-mid">1,950 pts</span>
+                    </div>
+                    <div class="flex justify-between items-center p-2.5 rounded-xl bg-brandOrange-bg border border-brandOrange-soft">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-6 h-6 rounded-lg bg-brandOrange text-[#202820] font-black flex items-center justify-center">3</span>
+                            <span id="ranking-my-name" class="font-extrabold text-[#202820]">Vos</span>
+                        </div>
+                        <span id="ranking-my-pts" class="font-black text-[#202820]">1,240 pts</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================================================== -->
+        <!-- PESTAÑA 4: PERFIL Y RED DE AMIGOS                     -->
+        <!-- ===================================================== -->
+        <section id="panel-perfil" class="tab-panel hidden flex-1 p-4 max-w-lg w-full mx-auto space-y-4">
+            <div class="bg-theme-panel border border-theme-border rounded-2xl p-4 flex items-center space-x-3.5">
+                <div class="w-14 h-14 rounded-2xl bg-brandGreen-dark text-[#F2F1E9] flex items-center justify-center font-black text-xl">
+                    CB
+                </div>
+                <div>
+                    <h2 id="profile-username" class="text-base font-extrabold text-theme-text">Jugador</h2>
+                    <p id="profile-email" class="text-xs text-theme-textSec">jugador@correo.com</p>
+                    <span class="inline-block mt-1 text-[10px] font-extrabold px-2 py-0.5 rounded bg-theme-panelSec text-brandGreen-mid border border-theme-border">GPS Verificado Activo</span>
+                </div>
+            </div>
+
+            <!-- GESTIÓN DE AMIGOS -->
+            <div class="bg-theme-panel border border-theme-border rounded-2xl p-4 space-y-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-extrabold text-theme-text">Mis Amigos y Solicitudes</h3>
+                    <button type="button" onclick="cargarListaAmigos()" class="text-xs font-bold text-brandOrange hover:underline">Actualizar</button>
+                </div>
+                <div id="friends-list-container" class="space-y-2 text-xs">
+                    <p class="text-theme-textSec py-2">No tenés solicitudes pendientes.</p>
+                </div>
+            </div>
+        </section>
+
     </main>
 
-    <!-- MODAL LISTA DE AMIGOS Y SOLICITUDES -->
-    <div id="friends-modal" class="hidden fixed inset-0 z-40 bg-black/50 flex items-center justify-center p-4">
-        <div class="bg-theme-panel border border-theme-border rounded-2xl w-full max-w-md p-5 space-y-4 shadow-lg">
-            <div class="flex justify-between items-center border-b border-theme-border pb-3">
-                <div>
-                    <h3 class="font-extrabold text-sm tracking-tight text-theme-text">RED DE AMIGOS</h3>
-                    <p class="text-[11px] text-theme-textSec">Jugadores conectados y solicitudes</p>
-                </div>
-                <button onclick="cerrarModalAmigos()" class="w-7 h-7 rounded-lg bg-theme-panelSec text-theme-textSec hover:text-theme-text text-xs font-bold flex items-center justify-center">✕</button>
-            </div>
-            <div id="friends-list-container" class="space-y-2 max-h-60 overflow-y-auto text-xs">
-                <p class="text-theme-textSec text-center py-4">Cargando conexiones...</p>
-            </div>
-            <button onclick="cerrarModalAmigos()" class="w-full bg-brandOrange hover:bg-brandOrange-hover text-[#202820] font-extrabold py-2.5 rounded-xl text-xs transition">
-                Volver al mapa
-            </button>
-        </div>
-    </div>
+    <!-- ========================================================= -->
+    <!-- MENÚ DE NAVEGACIÓN INFERIOR (4 PESTAÑAS)                  -->
+    <!-- ========================================================= -->
+    <nav id="bottom-nav" class="hidden fixed bottom-0 left-0 right-0 bg-theme-panel border-t border-theme-border px-2 py-2 flex justify-around items-center z-30">
+        <button type="button" onclick="cambiarPestana('mapa')" id="nav-mapa" class="nav-btn flex-1 py-1.5 mx-1 rounded-xl bg-theme-panelSec text-brandGreen-mid font-extrabold text-xs transition">
+            Radar
+        </button>
+        <button type="button" onclick="cambiarPestana('desafios')" id="nav-desafios" class="nav-btn flex-1 py-1.5 mx-1 rounded-xl text-theme-textSec hover:text-theme-text font-bold text-xs transition">
+            Desafíos
+        </button>
+        <button type="button" onclick="cambiarPestana('ranking')" id="nav-ranking" class="nav-btn flex-1 py-1.5 mx-1 rounded-xl text-theme-textSec hover:text-theme-text font-bold text-xs transition">
+            Ranking
+        </button>
+        <button type="button" onclick="cambiarPestana('perfil')" id="nav-perfil" class="nav-btn flex-1 py-1.5 mx-1 rounded-xl text-theme-textSec hover:text-theme-text font-bold text-xs transition">
+            Perfil
+        </button>
+    </nav>
+
+    <!-- NOTIFICACIÓN TOAST LIMPIA -->
+    <div id="toast-msg" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-brandGreen-dark text-[#F2F1E9] px-4 py-2.5 rounded-xl text-xs font-extrabold border border-brandGreen-mid"></div>
 
     <script>
-        // ==========================================
-        // 0. GESTIÓN DE APARIENCIA (CLARO / OSCURO / AUTO)
-        // ==========================================
+        // =========================================================
+        // 0. GESTIÓN DE APARIENCIA (CLARO / OSCURO / AUTOMÁTICO)
+        // =========================================================
         const mediaQueryDark = window.matchMedia('(prefers-color-scheme: dark)');
 
         function applyEffectiveTheme(pref) {
@@ -320,17 +487,18 @@
         }
 
         mediaQueryDark.addEventListener('change', () => {
-            const currentPref = localStorage.getItem('clb_theme_pref') || 'auto';
-            if (currentPref === 'auto') applyEffectiveTheme('auto');
+            if ((localStorage.getItem('clb_theme_pref') || 'auto') === 'auto') {
+                applyEffectiveTheme('auto');
+            }
         });
 
-        // ==========================================
-        // 1. CONFIGURACIÓN SUPABASE Y ENTORNO
-        // ==========================================
+        // =========================================================
+        // 1. CONFIGURACIÓN SUPABASE Y VARIABLES DE ESTADO
+        // =========================================================
         const SUPABASE_URL = 'TU_SUPABASE_URL';
         const SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY';
-        const supabaseClient = (SUPABASE_URL !== 'TU_SUPABASE_URL') 
-            ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) 
+        const supabaseClient = (SUPABASE_URL !== 'TU_SUPABASE_URL')
+            ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
             : null;
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -339,15 +507,41 @@
         let currentUser = null;
         let currentRival = { id: '00000000-0000-0000-0000-000000000099', username: 'GhostRunner_99' };
         let authMode = 'login';
+        let selectedMode = 'Libre';
+
+        // Estado de partida y GPS
         let map = null;
         let userMarker = null;
+        let flagMarker = null;
+        let routePolyline = null;
+        let routeCoords = [];
 
-        // ==========================================
-        // 2. INICIALIZACIÓN Y SPLASH SCREEN
-        // ==========================================
+        let isRunning = false;
+        let isPaused = false;
+        let totalDistanceKm = 0;
+        let elapsedSeconds = 0;
+        let sessionPoints = 0;
+        let totalAccountPoints = 1240;
+        let timerInterval = null;
+        let watchId = null;
+
+        let lastCoords = null;
+        let lastTimestamp = null;
+        let flagCoords = [-34.6027, -58.3806];
+        const MAX_SPEED_KMH = 45;
+
+        function mostrarToast(texto) {
+            const toast = document.getElementById('toast-msg');
+            toast.innerText = texto;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        // =========================================================
+        // 2. INICIALIZACIÓN
+        // =========================================================
         window.addEventListener('DOMContentLoaded', async () => {
-            const savedPref = localStorage.getItem('clb_theme_pref') || 'auto';
-            applyEffectiveTheme(savedPref);
+            applyEffectiveTheme(localStorage.getItem('clb_theme_pref') || 'auto');
 
             if (isDev) {
                 const badge = document.getElementById('env-badge');
@@ -359,8 +553,8 @@
             setTimeout(() => {
                 const splash = document.getElementById('splash-screen');
                 splash.style.opacity = '0';
-                setTimeout(() => splash.classList.add('hidden'), 400);
-            }, 1000);
+                setTimeout(() => splash.classList.add('hidden'), 300);
+            }, 800);
 
             if (supabaseClient) {
                 const { data: { session } } = await supabaseClient.auth.getSession();
@@ -370,9 +564,9 @@
             }
         });
 
-        // ==========================================
-        // 3. AUTENTICACIÓN (SOPORTE USUARIO Y CORREO)
-        // ==========================================
+        // =========================================================
+        // 3. AUTENTICACIÓN DUAL (USUARIO O CORREO ELECTRÓNICO)
+        // =========================================================
         function switchAuthTab(mode) {
             authMode = mode;
             const tabLogin = document.getElementById('tab-login');
@@ -382,11 +576,10 @@
             const idInput = document.getElementById('auth-identifier');
             const heading = document.getElementById('auth-heading');
             const subheading = document.getElementById('auth-subheading');
-            const errorBox = document.getElementById('auth-error');
-            errorBox.classList.add('hidden');
+            document.getElementById('auth-error').classList.add('hidden');
 
             if (mode === 'login') {
-                tabLogin.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-brandOrange text-[#202820] transition';
+                tabLogin.className = 'flex-1 py-2 text-xs font-extrabold rounded-lg bg-brandOrange text-[#202820] transition';
                 tabRegister.className = 'flex-1 py-2 text-xs font-bold rounded-lg text-theme-textSec hover:text-theme-text transition';
                 regUserField.classList.add('hidden');
                 heading.innerText = 'Bienvenido de nuevo';
@@ -395,7 +588,7 @@
                 idInput.type = 'text';
                 idInput.placeholder = 'chachi2k o jugador@correo.com';
             } else {
-                tabRegister.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-brandOrange text-[#202820] transition';
+                tabRegister.className = 'flex-1 py-2 text-xs font-extrabold rounded-lg bg-brandOrange text-[#202820] transition';
                 tabLogin.className = 'flex-1 py-2 text-xs font-bold rounded-lg text-theme-textSec hover:text-theme-text transition';
                 regUserField.classList.remove('hidden');
                 heading.innerText = 'Creá tu cuenta';
@@ -415,10 +608,13 @@
             const submitBtn = document.getElementById('auth-submit-btn');
             errorBox.classList.add('hidden');
 
-            // Modo prueba local si aún no se configuraron claves de Supabase
             if (!supabaseClient) {
                 const display = identifier.includes('@') ? identifier.split('@')[0] : identifier;
-                iniciarAppConUsuario({ id: 'local-user-1', email: identifier, user_metadata: { username: regUsername || display } });
+                iniciarAppConUsuario({
+                    id: 'local-user-1',
+                    email: identifier.includes('@') ? identifier : `${identifier}@juego.local`,
+                    user_metadata: { username: regUsername || display }
+                });
                 return;
             }
 
@@ -437,7 +633,6 @@
                     });
                     if (error) throw error;
 
-                    // Guardar también en la tabla profiles por respaldo directo
                     if (data.user) {
                         await supabaseClient.from('profiles').upsert({
                             id: data.user.id,
@@ -449,7 +644,6 @@
                 } else {
                     let emailToUse = identifier;
 
-                    // Si el usuario ingresó un nombre de usuario (sin @), buscamos su correo en profiles
                     if (!identifier.includes('@')) {
                         const { data: profileData, error: profileError } = await supabaseClient
                             .from('profiles')
@@ -487,33 +681,67 @@
         function iniciarAppConUsuario(user) {
             currentUser = user;
             const displayName = user.user_metadata?.username || user.email.split('@')[0];
-            
+
             document.getElementById('auth-view').classList.add('hidden');
             document.getElementById('app-view').classList.remove('hidden');
+            document.getElementById('bottom-nav').classList.remove('hidden');
             document.getElementById('btn-logout').classList.remove('hidden');
+
             document.getElementById('user-display-header').innerText = `@${displayName}`;
+            document.getElementById('profile-username').innerText = `@${displayName}`;
+            document.getElementById('profile-email').innerText = user.email;
+            document.getElementById('ranking-my-name').innerText = `@${displayName} (Vos)`;
             document.getElementById('rival-username').innerText = currentRival.username;
 
             inicializarMapa();
-            iniciarRastreoGPS();
+            iniciarRastreoGPSPasivo();
+            cargarListaAmigos();
         }
 
-        // ==========================================
-        // 4. MAPA Y SISTEMA ANTICHEAT GPS
-        // ==========================================
-        let lastCoords = null;
-        let lastTimestamp = null;
-        const MAX_SPEED_KMH = 45;
+        // =========================================================
+        // 4. NAVEGACIÓN ENTRE PESTAÑAS
+        // =========================================================
+        function cambiarPestana(tabName) {
+            ['mapa', 'desafios', 'ranking', 'perfil'].forEach(t => {
+                document.getElementById(`panel-${t}`).classList.add('hidden');
+                const navBtn = document.getElementById(`nav-${t}`);
+                navBtn.className = 'nav-btn flex-1 py-1.5 mx-1 rounded-xl text-theme-textSec hover:text-theme-text font-bold text-xs transition';
+            });
 
+            document.getElementById(`panel-${tabName}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`nav-${tabName}`);
+            activeBtn.className = 'nav-btn flex-1 py-1.5 mx-1 rounded-xl bg-theme-panelSec text-brandGreen-mid font-extrabold text-xs transition';
+
+            if (tabName === 'mapa' && map) {
+                setTimeout(() => map.invalidateSize(), 100);
+            }
+        }
+
+        function seleccionarModo(modo) {
+            selectedMode = modo;
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.className = 'mode-btn py-1.5 px-1 rounded-lg text-[10px] font-bold bg-theme-panelSec text-theme-textSec hover:text-theme-text transition';
+            });
+            const active = document.getElementById(`mode-${modo}`);
+            if (active) {
+                active.className = 'mode-btn py-1.5 px-1 rounded-lg text-[10px] font-extrabold bg-brandGreen-dark text-[#F2F1E9] transition';
+            }
+            mostrarToast(`Modo seleccionado: ${modo}`);
+        }
+
+        // =========================================================
+        // 5. MAPA, RECORRIDO, CAPTURA Y ANTICHEAT GPS
+        // =========================================================
         function inicializarMapa() {
             if (map) return;
-            const defaultCoords = [-34.6037, -58.3816];
-            map = L.map('map', { zoomControl: false }).setView(defaultCoords, 16);
+            const startCoords = [-34.6037, -58.3816];
+            map = L.map('map', { zoomControl: false }).setView(startCoords, 16);
+
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19
             }).addTo(map);
 
-            userMarker = L.circleMarker(defaultCoords, {
+            userMarker = L.circleMarker(startCoords, {
                 radius: 9,
                 fillColor: '#477B57',
                 color: '#F2F1E9',
@@ -521,6 +749,23 @@
                 opacity: 1,
                 fillOpacity: 1
             }).addTo(map);
+
+            flagMarker = L.circleMarker(flagCoords, {
+                radius: 10,
+                fillColor: '#FF7900',
+                color: '#202820',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.95
+            }).addTo(map);
+
+            routePolyline = L.polyline([], {
+                color: '#477B57',
+                weight: 4,
+                opacity: 0.85
+            }).addTo(map);
+
+            actualizarDistanciaBandera(startCoords[0], startCoords[1]);
         }
 
         function calcularDistanciaMetros(lat1, lon1, lat2, lon2) {
@@ -529,69 +774,201 @@
             const p2 = lat2 * Math.PI / 180;
             const dp = (lat2 - lat1) * Math.PI / 180;
             const dl = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dp/2) * Math.sin(dp/2) +
-                      Math.cos(p1) * Math.cos(p2) * Math.sin(dl/2) * Math.sin(dl/2);
+            const a = Math.sin(dp / 2) * Math.sin(dp / 2) +
+                      Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) * Math.sin(dl / 2);
             return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
         }
 
-        function procesarNuevaUbicacion(lat, lon) {
+        function actualizarDistanciaBandera(lat, lon) {
+            const distM = Math.round(calcularDistanciaMetros(lat, lon, flagCoords[0], flagCoords[1]));
+            document.getElementById('flag-distance').innerText = `${distM} m`;
+            return distM;
+        }
+
+        function procesarCoordenadas(lat, lon) {
             const now = Date.now();
             const badge = document.getElementById('anticheat-badge');
-            const speedDisplay = document.getElementById('gps-speed-display');
 
             if (lastCoords && lastTimestamp) {
-                const dist = calcularDistanciaMetros(lastCoords.lat, lastCoords.lon, lat, lon);
-                const segundos = (now - lastTimestamp) / 1000;
+                const distM = calcularDistanciaMetros(lastCoords.lat, lastCoords.lon, lat, lon);
+                const segs = (now - lastTimestamp) / 1000;
 
-                if (segundos > 0.5) {
-                    const kmh = (dist / segundos) * 3.6;
-                    speedDisplay.innerText = `${kmh.toFixed(1)} km/h`;
+                if (segs > 0.4) {
+                    const kmh = (distM / segs) * 3.6;
+                    document.getElementById('stat-speed').innerText = `${kmh.toFixed(1)} km/h`;
 
+                    // Anticheat: Bloquear saltos imposibles (> 45 km/h)
                     if (kmh > MAX_SPEED_KMH) {
                         badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-brandOrange inline-block"></span> Bloqueado: Salto GPS`;
-                        badge.className = 'text-brandOrange flex items-center gap-1.5 font-bold';
+                        badge.className = 'text-brandOrange flex items-center gap-1.5 font-extrabold';
                         if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
                         return false;
+                    }
+
+                    // Sumar recorrido si la partida está activa
+                    if (isRunning && !isPaused && distM > 1) {
+                        totalDistanceKm += (distM / 1000);
+                        sessionPoints += Math.round(distM * 0.15);
+                        actualizarUIEstadisticas();
                     }
                 }
             }
 
             lastCoords = { lat, lon };
             lastTimestamp = now;
+
             badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-brandGreen-mid inline-block"></span> GPS Verificado`;
-            badge.className = 'text-brandGreen-mid flex items-center gap-1.5 font-semibold';
+            badge.className = 'text-brandGreen-mid flex items-center gap-1.5 font-bold';
 
             if (map && userMarker) {
                 userMarker.setLatLng([lat, lon]);
                 map.panTo([lat, lon]);
+
+                if (isRunning && !isPaused) {
+                    routeCoords.push([lat, lon]);
+                    routePolyline.setLatLngs(routeCoords);
+                }
             }
+
+            actualizarDistanciaBandera(lat, lon);
             return true;
         }
 
-        function iniciarRastreoGPS() {
+        function iniciarRastreoGPSPasivo() {
             if (!navigator.geolocation) return;
-            navigator.geolocation.watchPosition(
-                (pos) => procesarNuevaUbicacion(pos.coords.latitude, pos.coords.longitude),
-                (err) => console.warn('GPS esperando señal:', err.message),
+            watchId = navigator.geolocation.watchPosition(
+                (pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    if (!lastCoords) {
+                        // Ubicar bandera objetivo cerca del jugador real (~110m)
+                        flagCoords = [latitude + 0.0009, longitude + 0.0007];
+                        if (flagMarker) flagMarker.setLatLng(flagCoords);
+                    }
+                    procesarCoordenadas(latitude, longitude);
+                },
+                (err) => console.warn('Esperando señal GPS:', err.message),
                 { enableHighAccuracy: true, maximumAge: 2000 }
             );
         }
 
-        function simularMovimientoNormal() {
-            const baseLat = lastCoords ? lastCoords.lat : -34.6037;
-            const baseLon = lastCoords ? lastCoords.lon : -58.3816;
-            procesarNuevaUbicacion(baseLat + 0.00004, baseLon + 0.00004);
+        // =========================================================
+        // 6. CONTROLES DE PARTIDA Y CAPTURA DE BANDERA
+        // =========================================================
+        function iniciarPartida() {
+            isRunning = true;
+            isPaused = false;
+
+            document.getElementById('btn-start-run').classList.add('hidden');
+            document.getElementById('btn-pause-run').classList.remove('hidden');
+            document.getElementById('btn-stop-run').classList.remove('hidden');
+
+            const pill = document.getElementById('game-status-pill');
+            pill.innerText = `EN CURSO • ${selectedMode.toUpperCase()}`;
+            pill.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded bg-brandGreen-dark text-[#F2F1E9]';
+
+            if (!timerInterval) {
+                timerInterval = setInterval(() => {
+                    if (isRunning && !isPaused) {
+                        elapsedSeconds++;
+                        actualizarUIEstadisticas();
+                    }
+                }, 1000);
+            }
+            mostrarToast('¡Recorrido iniciado! Acercate a la bandera.');
+        }
+
+        function pausarPartida() {
+            isPaused = !isPaused;
+            const btnPause = document.getElementById('btn-pause-run');
+            const pill = document.getElementById('game-status-pill');
+
+            if (isPaused) {
+                btnPause.innerText = 'Reanudar';
+                pill.innerText = 'PAUSADO';
+                pill.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded bg-brandOrange-bg text-[#202820] border border-brandOrange-soft';
+            } else {
+                btnPause.innerText = 'Pausar';
+                pill.innerText = `EN CURSO • ${selectedMode.toUpperCase()}`;
+                pill.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded bg-brandGreen-dark text-[#F2F1E9]';
+            }
+        }
+
+        function finalizarPartida() {
+            isRunning = false;
+            isPaused = false;
+            clearInterval(timerInterval);
+            timerInterval = null;
+
+            totalAccountPoints += sessionPoints;
+            document.getElementById('total-user-points').innerText = totalAccountPoints.toLocaleString();
+            document.getElementById('ranking-my-pts').innerText = `${totalAccountPoints.toLocaleString()} pts`;
+
+            mostrarToast(`Sesión finalizada: +${sessionPoints} pts ganados`);
+
+            // Resetear controles
+            totalDistanceKm = 0;
+            elapsedSeconds = 0;
+            sessionPoints = 0;
+            routeCoords = [];
+            if (routePolyline) routePolyline.setLatLngs([]);
+            actualizarUIEstadisticas();
+
+            document.getElementById('btn-start-run').classList.remove('hidden');
+            document.getElementById('btn-pause-run').classList.add('hidden');
+            document.getElementById('btn-stop-run').classList.add('hidden');
+
+            const pill = document.getElementById('game-status-pill');
+            pill.innerText = 'LISTO PARA INICIAR';
+            pill.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded bg-theme-panelSec text-theme-textSec border border-theme-border';
+        }
+
+        function intentarCapturarBandera() {
+            const currentPos = lastCoords ? [lastCoords.lat, lastCoords.lon] : [-34.6037, -58.3816];
+            const dist = actualizarDistanciaBandera(currentPos[0], currentPos[1]);
+
+            if (dist <= 35) {
+                sessionPoints += 150;
+                actualizarUIEstadisticas();
+                mostrarToast('¡Bandera capturada! +150 puntos');
+
+                // Reubicar nueva bandera
+                flagCoords = [currentPos[0] + (Math.random() - 0.5) * 0.002, currentPos[1] + (Math.random() - 0.5) * 0.002];
+                if (flagMarker) flagMarker.setLatLng(flagCoords);
+                actualizarDistanciaBandera(currentPos[0], currentPos[1]);
+            } else {
+                mostrarToast(`Estás a ${dist}m. Acercate a menos de 35m para capturar.`);
+            }
+        }
+
+        function actualizarUIEstadisticas() {
+            document.getElementById('stat-distance').innerText = `${totalDistanceKm.toFixed(2)} km`;
+            const mins = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
+            const secs = String(elapsedSeconds % 60).padStart(2, '0');
+            document.getElementById('stat-time').innerText = `${mins}:${secs}`;
+            document.getElementById('stat-points').innerText = sessionPoints;
+
+            // Actualizar progreso en pestaña Desafíos
+            const pct = Math.min(100, Math.round((totalDistanceKm / 3.0) * 100));
+            document.getElementById('challenge-prog-km').style.width = `${pct}%`;
+            document.getElementById('challenge-km-text').innerText = `${totalDistanceKm.toFixed(2)} / 3.00 km`;
+        }
+
+        // Simulación DEV
+        function simularAcercamientoBandera() {
+            const curr = lastCoords ? [lastCoords.lat, lastCoords.lon] : [-34.6037, -58.3816];
+            const nextLat = curr[0] + (flagCoords[0] - curr[0]) * 0.45;
+            const nextLon = curr[1] + (flagCoords[1] - curr[1]) * 0.45;
+            procesarCoordenadas(nextLat, nextLon);
         }
 
         function simularTeletransporte() {
-            const baseLat = lastCoords ? lastCoords.lat : -34.6037;
-            const baseLon = lastCoords ? lastCoords.lon : -58.3816;
-            procesarNuevaUbicacion(baseLat + 0.05, baseLon + 0.05);
+            const curr = lastCoords ? [lastCoords.lat, lastCoords.lon] : [-34.6037, -58.3816];
+            procesarCoordenadas(curr[0] + 0.05, curr[1] + 0.05);
         }
 
-        // ==========================================
-        // 5. SISTEMA DE AMIGOS (SUPABASE)
-        // ==========================================
+        // =========================================================
+        // 7. SISTEMA DE AMIGOS (SUPABASE)
+        // =========================================================
         async function enviarSolicitudAmistad() {
             const btn = document.getElementById('btn-add-friend');
             btn.disabled = true;
@@ -603,7 +980,7 @@
                     .insert([{ user_id: currentUser.id, friend_id: currentRival.id, status: 'pending' }]);
 
                 if (error && error.code !== '23505') {
-                    alert('No se pudo enviar la solicitud: ' + error.message);
+                    mostrarToast('Error al enviar solicitud');
                     btn.disabled = false;
                     btn.innerText = '+ Agregar Amigo';
                     return;
@@ -611,18 +988,19 @@
             }
 
             btn.innerText = '✓ Solicitud enviada';
-            btn.className = 'bg-theme-panelSec text-theme-textSec border border-theme-border text-xs font-bold px-3.5 py-2 rounded-xl';
+            btn.className = 'bg-theme-panelSec text-theme-textSec border border-theme-border text-xs font-extrabold px-3 py-1.5 rounded-xl';
+            mostrarToast(`Solicitud enviada a ${currentRival.username}`);
+            cargarListaAmigos();
         }
 
-        async function abrirModalAmigos() {
-            document.getElementById('friends-modal').classList.remove('hidden');
+        async function cargarListaAmigos() {
             const container = document.getElementById('friends-list-container');
 
             if (!supabaseClient || !currentUser) {
                 container.innerHTML = `
                     <div class="flex justify-between items-center bg-theme-bg p-3 rounded-xl border border-theme-border">
-                        <span class="font-bold text-theme-text">${currentRival.username}</span>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-brandOrange-bg text-[#202820] border border-brandOrange-soft">Pendiente</span>
+                        <span class="font-extrabold text-theme-text">${currentRival.username}</span>
+                        <span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-brandOrange-bg text-[#202820] border border-brandOrange-soft">Pendiente</span>
                     </div>`;
                 return;
             }
@@ -633,22 +1011,18 @@
                 .or(`user_id.eq.${currentUser.id},friend_id.eq.${currentUser.id}`);
 
             if (error || !data || data.length === 0) {
-                container.innerHTML = '<p class="text-theme-textSec text-center py-4">Aún no tenés amigos agregados.</p>';
+                container.innerHTML = '<p class="text-theme-textSec py-2">Aún no tenés amigos agregados.</p>';
                 return;
             }
 
             container.innerHTML = data.map(f => `
                 <div class="flex justify-between items-center bg-theme-bg p-3 rounded-xl border border-theme-border">
-                    <span class="font-mono text-theme-text">ID: ${f.friend_id.slice(0, 8)}...</span>
-                    <span class="text-[10px] font-bold px-2 py-0.5 rounded ${f.status === 'accepted' ? 'bg-brandGreen-dark text-[#F2F1E9]' : 'bg-brandOrange-bg text-[#202820] border border-brandOrange-soft'}">
+                    <span class="font-mono text-theme-text">Jugador #${f.friend_id.slice(0, 6)}</span>
+                    <span class="text-[10px] font-extrabold px-2 py-0.5 rounded ${f.status === 'accepted' ? 'bg-brandGreen-dark text-[#F2F1E9]' : 'bg-brandOrange-bg text-[#202820] border border-brandOrange-soft'}">
                         ${f.status === 'accepted' ? 'Amigo' : 'Pendiente'}
                     </span>
                 </div>
             `).join('');
-        }
-
-        function cerrarModalAmigos() {
-            document.getElementById('friends-modal').classList.add('hidden');
         }
     </script>
 </body>
