@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="theme-dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#07090E" />
+  <meta id="metaThemeColor" name="theme-color" content="#171D1A" />
   <title>Conquista la Bandera</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -14,36 +14,130 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-base: #07090E;
-      --bg-surface: #0F131D;
-      --bg-surface-elevated: #161D2E;
-      --border-subtle: rgba(255, 255, 255, 0.06);
-      --accent: #00F076;
-      --player-accent: #FFB800;
+      /* Marca institucional idéntica en ambos temas */
+      --orange-main: #FF7900;
+      --orange-hover: #E96800;
+      --orange-soft: #FFB36B;
+      --orange-bg-soft: #FFF0E2;
+
+      --green-dark: #244B37;
+      --green-mid: #477B57;
+      --green-light: #75C894;
+      --green-soft: #A4C9A9;
+
+      /* Variables de tema (Oscuro por defecto) */
+      --bg-base: #171D1A;
+      --bg-header: rgba(23, 29, 26, 0.92);
+      --bg-surface: #222B26;
+      --bg-surface-elevated: #2C3730;
+      --text-primary: #F2F1E9;
+      --text-secondary: #AAB5AC;
+      --border-subtle: #354139;
+      --shadow-card: 0 6px 24px rgba(0, 0, 0, 0.35);
+      --map-filter: invert(100%) hue-rotate(180deg) brightness(92%) contrast(92%) sepia(12%);
+      --progress-track: #2C3730;
+      --toast-info-bg: #222B26;
+      --toast-success-bg: #1B3628;
+      --toast-error-bg: #3B1D22;
     }
+
+    html.theme-light {
+      --bg-base: #F4F2EB;
+      --bg-header: rgba(244, 242, 235, 0.92);
+      --bg-surface: #FFFFFF;
+      --bg-surface-elevated: #E9E8DF;
+      --text-primary: #202820;
+      --text-secondary: #777D75;
+      --border-subtle: #DFE1D8;
+      --shadow-card: 0 6px 24px rgba(32, 40, 32, 0.08);
+      --map-filter: saturate(92%) contrast(98%) brightness(100%);
+      --progress-track: #E9E8DF;
+      --toast-info-bg: #FFFFFF;
+      --toast-success-bg: #EBF7EF;
+      --toast-error-bg: #FDECEC;
+    }
+
     * { -webkit-tap-highlight-color: transparent; }
     body {
       background-color: var(--bg-base);
-      color: #E2E8F0;
+      color: var(--text-primary);
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
       overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
+      transition: background-color 0.2s ease, color 0.2s ease;
     }
     .font-display { font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.03em; }
-    #map { height: 46vh; width: 100%; border-radius: 20px; z-index: 10; border: 1px solid var(--border-subtle); box-shadow: 0 12px 32px rgba(0,0,0,0.5); }
-    .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(90%) contrast(95%); }
-    .leaflet-control-attribution { display: none; }
 
+    /* Clases semánticas adaptables a Claro / Oscuro */
+    .app-header {
+      background-color: var(--bg-header);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .app-nav {
+      background-color: var(--bg-header);
+      border-top: 1px solid var(--border-subtle);
+    }
     .surface-card {
       background-color: var(--bg-surface);
       border: 1px solid var(--border-subtle);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      box-shadow: var(--shadow-card);
     }
     .surface-card-elevated {
       background-color: var(--bg-surface-elevated);
       border: 1px solid var(--border-subtle);
     }
-    .btn-press { transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.15s ease, border-color 0.15s ease; cursor: pointer; }
+    .surface-inset {
+      background-color: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+    }
+    .theme-input {
+      background-color: var(--bg-base);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+    }
+    .theme-input::placeholder {
+      color: var(--text-secondary);
+      opacity: 0.7;
+    }
+    .theme-input:focus {
+      outline: none;
+      border-color: var(--orange-main);
+    }
+    .text-main { color: var(--text-primary); }
+    .text-muted { color: var(--text-secondary); }
+    .border-theme { border-color: var(--border-subtle); }
+    .progress-track { background-color: var(--progress-track); }
+
+    /* Botones institucionales */
+    .btn-brand-orange {
+      background-color: var(--orange-main);
+      color: #FFFFFF;
+      box-shadow: 0 6px 18px rgba(255, 121, 0, 0.25);
+    }
+    .btn-brand-orange:hover {
+      background-color: var(--orange-hover);
+    }
+    .btn-choice-inactive {
+      background-color: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+    }
+    .btn-choice-inactive:hover {
+      color: var(--text-primary);
+    }
+
+    #map {
+      height: 46vh;
+      width: 100%;
+      border-radius: 20px;
+      z-index: 10;
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-card);
+    }
+    .leaflet-tile-pane { filter: var(--map-filter); }
+    .leaflet-control-attribution { display: none; }
+
+    .btn-press { transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease; cursor: pointer; }
     .btn-press:active { transform: scale(0.97); }
     .btn-press:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
@@ -68,7 +162,7 @@
     }
     .ar-flag-float { animation: flagHover 2.6s ease-in-out infinite; }
 
-    /* Marcador GPS con cono de orientación estilizado */
+    /* Marcador GPS con cono de orientación en naranja institucional */
     .gps-player-wrapper {
       position: relative;
       width: 48px;
@@ -87,10 +181,10 @@
     }
     .gps-beacon {
       width: 16px; height: 16px;
-      background: var(--player-accent);
-      border: 3px solid #07090E;
+      background: var(--orange-main);
+      border: 3px solid #FFFFFF;
       border-radius: 50%;
-      box-shadow: 0 0 16px var(--player-accent);
+      box-shadow: 0 0 16px var(--orange-main);
       position: relative;
       z-index: 2;
     }
@@ -99,101 +193,119 @@
       position: absolute;
       inset: -7px;
       border-radius: 50%;
-      border: 1.5px solid var(--player-accent);
+      border: 1.5px solid var(--orange-main);
       animation: pulseRing 2s infinite;
     }
     .progress-fill { transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
+
+    /* Toasts adaptables */
+    .toast-info { background-color: var(--toast-info-bg); border-color: var(--border-subtle); color: var(--text-primary); }
+    .toast-success { background-color: var(--toast-success-bg); border-color: #477B57; color: #75C894; }
+    html.theme-light .toast-success { color: #244B37; }
+    .toast-error { background-color: var(--toast-error-bg); border-color: rgba(244, 63, 94, 0.45); color: #F43F5E; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between pb-24">
 
   <!-- SPLASH SCREEN / PANTALLA DE CARGA INICIAL -->
-  <div id="splashScreen" class="fixed inset-0 z-[100] bg-[#07090E] flex flex-col items-center justify-center p-6 transition-opacity duration-500">
-    <div class="w-24 h-24 rounded-3xl bg-[#0F131D] border border-white/10 flex items-center justify-center shadow-2xl relative mb-6">
-      <div class="absolute inset-0 rounded-3xl border border-[#00F076]/30 sonar-ring" style="--pulse-speed: 2s"></div>
-      <!-- LOGO ESTILO CUADRADO: Corredor amarillo/naranja y bandera verde -->
+  <div id="splashScreen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center p-6 transition-opacity duration-500" style="background-color: var(--bg-base);">
+    <div class="w-24 h-24 rounded-3xl surface-card flex items-center justify-center relative mb-6">
+      <div class="absolute inset-0 rounded-3xl border border-[#FF7900]/40 sonar-ring" style="--pulse-speed: 2s"></div>
       <svg class="w-14 h-14 relative z-10" viewBox="0 0 64 64" fill="none">
-        <path d="M22 48L20 32L30 24L42 28L46 20" stroke="#FFB800" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="36" cy="14" r="5" fill="#FFB800"/>
-        <path d="M20 28L14 36M32 38L28 52" stroke="#FFB800" stroke-width="4" stroke-linecap="round"/>
-        <!-- Bandera verde -->
-        <path d="M42 16V40L54 28L42 16Z" fill="#00F076"/>
+        <path d="M22 48L20 32L30 24L42 28L46 20" stroke="#FF7900" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="36" cy="14" r="5" fill="#FF7900"/>
+        <path d="M20 28L14 36M32 38L28 52" stroke="#FF7900" stroke-width="4" stroke-linecap="round"/>
+        <path d="M42 16V40L54 28L42 16Z" fill="#477B57"/>
       </svg>
     </div>
-    <h1 class="font-display font-bold text-xl text-white tracking-wide text-center">CONQUISTA <span class="text-[#00F076]">LA BANDERA</span></h1>
-    <p class="text-xs text-slate-400 mt-2 font-medium">Iniciando sistema táctico...</p>
+    <h1 class="font-display font-bold text-xl text-main tracking-wide text-center">CONQUISTA <span class="text-[#FF7900]">LA BANDERA</span></h1>
+    <p class="text-xs text-muted mt-2 font-medium">Iniciando sistema táctico...</p>
   </div>
 
   <!-- SISTEMA DE NOTIFICACIONES TOAST -->
   <div id="toastContainer" class="fixed top-16 inset-x-4 z-[60] max-w-md mx-auto pointer-events-none flex flex-col gap-2.5"></div>
 
   <!-- HEADER PROFESIONAL -->
-  <header class="px-4 py-3.5 bg-[#07090E]/90 border-b border-white/[0.06] flex justify-between items-center sticky top-0 z-30 backdrop-blur-xl">
-    <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-xl bg-[#00F076]/10 border border-[#00F076]/25 flex items-center justify-center text-[#00F076] shadow-sm">
+  <header class="app-header px-4 py-3 flex justify-between items-center sticky top-0 z-30 backdrop-blur-xl">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <div class="w-9 h-9 rounded-xl bg-[#FF7900]/15 border border-[#FF7900]/30 flex items-center justify-center text-[#FF7900] shrink-0 shadow-sm">
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 21V4m0 0l11 3-3 5 3 5-11-3" />
         </svg>
       </div>
-      <div>
-        <div class="flex items-center gap-2">
-          <h1 class="font-display font-bold text-base leading-none text-white tracking-wide">CONQUISTA <span class="text-[#00F076]">LA BANDERA</span></h1>
-          <span id="devEnvBadge" class="hidden text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">DEV</span>
+      <div class="min-w-0">
+        <div class="flex items-center gap-1.5">
+          <h1 class="font-display font-bold text-sm sm:text-base leading-none text-main tracking-wide truncate">CONQUISTA <span class="text-[#FF7900]">LA BANDERA</span></h1>
+          <span id="devEnvBadge" class="hidden text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded bg-[#FF7900]/15 text-[#FF7900] border border-[#FF7900]/30 shrink-0">DEV</span>
         </div>
-        <div class="flex items-center gap-2 mt-1">
-          <span id="userLeagueBadge" class="text-[10px] font-bold uppercase tracking-widest text-[#00F076]/90">División Inicial</span>
-          <span id="streakBadge" class="hidden items-center gap-1 text-[10px] font-semibold text-amber-400">
+        <div class="flex items-center gap-1.5 mt-1">
+          <span id="userLeagueBadge" class="text-[10px] font-bold uppercase tracking-widest text-[#477B57] dark:text-[#75C894]">División Inicial</span>
+          <span id="streakBadge" class="hidden items-center gap-1 text-[10px] font-semibold text-[#FF7900]">
             <span>•</span>
-            <span id="streakCount">1</span> días seguidos
+            <span id="streakCount">1</span> días
           </span>
         </div>
       </div>
     </div>
 
-    <div class="flex items-center gap-2.5">
-      <button id="btnSoundToggle" type="button" aria-label="Alternar audio" class="p-2.5 rounded-xl surface-card-elevated text-slate-300 hover:text-white btn-press">
+    <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+      <!-- SELECTOR DE APARIENCIA: CLARO / OSCURO / AUTO -->
+      <div class="surface-card-elevated p-0.5 rounded-xl flex items-center text-[10px] font-bold" role="group" aria-label="Selector de tema">
+        <button type="button" data-theme-val="light" title="Modo claro" class="theme-opt-btn px-2 py-1.5 rounded-lg text-muted hover:text-main transition">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
+        </button>
+        <button type="button" data-theme-val="dark" title="Modo oscuro" class="theme-opt-btn px-2 py-1.5 rounded-lg text-muted hover:text-main transition">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <button type="button" data-theme-val="auto" title="Automático según dispositivo" class="theme-opt-btn px-2 py-1 rounded-lg text-muted hover:text-main transition">
+          Auto
+        </button>
+      </div>
+
+      <button id="btnSoundToggle" type="button" aria-label="Alternar audio" class="p-2 rounded-xl surface-card-elevated text-main btn-press">
         <svg id="iconSoundOn" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 010 7.07"/></svg>
-        <svg id="iconSoundOff" class="w-4 h-4 hidden text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/></svg>
+        <svg id="iconSoundOff" class="w-4 h-4 hidden text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/></svg>
       </button>
-      <div id="userBadge" class="hidden items-center gap-2.5 surface-card-elevated px-3 py-1.5 rounded-xl text-xs">
-        <span id="headerUsername" class="font-semibold text-slate-200">@jugador</span>
-        <button id="btnLogout" type="button" class="text-slate-400 hover:text-rose-400 text-[11px] font-semibold transition">Salir</button>
+
+      <div id="userBadge" class="hidden items-center gap-2 surface-card-elevated px-2.5 py-1.5 rounded-xl text-xs">
+        <span id="headerUsername" class="font-semibold text-main max-w-[80px] truncate">@jugador</span>
+        <button id="btnLogout" type="button" class="text-muted hover:text-rose-500 text-[11px] font-semibold transition">Salir</button>
       </div>
     </div>
   </header>
 
   <!-- PANTALLA DE ACCESO -->
   <main id="authScreen" class="p-4 max-w-md mx-auto w-full my-auto">
-    <div class="surface-card p-6 sm:p-7 rounded-3xl space-y-6 shadow-2xl">
-      <div id="authTabs" class="grid grid-cols-2 gap-1 bg-[#07090E] p-1.5 rounded-2xl border border-white/[0.04]">
-        <button id="tabBtnLogin" type="button" class="bg-[#00F076] text-[#07090E] font-bold py-2.5 rounded-xl text-xs transition cursor-pointer shadow-sm">Iniciar sesión</button>
-        <button id="tabBtnSignup" type="button" class="text-slate-400 hover:text-white font-semibold py-2.5 rounded-xl text-xs transition cursor-pointer">Crear cuenta</button>
+    <div class="surface-card p-6 sm:p-7 rounded-3xl space-y-6">
+      <div id="authTabs" class="grid grid-cols-2 gap-1 surface-inset p-1.5 rounded-2xl">
+        <button id="tabBtnLogin" type="button" class="bg-[#FF7900] text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer shadow-sm">Iniciar sesión</button>
+        <button id="tabBtnSignup" type="button" class="text-muted hover:text-main font-semibold py-2.5 rounded-xl text-xs transition cursor-pointer">Crear cuenta</button>
       </div>
 
       <!-- LOGIN -->
       <form id="loginFormView" class="space-y-4">
         <div>
-          <h2 class="font-display text-xl font-bold text-white tracking-tight">Bienvenido de nuevo</h2>
-          <p class="text-xs text-slate-400 mt-1">Ingresá con tu usuario o correo electrónico.</p>
+          <h2 class="font-display text-xl font-bold text-main tracking-tight">Bienvenido de nuevo</h2>
+          <p class="text-xs text-muted mt-1">Ingresá con tu usuario o correo electrónico.</p>
         </div>
         <div>
-          <label for="loginIdentifier" class="text-xs font-semibold text-slate-300">Usuario o correo electrónico</label>
-          <input id="loginIdentifier" type="text" autocomplete="username" placeholder="tu_usuario o nombre@gmail.com" class="w-full mt-1.5 px-4 py-3 rounded-xl bg-[#07090E] border border-white/[0.08] text-sm text-white placeholder-slate-600 focus:outline-none focus:border-[#00F076] transition" />
+          <label for="loginIdentifier" class="text-xs font-semibold text-main">Usuario o correo electrónico</label>
+          <input id="loginIdentifier" type="text" autocomplete="username" placeholder="tu_usuario o nombre@gmail.com" class="theme-input w-full mt-1.5 px-4 py-3 rounded-xl text-sm transition" />
         </div>
         <div>
           <div class="flex items-center justify-between">
-            <label for="loginPassword" class="text-xs font-semibold text-slate-300">Contraseña</label>
-            <button id="btnForgotPassword" type="button" class="text-[11px] text-[#00F076] hover:text-[#00F076]/80 font-semibold transition">¿Olvidaste tu contraseña?</button>
+            <label for="loginPassword" class="text-xs font-semibold text-main">Contraseña</label>
+            <button id="btnForgotPassword" type="button" class="text-[11px] text-[#FF7900] hover:text-[#E96800] font-semibold transition">¿Olvidaste tu contraseña?</button>
           </div>
           <div class="relative mt-1.5">
-            <input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••••" class="w-full pl-4 pr-11 py-3 rounded-xl bg-[#07090E] border border-white/[0.08] text-sm text-white placeholder-slate-600 focus:outline-none focus:border-[#00F076] transition" />
-            <button type="button" data-toggle-target="loginPassword" aria-label="Mostrar u ocultar clave" class="toggle-pass-btn absolute inset-y-0 right-0 px-3.5 flex items-center text-slate-400 hover:text-[#00F076] transition">
+            <input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••••" class="theme-input w-full pl-4 pr-11 py-3 rounded-xl text-sm transition" />
+            <button type="button" data-toggle-target="loginPassword" aria-label="Mostrar u ocultar clave" class="toggle-pass-btn absolute inset-y-0 right-0 px-3.5 flex items-center text-muted hover:text-[#FF7900] transition">
               <svg class="icon-eye-open w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               <svg class="icon-eye-closed w-4 h-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
             </button>
           </div>
         </div>
-        <button id="btnLogin" type="submit" class="w-full bg-[#00F076] hover:bg-[#00F076]/90 text-[#07090E] font-bold py-3.5 rounded-xl text-sm btn-press shadow-lg shadow-[#00F076]/15">
+        <button id="btnLogin" type="submit" class="w-full btn-brand-orange font-bold py-3.5 rounded-xl text-sm btn-press">
           Continuar
         </button>
       </form>
@@ -201,46 +313,46 @@
       <!-- RECUPERAR CONTRASEÑA -->
       <form id="forgotFormView" class="hidden space-y-4">
         <div>
-          <h2 class="font-display text-xl font-bold text-white tracking-tight">Recuperar contraseña</h2>
-          <p class="text-xs text-slate-400 mt-1">Te enviaremos un enlace seguro para crear una clave nueva.</p>
+          <h2 class="font-display text-xl font-bold text-main tracking-tight">Recuperar contraseña</h2>
+          <p class="text-xs text-muted mt-1">Te enviaremos un enlace seguro para crear una clave nueva.</p>
         </div>
         <div>
-          <label for="forgotEmail" class="text-xs font-semibold text-slate-300">Correo electrónico de tu cuenta</label>
-          <input id="forgotEmail" type="email" autocomplete="email" placeholder="nombre@gmail.com" class="w-full mt-1.5 px-4 py-3 rounded-xl bg-[#07090E] border border-white/[0.08] text-sm text-white placeholder-slate-600 focus:outline-none focus:border-[#00F076] transition" />
+          <label for="forgotEmail" class="text-xs font-semibold text-main">Correo electrónico de tu cuenta</label>
+          <input id="forgotEmail" type="email" autocomplete="email" placeholder="nombre@gmail.com" class="theme-input w-full mt-1.5 px-4 py-3 rounded-xl text-sm transition" />
         </div>
-        <button id="btnSendReset" type="submit" class="w-full bg-[#00F076] hover:bg-[#00F076]/90 text-[#07090E] font-bold py-3.5 rounded-xl text-sm btn-press shadow-lg shadow-[#00F076]/15">
+        <button id="btnSendReset" type="submit" class="w-full btn-brand-orange font-bold py-3.5 rounded-xl text-sm btn-press">
           Enviar enlace de recuperación
         </button>
-        <button id="btnBackToLogin" type="button" class="w-full text-xs font-semibold text-slate-400 hover:text-white transition pt-1">← Volver al inicio de sesión</button>
+        <button id="btnBackToLogin" type="button" class="w-full text-xs font-semibold text-muted hover:text-main transition pt-1">← Volver al inicio de sesión</button>
       </form>
 
       <!-- NUEVA CONTRASEÑA -->
       <form id="resetPasswordView" class="hidden space-y-4">
         <div>
-          <h2 class="font-display text-xl font-bold text-white tracking-tight">Nueva contraseña</h2>
-          <p class="text-xs text-slate-400 mt-1">Elegí una clave segura para volver a ingresar.</p>
+          <h2 class="font-display text-xl font-bold text-main tracking-tight">Nueva contraseña</h2>
+          <p class="text-xs text-muted mt-1">Elegí una clave segura para volver a ingresar.</p>
         </div>
         <div>
-          <label for="newPasswordInput" class="text-xs font-semibold text-slate-300">Nueva clave</label>
+          <label for="newPasswordInput" class="text-xs font-semibold text-main">Nueva clave</label>
           <div class="relative mt-1.5">
-            <input id="newPasswordInput" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres, 1 mayúscula y 1 número" class="w-full pl-4 pr-11 py-3 rounded-xl bg-[#07090E] border border-white/[0.08] text-sm text-white placeholder-slate-600 focus:outline-none focus:border-[#00F076] transition" />
-            <button type="button" data-toggle-target="newPasswordInput" aria-label="Mostrar u ocultar clave" class="toggle-pass-btn absolute inset-y-0 right-0 px-3.5 flex items-center text-slate-400 hover:text-[#00F076] transition">
+            <input id="newPasswordInput" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres, 1 mayúscula y 1 número" class="theme-input w-full pl-4 pr-11 py-3 rounded-xl text-sm transition" />
+            <button type="button" data-toggle-target="newPasswordInput" aria-label="Mostrar u ocultar clave" class="toggle-pass-btn absolute inset-y-0 right-0 px-3.5 flex items-center text-muted hover:text-[#FF7900] transition">
               <svg class="icon-eye-open w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               <svg class="icon-eye-closed w-4 h-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
             </button>
           </div>
         </div>
         <div>
-          <label for="confirmNewPasswordInput" class="text-xs font-semibold text-slate-300">Confirmar nueva clave</label>
+          <label for="confirmNewPasswordInput" class="text-xs font-semibold text-main">Confirmar nueva clave</label>
           <div class="relative mt-1.5">
-            <input id="confirmNewPasswordInput" type="password" autocomplete="new-password" placeholder="Repetí tu clave" class="w-full pl-4 pr-11 py-3 rounded-xl bg-[#07090E] border border-white/[0.08] text-sm text-white placeholder-slate-600 focus:outline-none focus:border-[#00F076] transition" />
-            <button type="button" data-toggle-target="confirmNewPasswordInput" aria-label="Mostrar u ocultar clave" class="toggle-pass-btn absolute inset-y-0 right-0 px-3.5 flex items-center text-slate-400 hover:text-[#00F076] transition">
+            <input id="confirmNewPasswordInput" type="password" autocomplete="new-password" placeholder="Repetí tu clave" class="theme-input w-full pl-4 pr-11 py-3 rounded-xl text-sm transition" />
+            <button type="button" data-toggle-target="confirmNewPasswordInput" aria-label="Mostrar u ocultar clave" class="toggle-pass-btn absolute inset-y-0 right-0 px-3.5 flex items-center text-muted hover:text-[#FF7900] transition">
               <svg class="icon-eye-open w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               <svg class="icon-eye-closed w-4 h-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
             </button>
           </div>
         </div>
-        <button id="btnUpdatePassword" type="submit" class="w-full bg-[#00F076] hover:bg-[#00F076]/90 text-[#07090E] font-bold py-3.5 rounded-xl text-sm btn-press shadow-lg shadow-[#00F076]/15">
+        <button id="btnUpdatePassword" type="submit" class="w-full btn-brand-orange font-bold py-3.5 rounded-xl text-sm btn-press">
           Guardar nueva clave
         </button>
       </form>
@@ -248,49 +360,49 @@
       <!-- REGISTRO -->
       <form id="signupFormView" class="hidden space-y-4">
         <div>
-          <h2 class="font-display text-xl font-bold text-white tracking-tight">Crear cuenta</h2>
-          <p class="text-xs text-slate-400 mt-1">Te enviaremos un enlace de confirmación a tu correo.</p>
+          <h2 class="font-display text-xl font-bold text-main tracking-tight">Crear cuenta</h2>
+          <p class="text-xs text-muted mt-1">Te enviaremos un enlace de confirmación a tu correo.</p>
         </div>
         <div>
-          <label for="regUsername" class="text-xs font-semibold text-slate-300">Nombre de usuario</label>
-          <input id="regUsername" type="text" autocomplete="off" placeholder="ej. chachi.run" class="w-full mt-1.5 px-4 py-3 rounded-xl bg-[#07090E] border border-white/[0.08] text-sm text-white placeholder-slate-600 focus:outline-none focus:border-[#00F076] transition" />
-          <p class="text-[11px] text-slate-500 mt-1.5">Solo letras minúsculas, números, puntos o guiones bajos.</p>
+          <label for="regUsername" class="text-xs font-semibold text-main">Nombre de usuario</label>
+          <input id="regUsername" type="text" autocomplete="off" placeholder="ej. chachi.run" class="theme-input w-full mt-1.5 px-4 py-3 rounded-xl text-sm transition" />
+          <p class="text-[11px] text-muted mt-1.5">Solo letras minúsculas, números, puntos o guiones bajos.</p>
         </div>
         <div>
-          <label for="regEmail" class="text-xs font-semibold text-slate-300">Correo electrónico</label>
-          <input id="regEmail" type="email" autocomplete="email" placeholder="nombre@gmail.com" class="w-full mt-1.5 px-4 py-3 rounded-xl bg-[#07090E] border border-white/[0.08] text-sm text-white placeholder-slate-600 focus:outline-none focus:border-[#00F076] transition" />
+          <label for="regEmail" class="text-xs font-semibold text-main">Correo electrónico</label>
+          <input id="regEmail" type="email" autocomplete="email" placeholder="nombre@gmail.com" class="theme-input w-full mt-1.5 px-4 py-3 rounded-xl text-sm transition" />
         </div>
         <div>
-          <label for="regPassword" class="text-xs font-semibold text-slate-300">Contraseña</label>
+          <label for="regPassword" class="text-xs font-semibold text-main">Contraseña</label>
           <div class="relative mt-1.5">
-            <input id="regPassword" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres" class="w-full pl-4 pr-11 py-3 rounded-xl bg-[#07090E] border border-white/[0.08] text-sm text-white placeholder-slate-600 focus:outline-none focus:border-[#00F076] transition" />
-            <button type="button" data-toggle-target="regPassword" aria-label="Mostrar u ocultar clave" class="toggle-pass-btn absolute inset-y-0 right-0 px-3.5 flex items-center text-slate-400 hover:text-[#00F076] transition">
+            <input id="regPassword" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres" class="theme-input w-full pl-4 pr-11 py-3 rounded-xl text-sm transition" />
+            <button type="button" data-toggle-target="regPassword" aria-label="Mostrar u ocultar clave" class="toggle-pass-btn absolute inset-y-0 right-0 px-3.5 flex items-center text-muted hover:text-[#FF7900] transition">
               <svg class="icon-eye-open w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               <svg class="icon-eye-closed w-4 h-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
             </button>
           </div>
-          <p class="text-[11px] text-slate-500 mt-1.5">Debe incluir al menos una mayúscula y un número.</p>
+          <p class="text-[11px] text-muted mt-1.5">Debe incluir al menos una mayúscula y un número.</p>
         </div>
-        <button id="btnSignup" type="submit" class="w-full bg-[#00F076] hover:bg-[#00F076]/90 text-[#07090E] font-bold py-3.5 rounded-xl text-sm btn-press shadow-lg shadow-[#00F076]/15">
+        <button id="btnSignup" type="submit" class="w-full btn-brand-orange font-bold py-3.5 rounded-xl text-sm btn-press">
           Registrarme
         </button>
       </form>
 
       <!-- VERIFICACIÓN OTP -->
       <div id="otpVerifyView" class="hidden space-y-4 py-2">
-        <div class="w-12 h-12 rounded-2xl bg-[#00F076]/10 border border-[#00F076]/25 flex items-center justify-center text-[#00F076]">
+        <div class="w-12 h-12 rounded-2xl bg-[#FF7900]/15 border border-[#FF7900]/30 flex items-center justify-center text-[#FF7900]">
           <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
         </div>
         <div>
-          <h2 class="font-display text-lg font-bold text-white">Revisá tu bandeja de entrada</h2>
-          <p class="text-xs text-slate-400 mt-1 leading-relaxed">
-            Enviamos un correo a <span id="otpTargetEmail" class="text-slate-200 font-semibold"></span>. Abrilo y tocá el enlace para continuar.
+          <h2 class="font-display text-lg font-bold text-main">Revisá tu bandeja de entrada</h2>
+          <p class="text-xs text-muted mt-1 leading-relaxed">
+            Enviamos un correo a <span id="otpTargetEmail" class="text-main font-semibold"></span>. Abrilo y tocá el enlace para continuar.
           </p>
         </div>
-        <button id="btnCancelOtp" type="button" class="text-xs font-semibold text-slate-400 hover:text-white transition">← Volver</button>
+        <button id="btnCancelOtp" type="button" class="text-xs font-semibold text-muted hover:text-main transition">← Volver</button>
       </div>
 
-      <p id="authError" class="text-xs text-rose-400 hidden bg-rose-500/10 border border-rose-500/20 px-3.5 py-3 rounded-xl font-medium"></p>
+      <p id="authError" class="text-xs text-rose-500 hidden bg-rose-500/10 border border-rose-500/25 px-3.5 py-3 rounded-xl font-medium"></p>
     </div>
   </main>
 
@@ -298,137 +410,137 @@
   <div id="appContainer" class="hidden max-w-lg mx-auto w-full p-4 space-y-4">
     
     <!-- PERMISO GPS Y BRÚJULA -->
-    <div id="gpsPermissionBanner" class="hidden surface-card border-[#00F076]/30 p-4.5 rounded-2xl space-y-3.5">
+    <div id="gpsPermissionBanner" class="hidden surface-card border-[#477B57]/50 p-4 rounded-2xl space-y-3.5">
       <div class="flex items-start gap-3.5">
-        <div class="w-10 h-10 rounded-xl bg-[#00F076]/10 border border-[#00F076]/25 flex items-center justify-center text-[#00F076] shrink-0 mt-0.5">
+        <div class="w-10 h-10 rounded-xl bg-[#477B57]/15 border border-[#477B57]/35 flex items-center justify-center text-[#477B57] shrink-0 mt-0.5">
           <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/>
             <circle cx="12" cy="11" r="2.5"/>
           </svg>
         </div>
         <div class="space-y-1">
-          <h3 id="gpsPermTitle" class="font-display font-bold text-sm text-white">Permitir acceso a tu ubicación</h3>
-          <p id="gpsPermDesc" class="text-xs text-slate-400 leading-relaxed">
+          <h3 id="gpsPermTitle" class="font-display font-bold text-sm text-main">Permitir acceso a tu ubicación</h3>
+          <p id="gpsPermDesc" class="text-xs text-muted leading-relaxed">
             Para generar banderas reales en tus calles o parques y orientar tu brújula en el mapa, necesitamos confirmar el permiso de GPS.
           </p>
         </div>
       </div>
 
-      <div id="gpsDeniedHelp" class="hidden bg-[#07090E] border border-rose-500/25 p-3.5 rounded-xl text-[11px] text-slate-300 space-y-1.5"></div>
+      <div id="gpsDeniedHelp" class="hidden surface-inset border-rose-500/30 p-3.5 rounded-xl text-[11px] text-main space-y-1.5"></div>
 
-      <button id="btnConfirmGpsPermission" type="button" class="w-full bg-[#00F076] hover:bg-[#00F076]/90 text-[#07090E] font-bold py-3.5 rounded-xl text-xs btn-press flex items-center justify-center gap-2 shadow-md shadow-[#00F076]/10">
+      <button id="btnConfirmGpsPermission" type="button" class="w-full btn-brand-orange font-bold py-3.5 rounded-xl text-xs btn-press flex items-center justify-center gap-2">
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>
         <span id="btnConfirmGpsText">Confirmar y activar ubicación</span>
       </button>
     </div>
 
-    <!-- DESAFÍO TEMPORAL X3 -->
-    <div id="flashBanner" class="surface-card border-amber-500/25 p-3.5 rounded-2xl flex items-center justify-between gap-3 shadow-md">
+    <!-- DESAFÍO TEMPORAL X3 (NARANJA INSTITUCIONAL) -->
+    <div id="flashBanner" class="surface-card border-[#FF7900]/40 p-3.5 rounded-2xl flex items-center justify-between gap-3">
       <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400 shrink-0">
+        <div class="w-9 h-9 rounded-xl bg-[#FF7900]/15 border border-[#FF7900]/30 flex items-center justify-center text-[#FF7900] shrink-0">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400">Desafío x3 Puntos</span>
-            <span id="flashTimer" class="text-[11px] font-mono text-slate-400">44:59</span>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-[#FF7900]">Desafío x3 Puntos</span>
+            <span id="flashTimer" class="text-[11px] font-mono text-muted">44:59</span>
           </div>
-          <p class="text-xs text-slate-200 mt-0.5">Bandera especial activa en tu radio</p>
+          <p class="text-xs text-main font-medium mt-0.5">Bandera especial activa en tu radio</p>
         </div>
       </div>
-      <button id="btnFlashEvent" type="button" class="bg-amber-400 hover:bg-amber-300 text-[#07090E] font-bold text-xs px-3.5 py-2 rounded-xl shrink-0 btn-press">
+      <button id="btnFlashEvent" type="button" class="btn-brand-orange font-bold text-xs px-3.5 py-2 rounded-xl shrink-0 btn-press">
         Aceptar
       </button>
     </div>
 
     <!-- PESTAÑA 1: MAPA -->
     <section id="tabPlay" class="tab-section space-y-4">
-      <div id="setupPanel" class="surface-card p-4.5 rounded-2xl space-y-4">
+      <div id="setupPanel" class="surface-card p-4 rounded-2xl space-y-3.5">
         <div class="grid grid-cols-3 gap-2" id="categoryGroup">
-          <button type="button" data-cat="walk_run" class="cat-btn bg-[#00F076] text-[#07090E] font-bold py-2.5 px-2 rounded-xl text-xs btn-press shadow-sm">A pie / Run</button>
-          <button type="button" data-cat="bike" class="cat-btn bg-[#07090E] border border-white/[0.07] text-slate-300 font-semibold py-2.5 px-2 rounded-xl text-xs btn-press">Bicicleta</button>
-          <button type="button" data-cat="mixed" class="cat-btn bg-[#07090E] border border-white/[0.07] text-slate-300 font-semibold py-2.5 px-2 rounded-xl text-xs btn-press">Mixto</button>
+          <button type="button" data-cat="walk_run" class="cat-btn bg-[#FF7900] text-white font-bold py-2.5 px-2 rounded-xl text-xs btn-press shadow-sm">A pie / Run</button>
+          <button type="button" data-cat="bike" class="cat-btn btn-choice-inactive font-semibold py-2.5 px-2 rounded-xl text-xs btn-press">Bicicleta</button>
+          <button type="button" data-cat="mixed" class="cat-btn btn-choice-inactive font-semibold py-2.5 px-2 rounded-xl text-xs btn-press">Mixto</button>
         </div>
 
         <div class="grid grid-cols-4 gap-2" id="distanceGroup">
-          <button type="button" data-dist="1km" class="dist-btn bg-[#00F076] text-[#07090E] font-bold py-2.5 rounded-xl text-xs btn-press shadow-sm">1 km</button>
-          <button type="button" data-dist="3km" class="dist-btn bg-[#07090E] border border-white/[0.07] text-slate-300 font-semibold py-2.5 rounded-xl text-xs btn-press">3 km</button>
-          <button type="button" data-dist="5km" class="dist-btn bg-[#07090E] border border-white/[0.07] text-slate-300 font-semibold py-2.5 rounded-xl text-xs btn-press">5 km</button>
-          <button type="button" data-dist="10km" class="dist-btn bg-[#07090E] border border-white/[0.07] text-slate-300 font-semibold py-2.5 rounded-xl text-xs btn-press">10 km</button>
+          <button type="button" data-dist="1km" class="dist-btn bg-[#FF7900] text-white font-bold py-2.5 rounded-xl text-xs btn-press shadow-sm">1 km</button>
+          <button type="button" data-dist="3km" class="dist-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press">3 km</button>
+          <button type="button" data-dist="5km" class="dist-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press">5 km</button>
+          <button type="button" data-dist="10km" class="dist-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press">10 km</button>
         </div>
 
         <div class="grid grid-cols-2 gap-2" id="modeGroup">
-          <button type="button" data-mode="async_record" class="mode-btn bg-[#00F076]/10 border border-[#00F076]/50 text-[#00F076] font-bold py-2.5 rounded-xl text-xs btn-press">Contrarreloj</button>
-          <button type="button" data-mode="live_duel" class="mode-btn bg-[#07090E] border border-white/[0.07] text-slate-300 font-semibold py-2.5 rounded-xl text-xs btn-press">Duelo 1v1</button>
+          <button type="button" data-mode="async_record" class="mode-btn bg-[#FF7900]/15 border border-[#FF7900] text-[#FF7900] font-bold py-2.5 rounded-xl text-xs btn-press">Contrarreloj</button>
+          <button type="button" data-mode="live_duel" class="mode-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press">Duelo 1v1</button>
         </div>
 
-        <div id="duelJoinBox" class="hidden bg-[#07090E] p-3.5 rounded-xl space-y-2 border border-white/[0.07]">
-          <p class="text-[11px] text-slate-400 font-medium">¿Tenés un código de invitación de tu rival?</p>
+        <div id="duelJoinBox" class="hidden surface-inset p-3.5 rounded-xl space-y-2">
+          <p class="text-[11px] text-muted font-medium">¿Tenés un código de invitación de tu rival?</p>
           <div class="flex gap-2">
-            <input id="duelCodeInput" type="text" maxlength="4" placeholder="EJ: K9P2" class="uppercase flex-1 px-3.5 py-2 rounded-xl bg-[#0F131D] border border-white/[0.1] text-xs font-mono text-white tracking-wider" />
-            <button id="btnJoinDuel" type="button" class="bg-slate-200 hover:bg-white text-[#07090E] font-bold px-4 py-2 rounded-xl text-xs btn-press">Unirme</button>
+            <input id="duelCodeInput" type="text" maxlength="4" placeholder="EJ: K9P2" class="theme-input uppercase flex-1 px-3.5 py-2 rounded-xl text-xs font-mono tracking-wider" />
+            <button id="btnJoinDuel" type="button" class="bg-[#244B37] hover:bg-[#477B57] text-white font-bold px-4 py-2 rounded-xl text-xs btn-press">Unirme</button>
           </div>
         </div>
 
-        <button id="btnGenerateFlag" type="button" class="w-full bg-[#00F076] hover:bg-[#00F076]/90 text-[#07090E] font-bold py-3.5 rounded-xl text-sm btn-press shadow-lg shadow-[#00F076]/15">
+        <button id="btnGenerateFlag" type="button" class="w-full btn-brand-orange font-bold py-3.5 rounded-xl text-sm btn-press">
           Generar bandera en ruta
         </button>
       </div>
 
       <!-- HUD PARTIDA ACTIVA -->
-      <div id="activeHud" class="hidden surface-card border-[#00F076]/30 p-4.5 rounded-2xl space-y-4">
-        <div id="duelWaitingBanner" class="hidden bg-amber-500/10 border border-amber-500/25 p-3.5 rounded-xl flex justify-between items-center">
+      <div id="activeHud" class="hidden surface-card border-[#477B57]/50 p-4 rounded-2xl space-y-4">
+        <div id="duelWaitingBanner" class="hidden bg-[#FF7900]/15 border border-[#FF7900]/35 p-3.5 rounded-xl flex justify-between items-center">
           <div>
-            <p class="text-xs font-bold text-amber-300">Esperando a tu rival</p>
-            <p class="text-[11px] text-slate-400 mt-0.5">Compartí este código de sala:</p>
+            <p class="text-xs font-bold text-[#FF7900]">Esperando a tu rival</p>
+            <p class="text-[11px] text-muted mt-0.5">Compartí este código de sala:</p>
           </div>
-          <span id="displayDuelCode" class="font-mono font-bold text-base text-amber-400 tracking-widest bg-[#07090E] px-3.5 py-1.5 rounded-lg border border-white/[0.08]">----</span>
+          <span id="displayDuelCode" class="font-mono font-bold text-base text-[#FF7900] tracking-widest theme-input px-3.5 py-1.5 rounded-lg">----</span>
         </div>
 
-        <div class="space-y-3 bg-[#07090E] p-3.5 rounded-xl border border-white/[0.06]">
+        <div class="space-y-3 surface-inset p-3.5 rounded-xl">
           <div>
             <div class="flex justify-between text-[11px] font-semibold mb-1.5">
-              <span class="text-slate-300">Tu recorrido</span>
-              <span id="myProgressPct" class="text-[#00F076] font-mono">0%</span>
+              <span class="text-main">Tu recorrido</span>
+              <span id="myProgressPct" class="text-[#477B57] font-mono font-bold">0%</span>
             </div>
-            <div class="w-full bg-slate-800/80 h-2 rounded-full overflow-hidden">
-              <div id="myProgressBar" class="progress-fill bg-[#00F076] h-full rounded-full shadow-sm shadow-[#00F076]" style="width: 2%"></div>
+            <div class="w-full progress-track h-2 rounded-full overflow-hidden">
+              <div id="myProgressBar" class="progress-fill bg-[#477B57] h-full rounded-full" style="width: 2%"></div>
             </div>
           </div>
 
           <div id="rivalProgressContainer" class="hidden">
             <div class="flex justify-between text-[11px] font-semibold mb-1.5">
-              <span class="text-slate-300">Rival</span>
-              <span id="rivalProgressPct" class="text-rose-400 font-mono">0%</span>
+              <span class="text-main">Rival</span>
+              <span id="rivalProgressPct" class="text-[#FF7900] font-mono font-bold">0%</span>
             </div>
-            <div class="w-full bg-slate-800/80 h-2 rounded-full overflow-hidden">
-              <div id="rivalProgressBar" class="progress-fill bg-rose-500 h-full rounded-full" style="width: 2%"></div>
+            <div class="w-full progress-track h-2 rounded-full overflow-hidden">
+              <div id="rivalProgressBar" class="progress-fill bg-[#FF7900] h-full rounded-full" style="width: 2%"></div>
             </div>
           </div>
         </div>
 
-        <div class="flex justify-between items-center bg-[#07090E] p-3.5 rounded-xl border border-white/[0.06]">
+        <div class="flex justify-between items-center surface-inset p-3.5 rounded-xl">
           <div class="flex items-center gap-3">
             <div class="relative w-9 h-9 flex items-center justify-center">
-              <div id="sonarRing" class="sonar-ring absolute inset-0 rounded-full border border-[#00F076]" style="--pulse-speed: 2s"></div>
-              <div class="w-2.5 h-2.5 rounded-full bg-[#00F076]"></div>
+              <div id="sonarRing" class="sonar-ring absolute inset-0 rounded-full border border-[#477B57]" style="--pulse-speed: 2s"></div>
+              <div class="w-2.5 h-2.5 rounded-full bg-[#477B57]"></div>
             </div>
             <div>
-              <p class="text-[11px] text-slate-400 font-medium" id="hudDistanceLabel">Distancia total: -- m</p>
-              <p class="text-xs font-semibold text-slate-200" id="sonarStatusText">Rastreando ubicación</p>
+              <p class="text-[11px] text-muted font-medium" id="hudDistanceLabel">Distancia total: -- m</p>
+              <p class="text-xs font-semibold text-main" id="sonarStatusText">Rastreando ubicación</p>
             </div>
           </div>
           <div class="text-right">
-            <span class="text-[10px] text-slate-400 block font-medium uppercase tracking-wider">Restante</span>
-            <span class="font-display text-xl font-bold text-white" id="hudRemaining">-- m</span>
+            <span class="text-[10px] text-muted block font-medium uppercase tracking-wider">Restante</span>
+            <span class="font-display text-xl font-bold text-main" id="hudRemaining">-- m</span>
           </div>
         </div>
 
         <div id="actionButtonsGrid" class="grid grid-cols-1 gap-2.5">
-          <button id="btnOpenAR" type="button" class="bg-[#00F076] hover:bg-[#00F076]/90 text-[#07090E] font-bold py-3.5 rounded-xl text-xs btn-press shadow-md shadow-[#00F076]/15">
+          <button id="btnOpenAR" type="button" class="btn-brand-orange font-bold py-3.5 rounded-xl text-xs btn-press">
             Conquistar bandera (Cámara)
           </button>
-          <button id="btnSimulate" type="button" class="hidden bg-[#07090E] hover:bg-slate-800 text-amber-300 font-semibold py-3.5 rounded-xl text-xs border border-amber-500/30 btn-press">
+          <button id="btnSimulate" type="button" class="hidden surface-inset hover:opacity-90 text-[#FF7900] font-semibold py-3.5 rounded-xl text-xs border border-[#FF7900]/40 btn-press">
             Simular llegada (DEV)
           </button>
         </div>
@@ -437,11 +549,11 @@
       <!-- MAPA -->
       <div class="relative">
         <div id="map"></div>
-        <div id="gpsStatus" class="absolute bottom-3 left-3 z-20 bg-[#07090E]/90 backdrop-blur-md px-3.5 py-2 rounded-full text-[11px] text-slate-300 border border-white/[0.08] flex items-center gap-2 shadow-lg">
-          <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+        <div id="gpsStatus" class="surface-card absolute bottom-3 left-3 z-20 backdrop-blur-md px-3.5 py-2 rounded-full text-[11px] text-main flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-[#FF7900] animate-pulse"></span>
           <span>Esperando confirmación GPS...</span>
         </div>
-        <button id="btnRecenterMap" type="button" aria-label="Centrar en mi ubicación" class="absolute bottom-3 right-3 z-20 bg-[#07090E]/90 backdrop-blur-md p-3 rounded-full text-slate-200 border border-white/[0.12] hover:text-[#00F076] btn-press shadow-lg">
+        <button id="btnRecenterMap" type="button" aria-label="Centrar en mi ubicación" class="surface-card absolute bottom-3 right-3 z-20 backdrop-blur-md p-3 rounded-full text-main hover:text-[#FF7900] btn-press">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>
         </button>
       </div>
@@ -451,35 +563,35 @@
     <section id="tabClubs" class="tab-section hidden space-y-4">
       <div class="surface-card p-5 rounded-2xl space-y-4">
         <div class="flex items-center justify-between">
-          <h2 class="font-display font-bold text-lg text-white">Club y Territorio</h2>
-          <span class="text-[11px] font-semibold bg-[#07090E] text-slate-400 px-3 py-1.5 rounded-xl border border-white/[0.06]">Máx. 10 miembros</span>
+          <h2 class="font-display font-bold text-lg text-main">Club y Territorio</h2>
+          <span class="text-[11px] font-semibold surface-inset text-muted px-3 py-1.5 rounded-xl">Máx. 10 miembros</span>
         </div>
 
         <div id="noClubView" class="space-y-4">
           <div class="space-y-2">
-            <p class="text-xs text-slate-400 font-medium">Unirse mediante código de invitación:</p>
+            <p class="text-xs text-muted font-medium">Unirse mediante código de invitación:</p>
             <div class="flex gap-2">
-              <input id="joinCodeInput" type="text" maxlength="8" placeholder="EJ: A8F21C" class="uppercase flex-1 px-4 py-3 rounded-xl bg-[#07090E] border border-white/[0.08] text-sm font-mono text-white tracking-wider" />
-              <button id="btnJoinClub" type="button" class="bg-[#00F076] text-[#07090E] font-bold px-4 rounded-xl text-xs btn-press">Unirse</button>
+              <input id="joinCodeInput" type="text" maxlength="8" placeholder="EJ: A8F21C" class="theme-input uppercase flex-1 px-4 py-3 rounded-xl text-sm font-mono tracking-wider" />
+              <button id="btnJoinClub" type="button" class="btn-brand-orange font-bold px-4 rounded-xl text-xs btn-press">Unirse</button>
             </div>
           </div>
-          <hr class="border-white/[0.06]" />
+          <hr class="border-theme" />
           <div class="space-y-2">
-            <p class="text-xs text-slate-400 font-medium">O creá un club nuevo para competir en grupo:</p>
-            <input id="newClubName" type="text" maxlength="30" placeholder="Nombre del club" class="w-full px-4 py-3 rounded-xl bg-[#07090E] border border-white/[0.08] text-sm text-white" />
-            <button id="btnCreateClub" type="button" class="w-full bg-[#07090E] hover:bg-slate-800 text-white font-semibold py-3.5 rounded-xl text-xs border border-white/[0.08] btn-press">Crear club</button>
+            <p class="text-xs text-muted font-medium">O creá un club nuevo para competir en grupo:</p>
+            <input id="newClubName" type="text" maxlength="30" placeholder="Nombre del club" class="theme-input w-full px-4 py-3 rounded-xl text-sm" />
+            <button id="btnCreateClub" type="button" class="w-full bg-[#244B37] hover:bg-[#477B57] text-white font-semibold py-3.5 rounded-xl text-xs btn-press">Crear club</button>
           </div>
         </div>
 
         <div id="myClubView" class="hidden space-y-3.5">
-          <div class="flex justify-between items-center bg-[#07090E] p-4 rounded-xl border border-white/[0.06]">
+          <div class="flex justify-between items-center surface-inset p-4 rounded-xl">
             <div>
-              <h3 id="clubNameDisplay" class="font-display font-bold text-base text-white">--</h3>
-              <p class="text-xs text-slate-400 mt-0.5">Puntos acumulados: <span id="clubPointsDisplay" class="text-[#00F076] font-bold">0</span></p>
+              <h3 id="clubNameDisplay" class="font-display font-bold text-base text-main">--</h3>
+              <p class="text-xs text-muted mt-0.5">Puntos acumulados: <span id="clubPointsDisplay" class="text-[#477B57] font-bold">0</span></p>
             </div>
             <div class="text-right">
-              <span class="text-[10px] text-slate-500 block uppercase font-semibold">Código</span>
-              <span id="clubCodeDisplay" class="font-mono font-bold text-slate-200 text-sm tracking-wider">------</span>
+              <span class="text-[10px] text-muted block uppercase font-semibold">Código</span>
+              <span id="clubCodeDisplay" class="font-mono font-bold text-[#FF7900] text-sm tracking-wider">------</span>
             </div>
           </div>
           <div id="clubMembersList" class="space-y-2"></div>
@@ -490,11 +602,11 @@
     <!-- PESTAÑA 3: RANKING -->
     <section id="tabRankings" class="tab-section hidden space-y-4">
       <div class="surface-card p-5 rounded-2xl space-y-4">
-        <h2 class="font-display font-bold text-lg text-white">Clasificación</h2>
+        <h2 class="font-display font-bold text-lg text-main">Clasificación</h2>
         <div class="grid grid-cols-3 gap-2" id="rankingFilterGroup">
-          <button type="button" data-rank="walk_run" class="rank-btn bg-[#00F076] text-[#07090E] py-2.5 rounded-xl text-xs font-bold btn-press shadow-sm">A pie / Run</button>
-          <button type="button" data-rank="bike" class="rank-btn bg-[#07090E] border border-white/[0.07] text-slate-300 py-2.5 rounded-xl text-xs font-semibold btn-press">Bicicleta</button>
-          <button type="button" data-rank="mixed" class="rank-btn bg-[#07090E] border border-white/[0.07] text-slate-300 py-2.5 rounded-xl text-xs font-semibold btn-press">Mixto</button>
+          <button type="button" data-rank="walk_run" class="rank-btn bg-[#FF7900] text-white py-2.5 rounded-xl text-xs font-bold btn-press shadow-sm">A pie / Run</button>
+          <button type="button" data-rank="bike" class="rank-btn btn-choice-inactive py-2.5 rounded-xl text-xs font-semibold btn-press">Bicicleta</button>
+          <button type="button" data-rank="mixed" class="rank-btn btn-choice-inactive py-2.5 rounded-xl text-xs font-semibold btn-press">Mixto</button>
         </div>
         <div id="rankingList" class="space-y-2 text-sm"></div>
       </div>
@@ -505,51 +617,51 @@
       <div class="surface-card p-5 rounded-2xl space-y-4">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3.5">
-            <div class="w-12 h-12 rounded-2xl bg-[#00F076]/10 border border-[#00F076]/25 flex items-center justify-center text-[#00F076] font-display font-bold text-lg" id="profileAvatarInitials">
+            <div class="w-12 h-12 rounded-2xl bg-[#FF7900]/15 border border-[#FF7900]/30 flex items-center justify-center text-[#FF7900] font-display font-bold text-lg" id="profileAvatarInitials">
               JG
             </div>
             <div>
-              <h2 id="profileDisplayName" class="font-display font-bold text-lg text-white">Jugador</h2>
-              <p id="profileHandle" class="text-xs text-slate-400 font-medium">@jugador</p>
+              <h2 id="profileDisplayName" class="font-display font-bold text-lg text-main">Jugador</h2>
+              <p id="profileHandle" class="text-xs text-muted font-medium">@jugador</p>
             </div>
           </div>
           <div class="text-right">
-            <span id="profileLevelBadge" class="inline-block bg-[#00F076]/10 border border-[#00F076]/25 text-[#00F076] text-xs font-bold px-3 py-1.5 rounded-xl">Nivel 1</span>
+            <span id="profileLevelBadge" class="inline-block bg-[#477B57]/15 border border-[#477B57]/35 text-[#477B57] text-xs font-bold px-3 py-1.5 rounded-xl">Nivel 1</span>
           </div>
         </div>
 
-        <div class="bg-[#07090E] p-3.5 rounded-xl border border-white/[0.06] space-y-2">
+        <div class="surface-inset p-3.5 rounded-xl space-y-2">
           <div class="flex justify-between text-[11px] font-semibold">
-            <span class="text-slate-400">Experiencia acumulada</span>
-            <span id="profileXpText" class="text-[#00F076] font-mono">0 XP</span>
+            <span class="text-muted">Experiencia acumulada</span>
+            <span id="profileXpText" class="text-[#477B57] font-mono font-bold">0 XP</span>
           </div>
-          <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-            <div id="profileXpBar" class="bg-[#00F076] h-full rounded-full" style="width: 10%"></div>
+          <div class="w-full progress-track h-2 rounded-full overflow-hidden">
+            <div id="profileXpBar" class="bg-[#477B57] h-full rounded-full" style="width: 10%"></div>
           </div>
         </div>
 
         <div class="grid grid-cols-3 gap-2.5 text-center">
-          <div class="bg-[#07090E] p-3.5 rounded-xl border border-white/[0.06]">
-            <span class="font-display text-lg font-bold text-white block" id="statTotalPoints">0</span>
-            <span class="text-[10px] text-slate-400 uppercase font-semibold tracking-wider">Puntos</span>
+          <div class="surface-inset p-3.5 rounded-xl">
+            <span class="font-display text-lg font-bold text-main block" id="statTotalPoints">0</span>
+            <span class="text-[10px] text-muted uppercase font-semibold tracking-wider">Puntos</span>
           </div>
-          <div class="bg-[#07090E] p-3.5 rounded-xl border border-white/[0.06]">
-            <span class="font-display text-lg font-bold text-[#00F076] block" id="statTotalWins">0</span>
-            <span class="text-[10px] text-slate-400 uppercase font-semibold tracking-wider">Conquistas</span>
+          <div class="surface-inset p-3.5 rounded-xl">
+            <span class="font-display text-lg font-bold text-[#477B57] block" id="statTotalWins">0</span>
+            <span class="text-[10px] text-muted uppercase font-semibold tracking-wider">Conquistas</span>
           </div>
-          <div class="bg-[#07090E] p-3.5 rounded-xl border border-white/[0.06]">
-            <span class="font-display text-lg font-bold text-amber-400 block" id="statStreak">1d</span>
-            <span class="text-[10px] text-slate-400 uppercase font-semibold tracking-wider">Racha</span>
+          <div class="surface-inset p-3.5 rounded-xl">
+            <span class="font-display text-lg font-bold text-[#FF7900] block" id="statStreak">1d</span>
+            <span class="text-[10px] text-muted uppercase font-semibold tracking-wider">Racha</span>
           </div>
         </div>
 
-        <form id="profileEditForm" class="space-y-3 pt-3 border-t border-white/[0.06]">
-          <p class="text-xs font-semibold text-slate-300">Datos personales</p>
+        <form id="profileEditForm" class="space-y-3 pt-3 border-t border-theme">
+          <p class="text-xs font-semibold text-main">Datos personales</p>
           <div>
-            <label for="editFullName" class="text-[11px] text-slate-400 font-medium">Nombre visible</label>
-            <input id="editFullName" type="text" maxlength="40" placeholder="Tu nombre o apodo" class="w-full mt-1 px-3.5 py-2.5 rounded-xl bg-[#07090E] border border-white/[0.08] text-xs text-white" />
+            <label for="editFullName" class="text-[11px] text-muted font-medium">Nombre visible</label>
+            <input id="editFullName" type="text" maxlength="40" placeholder="Tu nombre o apodo" class="theme-input w-full mt-1 px-3.5 py-2.5 rounded-xl text-xs" />
           </div>
-          <button type="submit" id="btnSaveProfile" class="w-full bg-[#07090E] hover:bg-slate-800 text-[#00F076] border border-[#00F076]/30 font-semibold py-3 rounded-xl text-xs btn-press">
+          <button type="submit" id="btnSaveProfile" class="w-full bg-[#244B37] hover:bg-[#477B57] text-white font-semibold py-3 rounded-xl text-xs btn-press">
             Guardar cambios
           </button>
         </form>
@@ -557,11 +669,11 @@
 
       <div class="surface-card p-5 rounded-2xl space-y-3">
         <div class="flex items-center justify-between">
-          <h3 class="font-display font-bold text-base text-white">Historial de Conquistas</h3>
-          <span class="text-[11px] text-slate-400 font-medium">Últimas 15</span>
+          <h3 class="font-display font-bold text-base text-main">Historial de Conquistas</h3>
+          <span class="text-[11px] text-muted font-medium">Últimas 15</span>
         </div>
         <div id="matchHistoryList" class="space-y-2.5">
-          <p class="text-xs text-slate-500 text-center py-4">Cargando historial...</p>
+          <p class="text-xs text-muted text-center py-4">Cargando historial...</p>
         </div>
       </div>
     </section>
@@ -573,36 +685,36 @@
     <canvas id="arPhotoCanvas" class="hidden absolute inset-0 w-full h-full object-cover z-10"></canvas>
     
     <div class="relative z-20 p-4 bg-gradient-to-b from-black/80 to-transparent flex justify-between items-center">
-      <span id="arHeaderBadge" class="bg-[#07090E]/90 border border-white/15 text-slate-200 font-medium text-xs px-3.5 py-2 rounded-full backdrop-blur-md">
+      <span id="arHeaderBadge" class="bg-[#171D1A]/90 border border-white/15 text-[#F2F1E9] font-medium text-xs px-3.5 py-2 rounded-full backdrop-blur-md">
         Cámara AR • Apuntá hacia el entorno
       </span>
-      <button id="btnCloseAR" type="button" class="bg-[#07090E]/90 border border-white/15 text-white px-4 py-2 rounded-full text-xs font-semibold backdrop-blur-md">Cerrar</button>
+      <button id="btnCloseAR" type="button" class="bg-[#171D1A]/90 border border-white/15 text-white px-4 py-2 rounded-full text-xs font-semibold backdrop-blur-md">Cerrar</button>
     </div>
 
     <div id="arLiveOverlay" class="relative z-20 flex flex-col items-center justify-center my-auto pointer-events-none">
       <div id="arFlagContainer" class="ar-flag-float transition-transform duration-150">
-        <svg class="w-32 h-32 drop-shadow-[0_8px_24px_rgba(0,240,118,0.7)]" viewBox="0 0 100 100" fill="none">
-          <line x1="25" y1="12" x2="25" y2="92" stroke="#F8FAFC" stroke-width="3.5" stroke-linecap="round"/>
-          <circle cx="25" cy="10" r="3.5" fill="#00F076"/>
-          <path d="M27 16 L82 28 L68 44 L82 60 L27 52 Z" fill="#00F076" stroke="#ECFDF5" stroke-width="1.5"/>
+        <svg class="w-32 h-32 drop-shadow-[0_8px_24px_rgba(71,123,87,0.85)]" viewBox="0 0 100 100" fill="none">
+          <line x1="25" y1="12" x2="25" y2="92" stroke="#F2F1E9" stroke-width="3.5" stroke-linecap="round"/>
+          <circle cx="25" cy="10" r="3.5" fill="#FF7900"/>
+          <path d="M27 16 L82 28 L68 44 L82 60 L27 52 Z" fill="#477B57" stroke="#A4C9A9" stroke-width="1.5"/>
         </svg>
       </div>
-      <p class="mt-4 bg-[#07090E]/85 px-4.5 py-2 rounded-full text-xs font-semibold text-slate-200 border border-white/10 backdrop-blur-md">
+      <p class="mt-4 bg-[#171D1A]/85 px-4 py-2 rounded-full text-xs font-semibold text-[#F2F1E9] border border-white/10 backdrop-blur-md">
         Sacá una foto del lugar para registrar la conquista
       </p>
     </div>
 
     <div class="relative z-20 p-5 bg-gradient-to-t from-black/95 to-transparent space-y-3">
-      <button id="btnTakePhoto" type="button" class="w-full bg-white hover:bg-slate-100 text-[#07090E] font-bold py-4 rounded-2xl text-sm flex items-center justify-center gap-2.5 btn-press shadow-xl">
+      <button id="btnTakePhoto" type="button" class="w-full btn-brand-orange font-bold py-4 rounded-2xl text-sm flex items-center justify-center gap-2.5 btn-press">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
         Sacar foto de conquista
       </button>
 
       <div id="arConfirmControls" class="hidden grid grid-cols-2 gap-3">
-        <button id="btnRetakePhoto" type="button" class="bg-[#121826] border border-white/15 text-slate-200 font-semibold py-4 rounded-2xl text-xs btn-press">
+        <button id="btnRetakePhoto" type="button" class="bg-[#222B26] border border-[#354139] text-[#F2F1E9] font-semibold py-4 rounded-2xl text-xs btn-press">
           Repetir foto
         </button>
-        <button id="btnConfirmCapture" type="button" class="bg-[#00F076] hover:bg-[#00F076]/90 text-[#07090E] font-bold py-4 rounded-2xl text-xs btn-press shadow-lg shadow-[#00F076]/20">
+        <button id="btnConfirmCapture" type="button" class="btn-brand-orange font-bold py-4 rounded-2xl text-xs btn-press">
           Confirmar conquista
         </button>
       </div>
@@ -610,23 +722,23 @@
   </div>
 
   <!-- MODAL DE VICTORIA -->
-  <div id="victoryModal" class="hidden fixed inset-0 z-50 bg-[#07090E]/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 overflow-y-auto">
+  <div id="victoryModal" class="hidden fixed inset-0 z-50 bg-[#171D1A]/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 overflow-y-auto">
     <div class="max-w-sm w-full space-y-4">
       <div class="text-center">
-        <p class="text-xs font-bold text-[#00F076] uppercase tracking-wider">Actividad registrada</p>
-        <h2 class="font-display text-2xl font-bold text-white mt-1">Bandera conquistada</h2>
+        <p class="text-xs font-bold text-[#75C894] uppercase tracking-wider">Actividad registrada</p>
+        <h2 class="font-display text-2xl font-bold text-[#F2F1E9] mt-1">Bandera conquistada</h2>
       </div>
 
-      <div class="rounded-3xl overflow-hidden border border-white/10 bg-[#0F131D] shadow-2xl">
+      <div class="rounded-3xl overflow-hidden border border-[#354139] bg-[#222B26] shadow-2xl">
         <canvas id="victoryCanvas" width="600" height="740" class="w-full h-auto block"></canvas>
       </div>
 
       <div class="grid grid-cols-2 gap-3">
-        <button id="btnShareCard" type="button" class="bg-[#00F076] hover:bg-[#00F076]/90 text-[#07090E] font-bold py-3.5 rounded-xl text-xs flex items-center justify-center gap-2 btn-press shadow-lg shadow-[#00F076]/15">
+        <button id="btnShareCard" type="button" class="btn-brand-orange font-bold py-3.5 rounded-xl text-xs flex items-center justify-center gap-2 btn-press">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
           Compartir tarjeta
         </button>
-        <button id="btnCloseVictory" type="button" class="bg-[#0F131D] hover:bg-slate-800 text-slate-200 font-semibold py-3.5 rounded-xl text-xs border border-white/[0.08] btn-press">
+        <button id="btnCloseVictory" type="button" class="bg-[#222B26] hover:bg-[#2C3730] text-[#F2F1E9] font-semibold py-3.5 rounded-xl text-xs border border-[#354139] btn-press">
           Listo
         </button>
       </div>
@@ -634,21 +746,21 @@
   </div>
 
   <!-- NAVEGACIÓN INFERIOR -->
-  <nav id="bottomNav" class="hidden fixed bottom-0 inset-x-0 bg-[#07090E]/95 border-t border-white/[0.06] backdrop-blur-xl z-30">
+  <nav id="bottomNav" class="app-nav hidden fixed bottom-0 inset-x-0 backdrop-blur-xl z-30">
     <div class="max-w-lg mx-auto grid grid-cols-4">
-      <button type="button" data-tab="Play" class="nav-btn py-3.5 flex flex-col items-center justify-center gap-1 text-[#00F076]">
+      <button type="button" data-tab="Play" class="nav-btn py-3.5 flex flex-col items-center justify-center gap-1 text-[#FF7900]">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
         <span class="text-[10px] font-semibold">Mapa</span>
       </button>
-      <button type="button" data-tab="Clubs" class="nav-btn py-3.5 flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-white">
+      <button type="button" data-tab="Clubs" class="nav-btn py-3.5 flex flex-col items-center justify-center gap-1 text-muted hover:text-main">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         <span class="text-[10px] font-semibold">Club</span>
       </button>
-      <button type="button" data-tab="Rankings" class="nav-btn py-3.5 flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-white">
+      <button type="button" data-tab="Rankings" class="nav-btn py-3.5 flex flex-col items-center justify-center gap-1 text-muted hover:text-main">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 010-5H6M18 9h1.5a2.5 2.5 0 000-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0012 0V2z"/></svg>
         <span class="text-[10px] font-semibold">Ranking</span>
       </button>
-      <button type="button" data-tab="Profile" class="nav-btn py-3.5 flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-white">
+      <button type="button" data-tab="Profile" class="nav-btn py-3.5 flex flex-col items-center justify-center gap-1 text-muted hover:text-main">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         <span class="text-[10px] font-semibold">Perfil</span>
       </button>
@@ -656,6 +768,46 @@
   </nav>
 
   <script>
+    // GESTIÓN VISUAL DE TEMA (CLARO / OSCURO / AUTOMÁTICO)
+    (function initAppearanceSelector() {
+      const THEME_KEY = 'clb_theme_pref';
+      const htmlEl = document.documentElement;
+      const metaTheme = document.getElementById('metaThemeColor');
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: light)');
+
+      function applyTheme(pref) {
+        const effectiveLight = pref === 'light' || (pref === 'auto' && mediaQuery.matches);
+        htmlEl.classList.toggle('theme-light', effectiveLight);
+        htmlEl.classList.toggle('theme-dark', !effectiveLight);
+        if (metaTheme) metaTheme.setAttribute('content', effectiveLight ? '#F4F2EB' : '#171D1A');
+
+        document.querySelectorAll('.theme-opt-btn').forEach(btn => {
+          const active = btn.getAttribute('data-theme-val') === pref;
+          btn.className = active
+            ? 'theme-opt-btn px-2 py-1.5 rounded-lg bg-[#FF7900] text-white shadow-sm transition'
+            : 'theme-opt-btn px-2 py-1.5 rounded-lg text-muted hover:text-main transition';
+        });
+      }
+
+      const saved = localStorage.getItem(THEME_KEY) || 'auto';
+      applyTheme(saved);
+
+      mediaQuery.addEventListener('change', () => {
+        if ((localStorage.getItem(THEME_KEY) || 'auto') === 'auto') applyTheme('auto');
+      });
+
+      document.addEventListener('DOMContentLoaded', () => {
+        applyTheme(localStorage.getItem(THEME_KEY) || 'auto');
+        document.querySelectorAll('.theme-opt-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const val = btn.getAttribute('data-theme-val');
+            localStorage.setItem(THEME_KEY, val);
+            applyTheme(val);
+          });
+        });
+      });
+    })();
+
     document.addEventListener('DOMContentLoaded', () => {
       'use strict';
 
@@ -750,11 +902,11 @@
         const container = document.getElementById('toastContainer');
         const el = document.createElement('div');
         const styles = {
-          info: 'bg-[#0F131D] border-white/15 text-slate-100',
-          success: 'bg-emerald-950/95 border-[#00F076]/40 text-emerald-200',
-          error: 'bg-rose-950/95 border-rose-500/40 text-rose-200'
+          info: 'toast-info',
+          success: 'toast-success',
+          error: 'toast-error'
         };
-        el.className = `px-4.5 py-3 rounded-2xl border text-xs font-semibold shadow-2xl backdrop-blur-xl transition-opacity duration-300 ${styles[type] || styles.info}`;
+        el.className = `px-4 py-3 rounded-2xl border text-xs font-semibold shadow-2xl backdrop-blur-xl transition-opacity duration-300 ${styles[type] || styles.info}`;
         el.textContent = message;
         container.appendChild(el);
         setTimeout(() => {
@@ -851,11 +1003,11 @@
         document.getElementById(isLogin ? 'loginFormView' : 'signupFormView').classList.remove('hidden');
 
         document.getElementById('tabBtnLogin').className = isLogin
-          ? 'bg-[#00F076] text-[#07090E] font-bold py-2.5 rounded-xl text-xs transition cursor-pointer shadow-sm'
-          : 'text-slate-400 hover:text-white font-semibold py-2.5 rounded-xl text-xs transition cursor-pointer';
+          ? 'bg-[#FF7900] text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer shadow-sm'
+          : 'text-muted hover:text-main font-semibold py-2.5 rounded-xl text-xs transition cursor-pointer';
         document.getElementById('tabBtnSignup').className = !isLogin
-          ? 'bg-[#00F076] text-[#07090E] font-bold py-2.5 rounded-xl text-xs transition cursor-pointer shadow-sm'
-          : 'text-slate-400 hover:text-white font-semibold py-2.5 rounded-xl text-xs transition cursor-pointer';
+          ? 'bg-[#FF7900] text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer shadow-sm'
+          : 'text-muted hover:text-main font-semibold py-2.5 rounded-xl text-xs transition cursor-pointer';
       }
 
       async function handleLogin(e) {
@@ -1123,7 +1275,7 @@
 
       function updateGpsIndicator(statusType, text) {
         const el = document.getElementById('gpsStatus');
-        const colors = { searching: 'bg-amber-400 animate-pulse', ok: 'bg-[#00F076]', warn: 'bg-amber-400', error: 'bg-rose-500' };
+        const colors = { searching: 'bg-[#FF7900] animate-pulse', ok: 'bg-[#477B57]', warn: 'bg-[#FF7900]', error: 'bg-rose-500' };
         el.innerHTML = `<span class="w-2 h-2 rounded-full ${colors[statusType] || colors.searching}"></span><span>${escapeHTML(text)}</span>`;
       }
 
@@ -1131,9 +1283,9 @@
         const ua = navigator.userAgent || '';
         const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
         if (isIOS) {
-          return `<p class="font-semibold text-rose-400">Cómo habilitarlo en tu iPhone:</p><p>1. Ajustes → Privacidad y seguridad → Localización.</p><p>2. Activá los servicios de ubicación y el navegador.</p>`;
+          return `<p class="font-semibold text-rose-500">Cómo habilitarlo en tu iPhone:</p><p>1. Ajustes → Privacidad y seguridad → Localización.</p><p>2. Activá los servicios de ubicación y el navegador.</p>`;
         }
-        return `<p class="font-semibold text-rose-400">Cómo habilitarlo en Android:</p><p>1. Ajustes del navegador → Permisos → Ubicación.</p><p>2. Cambiá a Permitir.</p>`;
+        return `<p class="font-semibold text-rose-500">Cómo habilitarlo en Android:</p><p>1. Ajustes del navegador → Permisos → Ubicación.</p><p>2. Cambiá a Permitir.</p>`;
       }
 
       function showGpsPermissionCard(mode) {
@@ -1207,7 +1359,7 @@
             <div class="gps-player-wrapper">
               <div id="playerHeadingCone" class="gps-heading-cone" style="transform: rotate(${state.deviceHeading}deg);">
                 <svg viewBox="0 0 56 56" fill="none">
-                  <path d="M28 2 L45 32 L28 26 L11 32 Z" fill="rgba(255, 184, 0, 0.65)" />
+                  <path d="M28 2 L45 32 L28 26 L11 32 Z" fill="rgba(255, 121, 0, 0.55)" />
                 </svg>
               </div>
               <div class="gps-beacon"></div>
@@ -1285,7 +1437,7 @@
         if (state.territoryLayer) state.map.removeLayer(state.territoryLayer);
         state.territoryLayer = L.layerGroup().addTo(state.map);
         L.circle([lat + 0.0042, lng + 0.0038], {
-          radius: 360, color: '#818CF8', fillColor: '#818CF8', fillOpacity: 0.1, weight: 1.5, dashArray: '4, 6'
+          radius: 360, color: '#477B57', fillColor: '#75C894', fillOpacity: 0.14, weight: 1.5, dashArray: '4, 6'
         }).bindPopup("<b>Zona de club</b><br>Capturá banderas acá.").addTo(state.territoryLayer);
       }
 
@@ -1321,10 +1473,10 @@
           if (state.flagMarker) state.map.removeLayer(state.flagMarker);
           if (state.routeLine) state.map.removeLayer(state.routeLine);
 
-          const pinColor = state.isFlashEvent ? '#FBBF24' : '#00F076';
+          const pinColor = state.isFlashEvent ? '#FF7900' : '#477B57';
           const flagIcon = L.divIcon({
             className: '',
-            html: `<svg width="32" height="32" viewBox="0 0 24 24" fill="${pinColor}" stroke="#07090E" stroke-width="2"><path d="M4 21V4m0 0l13 3-3 5 3 5-13-3"/></svg>`,
+            html: `<svg width="32" height="32" viewBox="0 0 24 24" fill="${pinColor}" stroke="#FFFFFF" stroke-width="2"><path d="M4 21V4m0 0l13 3-3 5 3 5-13-3"/></svg>`,
             iconSize: [32, 32], iconAnchor: [7, 30]
           });
 
@@ -1393,9 +1545,9 @@
 
         if (d <= CONFIG.CAPTURE_RADIUS_METERS) {
           ring.style.setProperty('--pulse-speed', '0.6s');
-          ring.style.borderColor = '#00F076';
+          ring.style.borderColor = '#477B57';
           statusText.textContent = "¡En rango! Abrí la cámara";
-          statusText.className = "text-xs font-bold text-[#00F076]";
+          statusText.className = "text-xs font-bold text-[#477B57]";
           if (Date.now() - state.lastVibrateTime > 2000) {
             if (navigator.vibrate) navigator.vibrate([120, 50, 120, 50, 200]);
             AudioEngine.ping();
@@ -1404,7 +1556,7 @@
         } else if (d <= 100) {
           ring.style.setProperty('--pulse-speed', '1.0s');
           statusText.textContent = "¡Muy cerca del objetivo!";
-          statusText.className = "text-xs font-semibold text-emerald-300";
+          statusText.className = "text-xs font-semibold text-[#75C894]";
           if (Date.now() - state.lastVibrateTime > 5000) {
             if (navigator.vibrate) navigator.vibrate(100);
             state.lastVibrateTime = Date.now();
@@ -1412,7 +1564,7 @@
         } else {
           ring.style.setProperty('--pulse-speed', '2.1s');
           statusText.textContent = "Rastreando ubicación";
-          statusText.className = "text-xs font-medium text-slate-200";
+          statusText.className = "text-xs font-medium text-main";
         }
 
         const totalTarget = state.activeMatch.realDistanceMeters || state.initialDistance || 1000;
@@ -1489,11 +1641,11 @@
         canvas.height = video.videoHeight || 1280;
 
         if (video.readyState >= 2) ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        else { ctx.fillStyle = '#07090E'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+        else { ctx.fillStyle = '#171D1A'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
 
-        ctx.fillStyle = 'rgba(7, 9, 14, 0.8)';
+        ctx.fillStyle = 'rgba(23, 29, 26, 0.85)';
         ctx.fillRect(0, canvas.height - 70, canvas.width, 70);
-        ctx.fillStyle = '#00F076';
+        ctx.fillStyle = '#FF7900';
         ctx.font = 'bold 20px "Space Grotesk", sans-serif';
         ctx.fillText(`CONQUISTA LA BANDERA • ${new Date().toLocaleTimeString('es-AR')}`, 30, canvas.height - 28);
 
@@ -1579,17 +1731,17 @@
         const ctx = canvas.getContext('2d');
         const W = canvas.width, H = canvas.height;
 
-        ctx.fillStyle = '#07090E';
+        ctx.fillStyle = '#171D1A';
         ctx.fillRect(0, 0, W, H);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+        ctx.strokeStyle = '#354139';
         ctx.lineWidth = 2;
         ctx.strokeRect(24, 24, W - 48, H - 48);
 
-        ctx.fillStyle = '#00F076';
+        ctx.fillStyle = '#FF7900';
         ctx.font = '700 22px "Space Grotesk", sans-serif';
         ctx.fillText('CONQUISTA LA BANDERA', 48, 76);
 
-        ctx.fillStyle = '#64748B';
+        ctx.fillStyle = '#AAB5AC';
         ctx.font = '600 14px "Plus Jakarta Sans", sans-serif';
         ctx.fillText(new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase(), 48, 104);
 
@@ -1603,7 +1755,7 @@
         const spanY = Math.max(0.0001, maxY - minY);
 
         ctx.save();
-        ctx.strokeStyle = stats.isFlash ? '#FBBF24' : '#00F076';
+        ctx.strokeStyle = stats.isFlash ? '#FF7900' : '#75C894';
         ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
         ctx.beginPath();
         pts.forEach((p, i) => {
@@ -1614,24 +1766,24 @@
         ctx.stroke();
         ctx.restore();
 
-        ctx.fillStyle = '#F8FAFC';
+        ctx.fillStyle = '#F2F1E9';
         ctx.font = '700 58px "Space Grotesk", sans-serif';
         ctx.fillText(`+${stats.points} PTS`, 48, 525);
 
-        ctx.fillStyle = '#64748B';
+        ctx.fillStyle = '#AAB5AC';
         ctx.font = '700 12px "Plus Jakarta Sans", sans-serif';
         ctx.fillText('DISTANCIA', 48, 585);
         ctx.fillText('VELOCIDAD PROM.', 235, 585);
         ctx.fillText('JUGADOR', 425, 585);
 
-        ctx.fillStyle = '#E2E8F0';
+        ctx.fillStyle = '#F2F1E9';
         ctx.font = '700 22px "Space Grotesk", sans-serif';
         ctx.fillText(`${(stats.distanceMeters / 1000).toFixed(2)} km`, 48, 616);
         ctx.fillText(`${stats.avgSpeed} km/h`, 235, 616);
-        ctx.fillStyle = '#00F076';
+        ctx.fillStyle = '#FF7900';
         ctx.fillText(stats.username, 425, 616);
 
-        ctx.fillStyle = '#475569';
+        ctx.fillStyle = '#777D75';
         ctx.font = '600 13px "Plus Jakarta Sans", sans-serif';
         ctx.fillText('conquistalabandera.com.ar', 48, 690);
 
@@ -1687,11 +1839,11 @@
         document.getElementById('clubMembersList').innerHTML = (members || []).map((m, i) => {
           const uname = escapeHTML((m.profiles && m.profiles.username) || 'jugador');
           const wins = Number((m.profiles && m.profiles.total_wins) || 0);
-          const badge = m.role === 'owner' ? '<span class="text-[10px] text-amber-400 ml-1.5 font-bold">Líder</span>' : '';
+          const badge = m.role === 'owner' ? '<span class="text-[10px] text-[#FF7900] ml-1.5 font-bold">Líder</span>' : '';
           return `
-            <div class="flex justify-between items-center bg-[#07090E] px-4 py-3 rounded-xl border border-white/[0.05] text-xs">
-              <span class="text-slate-200 font-medium"><b class="text-slate-500 mr-2">#${i + 1}</b>@${uname}${badge}</span>
-              <span class="text-slate-400 font-semibold">${wins} victorias</span>
+            <div class="surface-inset flex justify-between items-center px-4 py-3 rounded-xl text-xs">
+              <span class="text-main font-medium"><b class="text-muted mr-2">#${i + 1}</b>@${uname}${badge}</span>
+              <span class="text-muted font-semibold">${wins} victorias</span>
             </div>
           `;
         }).join('');
@@ -1706,11 +1858,11 @@
         document.getElementById('rankingList').innerHTML = (data || []).map((p, idx) => {
           const uname = escapeHTML(p.username || 'jugador');
           const pts = Number(p[col] || 0);
-          const rankColor = idx === 0 ? 'text-amber-400 font-bold' : idx === 1 ? 'text-slate-300 font-bold' : idx === 2 ? 'text-amber-600 font-bold' : 'text-slate-500 font-medium';
+          const rankColor = idx === 0 ? 'text-[#FF7900] font-bold' : idx === 1 ? 'text-main font-bold' : idx === 2 ? 'text-[#FFB36B] font-bold' : 'text-muted font-medium';
           return `
-            <div class="flex justify-between items-center bg-[#07090E] px-4 py-3.5 rounded-xl border border-white/[0.05]">
-              <span class="text-xs font-semibold text-slate-200"><b class="${rankColor} font-mono mr-3">#${idx + 1}</b>@${uname}</span>
-              <span class="font-mono text-xs font-bold text-[#00F076]">${pts} pts</span>
+            <div class="surface-inset flex justify-between items-center px-4 py-3.5 rounded-xl">
+              <span class="text-xs font-semibold text-main"><b class="${rankColor} font-mono mr-3">#${idx + 1}</b>@${uname}</span>
+              <span class="font-mono text-xs font-bold text-[#477B57]">${pts} pts</span>
             </div>
           `;
         }).join('');
@@ -1723,7 +1875,7 @@
           const { data, error } = await sb.from('matches').select('*').eq('user_id', state.user.id).eq('status', 'completed').order('created_at', { ascending: false }).limit(15);
           if (error) throw error;
           if (!data || data.length === 0) {
-            container.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Todavía no registraste conquistas.</p>`;
+            container.innerHTML = `<p class="text-xs text-muted text-center py-4">Todavía no registraste conquistas.</p>`;
             return;
           }
           container.innerHTML = data.map(m => {
@@ -1731,17 +1883,17 @@
             const dist = m.distance_meters ? `${(m.distance_meters / 1000).toFixed(2)} km` : 'Ruta';
             const pts = m.points_earned || 100;
             return `
-              <div class="flex items-center justify-between bg-[#07090E] px-4 py-3 rounded-xl border border-white/[0.05]">
+              <div class="surface-inset flex items-center justify-between px-4 py-3 rounded-xl">
                 <div>
-                  <p class="text-xs font-semibold text-slate-200">Bandera conquistada • ${escapeHTML(dist)}</p>
-                  <p class="text-[11px] text-slate-500 mt-0.5">${escapeHTML(dateStr)}</p>
+                  <p class="text-xs font-semibold text-main">Bandera conquistada • ${escapeHTML(dist)}</p>
+                  <p class="text-[11px] text-muted mt-0.5">${escapeHTML(dateStr)}</p>
                 </div>
-                <span class="font-mono text-xs font-bold text-[#00F076]">+${pts} pts</span>
+                <span class="font-mono text-xs font-bold text-[#477B57]">+${pts} pts</span>
               </div>
             `;
           }).join('');
         } catch (_) {
-          container.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">No se pudo cargar el historial.</p>`;
+          container.innerHTML = `<p class="text-xs text-muted text-center py-4">No se pudo cargar el historial.</p>`;
         }
       }
 
@@ -1788,9 +1940,9 @@
         btn.addEventListener('click', () => {
           state.category = btn.dataset.cat;
           document.querySelectorAll('#categoryGroup .cat-btn').forEach(b => {
-            b.className = 'cat-btn bg-[#07090E] border border-white/[0.07] text-slate-300 font-semibold py-2.5 px-2 rounded-xl text-xs btn-press';
+            b.className = 'cat-btn btn-choice-inactive font-semibold py-2.5 px-2 rounded-xl text-xs btn-press';
           });
-          btn.className = 'cat-btn bg-[#00F076] text-[#07090E] font-bold py-2.5 px-2 rounded-xl text-xs btn-press shadow-sm';
+          btn.className = 'cat-btn bg-[#FF7900] text-white font-bold py-2.5 px-2 rounded-xl text-xs btn-press shadow-sm';
         });
       });
 
@@ -1798,9 +1950,9 @@
         btn.addEventListener('click', () => {
           state.distance = btn.dataset.dist;
           document.querySelectorAll('#distanceGroup .dist-btn').forEach(b => {
-            b.className = 'dist-btn bg-[#07090E] border border-white/[0.07] text-slate-300 font-semibold py-2.5 rounded-xl text-xs btn-press';
+            b.className = 'dist-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press';
           });
-          btn.className = 'dist-btn bg-[#00F076] text-[#07090E] font-bold py-2.5 rounded-xl text-xs btn-press shadow-sm';
+          btn.className = 'dist-btn bg-[#FF7900] text-white font-bold py-2.5 rounded-xl text-xs btn-press shadow-sm';
         });
       });
 
@@ -1808,9 +1960,9 @@
         btn.addEventListener('click', () => {
           state.mode = btn.dataset.mode;
           document.querySelectorAll('#modeGroup .mode-btn').forEach(b => {
-            b.className = 'mode-btn bg-[#07090E] border border-white/[0.07] text-slate-300 font-semibold py-2.5 rounded-xl text-xs btn-press';
+            b.className = 'mode-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press';
           });
-          btn.className = 'mode-btn bg-[#00F076]/10 border border-[#00F076]/50 text-[#00F076] font-bold py-2.5 rounded-xl text-xs btn-press';
+          btn.className = 'mode-btn bg-[#FF7900]/15 border border-[#FF7900] text-[#FF7900] font-bold py-2.5 rounded-xl text-xs btn-press';
           const isDuel = state.mode === 'live_duel';
           document.getElementById('duelJoinBox').classList.toggle('hidden', !isDuel);
           document.getElementById('btnGenerateFlag').textContent = isDuel ? "Crear sala de duelo" : "Generar bandera en ruta";
@@ -1880,9 +2032,9 @@
       document.querySelectorAll('#rankingFilterGroup .rank-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           document.querySelectorAll('#rankingFilterGroup .rank-btn').forEach(b => {
-            b.className = 'rank-btn bg-[#07090E] border border-white/[0.07] text-slate-300 py-2.5 rounded-xl text-xs font-semibold btn-press';
+            b.className = 'rank-btn btn-choice-inactive py-2.5 rounded-xl text-xs font-semibold btn-press';
           });
-          btn.className = 'rank-btn bg-[#00F076] text-[#07090E] py-2.5 rounded-xl text-xs font-bold btn-press shadow-sm';
+          btn.className = 'rank-btn bg-[#FF7900] text-white py-2.5 rounded-xl text-xs font-bold btn-press shadow-sm';
           loadRankings(btn.dataset.rank);
         });
       });
@@ -1892,10 +2044,10 @@
           const tab = btn.dataset.tab;
           ['Play', 'Clubs', 'Rankings', 'Profile'].forEach(t => document.getElementById('tab' + t).classList.add('hidden'));
           document.querySelectorAll('#bottomNav .nav-btn').forEach(b => {
-            b.className = 'nav-btn py-3.5 flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-white';
+            b.className = 'nav-btn py-3.5 flex flex-col items-center justify-center gap-1 text-muted hover:text-main';
           });
           document.getElementById('tab' + tab).classList.remove('hidden');
-          btn.className = 'nav-btn py-3.5 flex flex-col items-center justify-center gap-1 text-[#00F076]';
+          btn.className = 'nav-btn py-3.5 flex flex-col items-center justify-center gap-1 text-[#FF7900]';
 
           if (tab === 'Play' && state.map) setTimeout(() => state.map.invalidateSize(), 150);
           if (tab === 'Clubs') loadMyClub();
