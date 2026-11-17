@@ -149,13 +149,13 @@
         </div>
     </header>
 
-    <!-- VISTA DE AUTENTICACIÓN (LOGIN / REGISTRO) -->
+    <!-- VISTA DE AUTENTICACIÓN (LOGIN CON USUARIO O CORREO / REGISTRO) -->
     <section id="auth-view" class="flex-1 flex flex-col justify-center p-5 max-w-md w-full mx-auto">
         <div class="bg-theme-panel border border-theme-border rounded-2xl p-6 shadow-sm">
             <div class="mb-5">
                 <span class="inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded bg-brandOrange-bg text-[#202820] border border-brandOrange-soft mb-2">Acceso Jugadores</span>
-                <h2 class="text-lg font-extrabold text-theme-text">Entrá a la competencia</h2>
-                <p class="text-xs text-theme-textSec mt-0.5">Gestioná tu recorrido, club y conquistas territoriales.</p>
+                <h2 id="auth-heading" class="text-lg font-extrabold text-theme-text">Bienvenido de nuevo</h2>
+                <p id="auth-subheading" class="text-xs text-theme-textSec mt-0.5">Ingresá con tu usuario o correo electrónico.</p>
             </div>
 
             <div class="flex bg-theme-panelSec p-1 rounded-xl mb-5 border border-theme-border">
@@ -164,14 +164,18 @@
             </div>
 
             <form id="auth-form" onsubmit="manejarAuth(event)" class="space-y-4">
-                <div id="username-field" class="hidden">
+                <!-- Campo exclusivo para Registro -->
+                <div id="register-username-field" class="hidden">
                     <label class="block text-xs font-semibold text-theme-text mb-1">Nombre de Jugador (Usuario)</label>
-                    <input type="text" id="auth-username" placeholder="Ej: GhostRunner_99" class="w-full bg-theme-bg border border-theme-border text-theme-text rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-brandGreen-mid">
+                    <input type="text" id="reg-username" placeholder="Ej: chachi2k" class="w-full bg-theme-bg border border-theme-border text-theme-text rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-brandGreen-mid">
                 </div>
+
+                <!-- Campo adaptable: Usuario o Correo en Login / Correo en Registro -->
                 <div>
-                    <label class="block text-xs font-semibold text-theme-text mb-1">Correo electrónico</label>
-                    <input type="email" id="auth-email" required placeholder="jugador@correo.com" class="w-full bg-theme-bg border border-theme-border text-theme-text rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-brandGreen-mid">
+                    <label id="identifier-label" class="block text-xs font-semibold text-theme-text mb-1">Usuario o correo electrónico</label>
+                    <input type="text" id="auth-identifier" required placeholder="chachi2k o jugador@correo.com" class="w-full bg-theme-bg border border-theme-border text-theme-text rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-brandGreen-mid">
                 </div>
+
                 <div>
                     <label class="block text-xs font-semibold text-theme-text mb-1">Contraseña</label>
                     <input type="password" id="auth-password" required placeholder="••••••••" class="w-full bg-theme-bg border border-theme-border text-theme-text rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-brandGreen-mid">
@@ -367,58 +371,111 @@
         });
 
         // ==========================================
-        // 3. AUTENTICACIÓN
+        // 3. AUTENTICACIÓN (SOPORTE USUARIO Y CORREO)
         // ==========================================
         function switchAuthTab(mode) {
             authMode = mode;
             const tabLogin = document.getElementById('tab-login');
             const tabRegister = document.getElementById('tab-register');
-            const userField = document.getElementById('username-field');
+            const regUserField = document.getElementById('register-username-field');
+            const idLabel = document.getElementById('identifier-label');
+            const idInput = document.getElementById('auth-identifier');
+            const heading = document.getElementById('auth-heading');
+            const subheading = document.getElementById('auth-subheading');
             const errorBox = document.getElementById('auth-error');
             errorBox.classList.add('hidden');
 
             if (mode === 'login') {
                 tabLogin.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-brandOrange text-[#202820] transition';
                 tabRegister.className = 'flex-1 py-2 text-xs font-bold rounded-lg text-theme-textSec hover:text-theme-text transition';
-                userField.classList.add('hidden');
+                regUserField.classList.add('hidden');
+                heading.innerText = 'Bienvenido de nuevo';
+                subheading.innerText = 'Ingresá con tu usuario o correo electrónico.';
+                idLabel.innerText = 'Usuario o correo electrónico';
+                idInput.type = 'text';
+                idInput.placeholder = 'chachi2k o jugador@correo.com';
             } else {
                 tabRegister.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-brandOrange text-[#202820] transition';
                 tabLogin.className = 'flex-1 py-2 text-xs font-bold rounded-lg text-theme-textSec hover:text-theme-text transition';
-                userField.classList.remove('hidden');
+                regUserField.classList.remove('hidden');
+                heading.innerText = 'Creá tu cuenta';
+                subheading.innerText = 'Elegí tu nombre de usuario y correo.';
+                idLabel.innerText = 'Correo electrónico';
+                idInput.type = 'email';
+                idInput.placeholder = 'jugador@correo.com';
             }
         }
 
         async function manejarAuth(e) {
             e.preventDefault();
-            const email = document.getElementById('auth-email').value.trim();
+            const identifier = document.getElementById('auth-identifier').value.trim();
             const password = document.getElementById('auth-password').value;
-            const username = document.getElementById('auth-username').value.trim();
+            const regUsername = document.getElementById('reg-username').value.trim();
             const errorBox = document.getElementById('auth-error');
+            const submitBtn = document.getElementById('auth-submit-btn');
             errorBox.classList.add('hidden');
 
+            // Modo prueba local si aún no se configuraron claves de Supabase
             if (!supabaseClient) {
-                iniciarAppConUsuario({ id: 'local-user-1', email: email, user_metadata: { username: username || email.split('@')[0] } });
+                const display = identifier.includes('@') ? identifier.split('@')[0] : identifier;
+                iniciarAppConUsuario({ id: 'local-user-1', email: identifier, user_metadata: { username: regUsername || display } });
                 return;
             }
 
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Verificando...';
+
             try {
                 if (authMode === 'register') {
-                    if (!username) throw new Error('Ingresá un nombre de usuario.');
+                    if (!regUsername) throw new Error('Ingresá un nombre de usuario.');
+                    if (!identifier.includes('@')) throw new Error('Ingresá un correo electrónico válido.');
+
                     const { data, error } = await supabaseClient.auth.signUp({
-                        email,
+                        email: identifier,
                         password,
-                        options: { data: { username } }
+                        options: { data: { username: regUsername } }
                     });
                     if (error) throw error;
-                    if (data.user) iniciarAppConUsuario(data.user);
+
+                    // Guardar también en la tabla profiles por respaldo directo
+                    if (data.user) {
+                        await supabaseClient.from('profiles').upsert({
+                            id: data.user.id,
+                            username: regUsername,
+                            email: identifier
+                        });
+                        iniciarAppConUsuario(data.user);
+                    }
                 } else {
-                    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-                    if (error) throw error;
+                    let emailToUse = identifier;
+
+                    // Si el usuario ingresó un nombre de usuario (sin @), buscamos su correo en profiles
+                    if (!identifier.includes('@')) {
+                        const { data: profileData, error: profileError } = await supabaseClient
+                            .from('profiles')
+                            .select('email')
+                            .ilike('username', identifier)
+                            .maybeSingle();
+
+                        if (profileError || !profileData) {
+                            throw new Error('Usuario o clave incorrectos.');
+                        }
+                        emailToUse = profileData.email;
+                    }
+
+                    const { data, error } = await supabaseClient.auth.signInWithPassword({
+                        email: emailToUse,
+                        password
+                    });
+                    if (error) throw new Error('Usuario o clave incorrectos.');
                     if (data.user) iniciarAppConUsuario(data.user);
                 }
             } catch (err) {
-                errorBox.innerText = err.message || 'Error al autenticar.';
+                errorBox.innerText = err.message || 'Usuario o clave incorrectos.';
                 errorBox.classList.remove('hidden');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Continuar';
             }
         }
 
