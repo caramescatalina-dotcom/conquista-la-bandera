@@ -1,1339 +1,598 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#0B0F17" />
-  <title>Conquista la Bandera</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg-base: #0B0F17;
-      --bg-surface: #121826;
-      --border-subtle: rgba(255, 255, 255, 0.08);
-      --accent: #10B981;
-    }
-    * { -webkit-tap-highlight-color: transparent; }
-    body {
-      background-color: var(--bg-base);
-      color: #F1F5F9;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
-    }
-    .font-display { font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.02em; }
-    #map { height: 46vh; width: 100%; border-radius: 16px; z-index: 10; border: 1px solid var(--border-subtle); }
-    .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(93%) contrast(96%); }
-    .leaflet-control-attribution { display: none; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Conquista la Bandera</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandOrange: {
+                            DEFAULT: '#FF7900',
+                            hover: '#E96800',
+                            soft: '#FFB36B',
+                            bg: '#FFF0E2'
+                        },
+                        brandGreen: {
+                            dark: '#244B37',
+                            mid: '#477B57',
+                            light: '#75C894',
+                            soft: '#A4C9A9'
+                        },
+                        theme: {
+                            bg: 'var(--bg-general)',
+                            panel: 'var(--bg-panel)',
+                            panelSec: 'var(--bg-panel-sec)',
+                            text: 'var(--text-main)',
+                            textSec: 'var(--text-sec)',
+                            border: 'var(--border-color)'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 
-    .surface-card {
-      background-color: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
-    }
-    .btn-press { transition: transform 0.12s ease, background-color 0.15s ease, border-color 0.15s ease; }
-    .btn-press:active { transform: scale(0.98); }
+    <!-- Leaflet CSS & JS (Mapas) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    @keyframes pulseRing {
-      0% { transform: scale(0.75); opacity: 0.85; }
-      100% { transform: scale(2.1); opacity: 0; }
-    }
-    .sonar-ring { animation: pulseRing var(--pulse-speed, 2s) cubic-bezier(0.16, 1, 0.3, 1) infinite; }
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    @keyframes flagHover {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-10px); }
-    }
-    .ar-flag-float { animation: flagHover 2.8s ease-in-out infinite; }
+    <style>
+        /* VARIABLES DE IDENTIDAD VISUAL - MODO CLARO (DEFAULT) */
+        :root {
+            --bg-general: #F4F2EB;
+            --bg-panel: #FFFFFF;
+            --bg-panel-sec: #E9E8DF;
+            --text-main: #202820;
+            --text-sec: #777D75;
+            --border-color: #DFE1D8;
+            --map-filter: saturate(0.85) contrast(0.98);
+        }
 
-    .gps-beacon {
-      width: 16px; height: 16px;
-      background: #10B981;
-      border: 2.5px solid #FFFFFF;
-      border-radius: 50%;
-      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.6);
-      position: relative;
-    }
-    .gps-beacon::after {
-      content: '';
-      position: absolute;
-      inset: -9px;
-      border-radius: 50%;
-      border: 1.5px solid #10B981;
-      animation: pulseRing 2.2s infinite;
-    }
-    .progress-fill { transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
-  </style>
+        /* VARIABLES DE IDENTIDAD VISUAL - MODO OSCURO */
+        [data-theme="dark"] {
+            --bg-general: #171D1A;
+            --bg-panel: #222B26;
+            --bg-panel-sec: #2C3730;
+            --text-main: #F2F1E9;
+            --text-sec: #AAB5AC;
+            --border-color: #354139;
+            --map-filter: invert(92%) hue-rotate(180deg) brightness(92%) contrast(90%) saturate(0.75);
+        }
+
+        body {
+            background-color: var(--bg-general);
+            color: var(--text-main);
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+            z-index: 1;
+            filter: var(--map-filter);
+            transition: filter 0.25s ease;
+        }
+
+        .leaflet-control-attribution {
+            display: none !important;
+        }
+    </style>
+
+    <!-- Script temprano para evitar destello de tema al cargar -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('clb_theme_pref') || 'auto';
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const effectiveTheme = savedTheme === 'auto' ? (prefersDark ? 'dark' : 'light') : savedTheme;
+            document.documentElement.setAttribute('data-theme', effectiveTheme);
+        })();
+    </script>
 </head>
-<body class="min-h-screen flex flex-col justify-between pb-24">
+<body class="font-sans min-h-screen flex flex-col select-none">
 
-  <!-- SISTEMA DE NOTIFICACIONES TOAST -->
-  <div id="toastContainer" class="fixed top-16 inset-x-4 z-50 max-w-md mx-auto pointer-events-none flex flex-col gap-2"></div>
-
-  <!-- HEADER -->
-  <header class="px-4 py-3.5 bg-[#0B0F17]/90 border-b border-white/[0.07] flex justify-between items-center sticky top-0 z-30 backdrop-blur-md">
-    <div class="flex items-center gap-2.5">
-      <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400">
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 21V4m0 0l11 3-3 5 3 5-11-3" />
-        </svg>
-      </div>
-      <div>
-        <h1 class="font-display font-bold text-base leading-none text-white">Conquista la Bandera</h1>
-        <div class="flex items-center gap-2 mt-1">
-          <span id="userLeagueBadge" class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">División Inicial</span>
-          <span id="streakBadge" class="hidden items-center gap-1 text-[10px] font-semibold text-amber-400">
-            <span>•</span>
-            <span id="streakCount">1</span> días seguidos
-          </span>
+    <!-- PANTALLA DE CARGA (SPLASH SCREEN) -->
+    <div id="splash-screen" class="fixed inset-0 z-50 bg-theme-bg flex flex-col items-center justify-center transition-opacity duration-400">
+        <div class="w-20 h-20 rounded-2xl bg-brandGreen-dark border border-brandGreen-mid flex items-center justify-center mb-5 shadow-sm">
+            <svg class="w-11 h-11 text-[#F2F1E9]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+                <line x1="4" y1="22" x2="4" y2="15"></line>
+            </svg>
         </div>
-      </div>
+        <h1 class="text-lg font-black tracking-wider text-theme-text">CONQUISTA <span class="text-brandGreen-mid">LA BANDERA</span></h1>
+        <p class="text-xs text-theme-textSec mt-1.5 tracking-widest uppercase font-medium">Preparando sector deportivo...</p>
     </div>
 
-    <div class="flex items-center gap-2">
-      <button id="btnSoundToggle" aria-label="Alternar audio" class="p-2 rounded-lg bg-[#121826] border border-white/[0.08] text-slate-300 hover:text-white btn-press">
-        <svg id="iconSoundOn" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 010 7.07"/></svg>
-        <svg id="iconSoundOff" class="w-4 h-4 hidden text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/></svg>
-      </button>
-      <div id="userBadge" class="hidden items-center gap-2.5 bg-[#121826] border border-white/[0.08] px-3 py-1.5 rounded-lg text-xs">
-        <span id="headerUsername" class="font-medium text-slate-200">@jugador</span>
-        <button id="btnLogout" class="text-slate-400 hover:text-rose-400 text-[11px] font-medium transition">Salir</button>
-      </div>
-    </div>
-  </header>
-
-  <!-- PANTALLA DE ACCESO -->
-  <main id="authScreen" class="p-5 max-w-md mx-auto w-full my-auto">
-    <div class="surface-card p-6 rounded-2xl space-y-5">
-      <div id="authTabs" class="grid grid-cols-2 gap-1 bg-[#0B0F17] p-1 rounded-xl border border-white/[0.06]">
-        <button id="tabBtnLogin" class="bg-emerald-500 text-slate-950 font-semibold py-2 rounded-lg text-xs transition">Iniciar sesión</button>
-        <button id="tabBtnSignup" class="text-slate-400 hover:text-white font-semibold py-2 rounded-lg text-xs transition">Crear cuenta</button>
-      </div>
-
-      <!-- LOGIN -->
-      <form id="loginFormView" class="space-y-4" onsubmit="return false;">
-        <div>
-          <h2 class="font-display text-xl font-bold text-white">Bienvenido de nuevo</h2>
-          <p class="text-xs text-slate-400 mt-1">Ingresá con tu nombre de usuario y clave.</p>
-        </div>
-        <div>
-          <label for="loginUsername" class="text-xs font-medium text-slate-300">Usuario</label>
-          <input id="loginUsername" type="text" autocomplete="username" placeholder="tu_usuario" class="w-full mt-1.5 px-3.5 py-2.5 rounded-xl bg-[#0B0F17] border border-white/[0.1] text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500" />
-        </div>
-        <div>
-          <label for="loginPassword" class="text-xs font-medium text-slate-300">Clave</label>
-          <input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••••" class="w-full mt-1.5 px-3.5 py-2.5 rounded-xl bg-[#0B0F17] border border-white/[0.1] text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500" />
-        </div>
-        <button id="btnLogin" type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold py-3 rounded-xl text-sm btn-press">
-          Continuar
-        </button>
-      </form>
-
-      <!-- REGISTRO -->
-      <form id="signupFormView" class="hidden space-y-4" onsubmit="return false;">
-        <div>
-          <h2 class="font-display text-xl font-bold text-white">Crear cuenta</h2>
-          <p class="text-xs text-slate-400 mt-1">Te enviaremos un enlace de confirmación a tu correo.</p>
-        </div>
-        <div>
-          <label for="regUsername" class="text-xs font-medium text-slate-300">Nombre de usuario</label>
-          <input id="regUsername" type="text" autocomplete="off" placeholder="ej. chachi.run" class="w-full mt-1.5 px-3.5 py-2.5 rounded-xl bg-[#0B0F17] border border-white/[0.1] text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500" />
-          <p class="text-[11px] text-slate-500 mt-1">Solo letras minúsculas, números, puntos o guiones bajos.</p>
-        </div>
-        <div>
-          <label for="regEmail" class="text-xs font-medium text-slate-300">Correo electrónico</label>
-          <input id="regEmail" type="email" autocomplete="email" placeholder="nombre@gmail.com" class="w-full mt-1.5 px-3.5 py-2.5 rounded-xl bg-[#0B0F17] border border-white/[0.1] text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500" />
-        </div>
-        <div>
-          <label for="regPassword" class="text-xs font-medium text-slate-300">Clave</label>
-          <input id="regPassword" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres" class="w-full mt-1.5 px-3.5 py-2.5 rounded-xl bg-[#0B0F17] border border-white/[0.1] text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500" />
-          <p class="text-[11px] text-slate-500 mt-1">Debe incluir al menos una mayúscula y un número (símbolos opcionales).</p>
-        </div>
-        <button id="btnSignup" type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold py-3 rounded-xl text-sm btn-press">
-          Registrarme
-        </button>
-      </form>
-
-      <!-- CONFIRMACIÓN POR EMAIL -->
-      <div id="otpVerifyView" class="hidden space-y-4 py-2">
-        <div class="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400">
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        </div>
-        <div>
-          <h2 class="font-display text-lg font-bold text-white">Revisá tu bandeja de entrada</h2>
-          <p class="text-xs text-slate-400 mt-1 leading-relaxed">
-            Enviamos un correo de verificación a <span id="otpTargetEmail" class="text-slate-200 font-medium"></span>. Abrilo y tocá el enlace de confirmación para activar tu cuenta.
-          </p>
-        </div>
-        <button id="btnCancelOtp" class="text-xs font-medium text-slate-400 hover:text-white transition">← Usar otro correo</button>
-      </div>
-
-      <p id="authError" class="text-xs text-rose-400 hidden bg-rose-500/10 border border-rose-500/20 px-3 py-2.5 rounded-xl"></p>
-    </div>
-  </main>
-
-  <!-- INTERFAZ PRINCIPAL -->
-  <div id="appContainer" class="hidden max-w-lg mx-auto w-full p-4 space-y-4">
-    
-    <!-- DESAFÍO TEMPORAL X3 -->
-    <div id="flashBanner" class="surface-card border-amber-500/25 p-3.5 rounded-2xl flex items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400">Desafío x3 Puntos</span>
-            <span id="flashTimer" class="text-[11px] font-mono text-slate-400">44:59</span>
-          </div>
-          <p class="text-xs text-slate-200 mt-0.5">Bandera especial activa en tu radio</p>
-        </div>
-      </div>
-      <button id="btnFlashEvent" class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-semibold text-xs px-3 py-2 rounded-xl shrink-0 btn-press">
-        Aceptar
-      </button>
-    </div>
-
-    <!-- PESTAÑA MAPA -->
-    <section id="tabPlay" class="space-y-4">
-      <div id="setupPanel" class="surface-card p-4 rounded-2xl space-y-3.5">
-        <div class="grid grid-cols-3 gap-2" id="categoryGroup">
-          <button data-cat="walk_run" class="cat-btn bg-emerald-500 text-slate-950 font-semibold py-2.5 px-2 rounded-xl text-xs btn-press">A pie / Run</button>
-          <button data-cat="bike" class="cat-btn bg-[#0B0F17] border border-white/[0.07] text-slate-300 font-semibold py-2.5 px-2 rounded-xl text-xs btn-press">Bicicleta</button>
-          <button data-cat="mixed" class="cat-btn bg-[#0B0F17] border border-white/[0.07] text-slate-300 font-semibold py-2.5 px-2 rounded-xl text-xs btn-press">Mixto</button>
-        </div>
-
-        <div class="grid grid-cols-4 gap-2" id="distanceGroup">
-          <button data-dist="1km" class="dist-btn bg-emerald-500 text-slate-950 font-semibold py-2 rounded-xl text-xs btn-press">1 km</button>
-          <button data-dist="3km" class="dist-btn bg-[#0B0F17] border border-white/[0.07] text-slate-300 font-semibold py-2 rounded-xl text-xs btn-press">3 km</button>
-          <button data-dist="5km" class="dist-btn bg-[#0B0F17] border border-white/[0.07] text-slate-300 font-semibold py-2 rounded-xl text-xs btn-press">5 km</button>
-          <button data-dist="10km" class="dist-btn bg-[#0B0F17] border border-white/[0.07] text-slate-300 font-semibold py-2 rounded-xl text-xs btn-press">10 km</button>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2" id="modeGroup">
-          <button data-mode="async_record" class="mode-btn bg-emerald-500/15 border border-emerald-500/60 text-emerald-300 font-semibold py-2.5 rounded-xl text-xs btn-press">Contrarreloj</button>
-          <button data-mode="live_duel" class="mode-btn bg-[#0B0F17] border border-white/[0.07] text-slate-300 font-semibold py-2.5 rounded-xl text-xs btn-press">Duelo 1v1</button>
-        </div>
-
-        <div id="duelJoinBox" class="hidden bg-[#0B0F17] p-3 rounded-xl space-y-2 border border-white/[0.07]">
-          <p class="text-[11px] text-slate-400">¿Tenés un código de invitación de tu rival?</p>
-          <div class="flex gap-2">
-            <input id="duelCodeInput" type="text" maxlength="4" placeholder="Código (ej. K9P2)" class="uppercase flex-1 px-3 py-2 rounded-lg bg-[#121826] border border-white/[0.1] text-xs font-mono text-white" />
-            <button id="btnJoinDuel" class="bg-slate-200 hover:bg-white text-slate-950 font-semibold px-3.5 py-2 rounded-lg text-xs btn-press">Unirme</button>
-          </div>
-        </div>
-
-        <button id="btnGenerateFlag" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold py-3.5 rounded-xl text-sm btn-press">
-          Generar bandera en ruta
-        </button>
-      </div>
-
-      <!-- HUD PARTIDA ACTIVA -->
-      <div id="activeHud" class="hidden surface-card border-emerald-500/30 p-4 rounded-2xl space-y-3.5">
-        <div id="duelWaitingBanner" class="hidden bg-amber-500/10 border border-amber-500/25 p-3 rounded-xl flex justify-between items-center">
-          <div>
-            <p class="text-xs font-semibold text-amber-300">Esperando a tu rival</p>
-            <p class="text-[11px] text-slate-400">Compartí este código de sala:</p>
-          </div>
-          <span id="displayDuelCode" class="font-mono font-bold text-lg text-amber-400 tracking-widest bg-[#0B0F17] px-3 py-1 rounded-lg border border-white/[0.08]">----</span>
-        </div>
-
-        <div class="space-y-2.5 bg-[#0B0F17] p-3 rounded-xl border border-white/[0.06]">
-          <div>
-            <div class="flex justify-between text-[11px] font-medium mb-1">
-              <span class="text-slate-300">Tu recorrido</span>
-              <span id="myProgressPct" class="text-emerald-400 font-mono">0%</span>
-            </div>
-            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-              <div id="myProgressBar" class="progress-fill bg-emerald-400 h-full rounded-full" style="width: 2%"></div>
-            </div>
-          </div>
-
-          <div id="rivalProgressContainer" class="hidden">
-            <div class="flex justify-between text-[11px] font-medium mb-1">
-              <span class="text-slate-300">Rival</span>
-              <span id="rivalProgressPct" class="text-rose-400 font-mono">0%</span>
-            </div>
-            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-              <div id="rivalProgressBar" class="progress-fill bg-rose-500 h-full rounded-full" style="width: 2%"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex justify-between items-center bg-[#0B0F17] p-3 rounded-xl border border-white/[0.06]">
-          <div class="flex items-center gap-3">
-            <div class="relative w-9 h-9 flex items-center justify-center">
-              <div id="sonarRing" class="sonar-ring absolute inset-0 rounded-full border border-emerald-400" style="--pulse-speed: 2s"></div>
-              <div class="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
+    <!-- HEADER SUPERIOR -->
+    <header class="px-4 py-3 border-b border-theme-border flex justify-between items-center bg-theme-panel z-20">
+        <div class="flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded-lg bg-brandGreen-dark flex items-center justify-center text-[#F2F1E9]">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+                    <line x1="4" y1="22" x2="4" y2="15"></line>
+                </svg>
             </div>
             <div>
-              <p class="text-[11px] text-slate-400" id="hudDistanceLabel">Distancia total: -- m</p>
-              <p class="text-xs font-medium text-slate-200" id="sonarStatusText">Rastreando ubicación</p>
+                <h1 class="font-extrabold tracking-tight text-xs leading-none text-theme-text">
+                    CONQUISTA <span class="text-brandGreen-mid">LA BANDERA</span>
+                </h1>
+                <span id="user-display-header" class="text-[11px] text-theme-textSec font-medium">Sin sesión activa</span>
             </div>
-          </div>
-          <div class="text-right">
-            <span class="text-[10px] text-slate-400 block">Restante</span>
-            <span class="font-display text-xl font-bold text-white" id="hudRemaining">-- m</span>
-          </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-2">
-          <button id="btnOpenAR" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold py-3 rounded-xl text-xs btn-press">
-            Abrir cámara AR
-          </button>
-          <button id="btnSimulate" class="bg-[#0B0F17] hover:bg-slate-800 text-slate-300 font-medium py-3 rounded-xl text-xs border border-white/[0.08] btn-press">
-            Simular llegada
-          </button>
-        </div>
-      </div>
+        <div class="flex items-center space-x-2">
+            <!-- SELECTOR DE APARIENCIA (3 OPCIONES) -->
+            <div class="flex items-center bg-theme-panelSec border border-theme-border rounded-lg p-0.5" title="Apariencia">
+                <button onclick="setThemePreference('light')" id="theme-btn-light" class="p-1.5 rounded-md text-theme-textSec hover:text-theme-text transition" aria-label="Modo claro">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                </button>
+                <button onclick="setThemePreference('auto')" id="theme-btn-auto" class="px-1.5 py-1 rounded-md text-[10px] font-bold text-theme-textSec hover:text-theme-text transition" aria-label="Automático">
+                    AUTO
+                </button>
+                <button onclick="setThemePreference('dark')" id="theme-btn-dark" class="p-1.5 rounded-md text-theme-textSec hover:text-theme-text transition" aria-label="Modo oscuro">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                </button>
+            </div>
 
-      <!-- MAPA -->
-      <div class="relative">
-        <div id="map"></div>
-        <div id="gpsStatus" class="absolute bottom-3 left-3 z-20 bg-[#0B0F17]/90 backdrop-blur px-3 py-1.5 rounded-full text-[11px] text-slate-300 border border-white/[0.08] flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-          <span>Buscando señal GPS...</span>
+            <span id="env-badge" class="text-[10px] font-bold px-2 py-1 rounded bg-theme-panelSec text-theme-textSec border border-theme-border">PROD</span>
+            <button id="btn-logout" onclick="cerrarSesion()" class="hidden text-xs font-semibold text-theme-textSec hover:text-theme-text px-2.5 py-1 rounded-lg bg-theme-panelSec border border-theme-border">Salir</button>
         </div>
-        <div class="absolute top-3 right-3 z-20 bg-[#0B0F17]/85 backdrop-blur px-2.5 py-1 rounded-lg text-[10px] text-slate-400 border border-white/[0.08] flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
-          <span>Zona de club</span>
+    </header>
+
+    <!-- VISTA DE AUTENTICACIÓN (LOGIN / REGISTRO) -->
+    <section id="auth-view" class="flex-1 flex flex-col justify-center p-5 max-w-md w-full mx-auto">
+        <div class="bg-theme-panel border border-theme-border rounded-2xl p-6 shadow-sm">
+            <div class="mb-5">
+                <span class="inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded bg-brandOrange-bg text-[#202820] border border-brandOrange-soft mb-2">Acceso Jugadores</span>
+                <h2 class="text-lg font-extrabold text-theme-text">Entrá a la competencia</h2>
+                <p class="text-xs text-theme-textSec mt-0.5">Gestioná tu recorrido, club y conquistas territoriales.</p>
+            </div>
+
+            <div class="flex bg-theme-panelSec p-1 rounded-xl mb-5 border border-theme-border">
+                <button id="tab-login" onclick="switchAuthTab('login')" class="flex-1 py-2 text-xs font-bold rounded-lg bg-brandOrange text-[#202820] transition">Iniciar sesión</button>
+                <button id="tab-register" onclick="switchAuthTab('register')" class="flex-1 py-2 text-xs font-bold rounded-lg text-theme-textSec hover:text-theme-text transition">Crear cuenta</button>
+            </div>
+
+            <form id="auth-form" onsubmit="manejarAuth(event)" class="space-y-4">
+                <div id="username-field" class="hidden">
+                    <label class="block text-xs font-semibold text-theme-text mb-1">Nombre de Jugador (Usuario)</label>
+                    <input type="text" id="auth-username" placeholder="Ej: GhostRunner_99" class="w-full bg-theme-bg border border-theme-border text-theme-text rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-brandGreen-mid">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-theme-text mb-1">Correo electrónico</label>
+                    <input type="email" id="auth-email" required placeholder="jugador@correo.com" class="w-full bg-theme-bg border border-theme-border text-theme-text rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-brandGreen-mid">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-theme-text mb-1">Contraseña</label>
+                    <input type="password" id="auth-password" required placeholder="••••••••" class="w-full bg-theme-bg border border-theme-border text-theme-text rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-brandGreen-mid">
+                </div>
+
+                <div id="auth-error" class="hidden text-xs text-[#202820] bg-brandOrange-bg border border-brandOrange p-3 rounded-xl font-medium"></div>
+
+                <button type="submit" id="auth-submit-btn" class="w-full bg-brandOrange hover:bg-brandOrange-hover text-[#202820] font-extrabold py-3 rounded-xl text-sm transition">
+                    Continuar
+                </button>
+            </form>
         </div>
-      </div>
     </section>
 
-    <!-- PESTAÑA CLUBES -->
-    <section id="tabClubs" class="hidden space-y-4">
-      <div class="surface-card p-5 rounded-2xl space-y-4">
-        <div class="flex items-center justify-between">
-          <h2 class="font-display font-bold text-lg text-white">Club y Territorio</h2>
-          <span class="text-[11px] font-medium bg-[#0B0F17] text-slate-400 px-2.5 py-1 rounded-lg border border-white/[0.06]">Máx. 10 miembros</span>
-        </div>
+    <!-- VISTA PRINCIPAL DE LA APP (MAPA + SOCIAL + ANTICHEAT) -->
+    <main id="app-view" class="hidden flex-1 flex flex-col relative">
+        
+        <!-- PANEL SUPERIOR: CONTRINCANTE, DESAFÍO Y ESTADO GPS -->
+        <div class="p-3 z-10 bg-theme-bg">
+            <div class="bg-theme-panel border border-theme-border rounded-2xl p-3.5 max-w-md mx-auto shadow-sm">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-brandOrange-bg border border-brandOrange-soft flex items-center justify-center text-[#202820] font-black text-xs">
+                            VS
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-brandOrange uppercase tracking-wider block">Contrincante Activo</span>
+                            <h2 id="rival-username" class="text-sm font-extrabold text-theme-text">Buscando rival...</h2>
+                        </div>
+                    </div>
+                    <button id="btn-add-friend" onclick="enviarSolicitudAmistad()" class="bg-brandOrange hover:bg-brandOrange-hover text-[#202820] text-xs font-extrabold px-3.5 py-2 rounded-xl transition">
+                        + Agregar Amigo
+                    </button>
+                </div>
 
-        <div id="noClubView" class="space-y-4">
-          <div class="space-y-2">
-            <p class="text-xs text-slate-400">Unirse mediante código de invitación:</p>
-            <div class="flex gap-2">
-              <input id="joinCodeInput" type="text" maxlength="8" placeholder="EJ: A8F21C" class="uppercase flex-1 px-3.5 py-2.5 rounded-xl bg-[#0B0F17] border border-white/[0.1] text-sm font-mono text-white" />
-              <button id="btnJoinClub" class="bg-emerald-500 text-slate-950 font-semibold px-4 rounded-xl text-xs btn-press">Unirse</button>
+                <!-- BARRA DE INDICADORES DE PROGRESO Y ACTIVIDAD GPS (VERDE INSTITUCIONAL) -->
+                <div class="mt-3 pt-2.5 border-t border-theme-border flex justify-between items-center text-[11px] font-medium">
+                    <span id="anticheat-badge" class="text-brandGreen-mid flex items-center gap-1.5 font-semibold">
+                        <span class="w-2 h-2 rounded-full bg-brandGreen-mid inline-block"></span>
+                        GPS Verificado
+                    </span>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-[10px] px-2 py-0.5 rounded bg-theme-panelSec text-brandGreen-mid font-bold border border-theme-border">ACTIVIDAD ACTIVA</span>
+                        <span id="gps-speed-display" class="text-theme-textSec font-mono">0.0 km/h</span>
+                    </div>
+                </div>
             </div>
-          </div>
-          <hr class="border-white/[0.06]" />
-          <div class="space-y-2">
-            <p class="text-xs text-slate-400">O creá un club nuevo para competir en grupo:</p>
-            <input id="newClubName" type="text" maxlength="30" placeholder="Nombre del club" class="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0F17] border border-white/[0.1] text-sm text-white" />
-            <button id="btnCreateClub" class="w-full bg-[#0B0F17] hover:bg-slate-800 text-white font-semibold py-3 rounded-xl text-xs border border-white/[0.1] btn-press">Crear club</button>
-          </div>
         </div>
 
-        <div id="myClubView" class="hidden space-y-3">
-          <div class="flex justify-between items-center bg-[#0B0F17] p-3.5 rounded-xl border border-white/[0.06]">
-            <div>
-              <h3 id="clubNameDisplay" class="font-display font-bold text-base text-white">--</h3>
-              <p class="text-xs text-slate-400 mt-0.5">Puntos acumulados: <span id="clubPointsDisplay" class="text-emerald-400 font-semibold">0</span></p>
+        <!-- CONTENEDOR DEL MAPA -->
+        <div class="flex-1 relative w-full min-h-[380px] border-t border-theme-border">
+            <div id="map"></div>
+
+            <!-- TARJETA FLOTANTE DE DESAFÍO / RECOMPENSA (NARANJA INSTITUCIONAL) -->
+            <div class="absolute top-3 left-3 right-3 z-10 max-w-md mx-auto pointer-events-none">
+                <div class="bg-theme-panel border border-theme-border rounded-xl px-3.5 py-2.5 flex items-center justify-between shadow-sm pointer-events-auto">
+                    <div class="flex items-center space-x-2.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-brandOrange"></span>
+                        <div>
+                            <p class="text-[11px] font-extrabold text-theme-text leading-tight">Desafío de Zona: Captura Rápida</p>
+                            <p class="text-[10px] text-theme-textSec">Recompensa: +150 pts de División</p>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-extrabold px-2 py-1 rounded-lg bg-brandOrange-bg text-[#202820] border border-brandOrange-soft">ACTIVO</span>
+                </div>
             </div>
-            <div class="text-right">
-              <span class="text-[10px] text-slate-500 block uppercase">Código</span>
-              <span id="clubCodeDisplay" class="font-mono font-bold text-slate-200 text-sm tracking-wider">------</span>
+
+            <!-- CONTROLES DE SIMULACIÓN (SOLO VISIBLES EN ?env=dev) -->
+            <div id="dev-controls" class="hidden absolute bottom-4 left-4 z-20 bg-theme-panel border border-theme-border p-3 rounded-xl shadow-sm space-y-2 max-w-[200px]">
+                <div class="text-[10px] font-extrabold text-brandOrange uppercase tracking-wider">Herramientas DEV</div>
+                <button onclick="simularMovimientoNormal()" class="w-full text-left text-[11px] font-semibold bg-theme-panelSec hover:opacity-90 px-2.5 py-1.5 rounded-lg text-brandGreen-mid border border-theme-border">
+                    ▶ Simular paso normal
+                </button>
+                <button onclick="simularTeletransporte()" class="w-full text-left text-[11px] font-semibold bg-brandOrange-bg hover:opacity-90 px-2.5 py-1.5 rounded-lg text-[#202820] border border-brandOrange-soft">
+                    ⚡ Simular salto GPS
+                </button>
             </div>
-          </div>
-          <div id="clubMembersList" class="space-y-2"></div>
         </div>
-      </div>
-    </section>
 
-    <!-- PESTAÑA RANKING -->
-    <section id="tabRankings" class="hidden space-y-4">
-      <div class="surface-card p-5 rounded-2xl space-y-4">
-        <h2 class="font-display font-bold text-lg text-white">Clasificación</h2>
-        <div class="grid grid-cols-3 gap-2" id="rankingFilterGroup">
-          <button data-rank="walk_run" class="rank-btn bg-emerald-500 text-slate-950 py-2 rounded-xl text-xs font-semibold btn-press">A pie / Run</button>
-          <button data-rank="bike" class="rank-btn bg-[#0B0F17] border border-white/[0.07] text-slate-300 py-2 rounded-xl text-xs font-semibold btn-press">Bicicleta</button>
-          <button data-rank="mixed" class="rank-btn bg-[#0B0F17] border border-white/[0.07] text-slate-300 py-2 rounded-xl text-xs font-semibold btn-press">Mixto</button>
+        <!-- BARRA DE NAVEGACIÓN INFERIOR -->
+        <nav class="bg-theme-panel border-t border-theme-border px-6 py-2.5 flex justify-around items-center z-20">
+            <button onclick="cambiarPestana('mapa')" class="flex flex-col items-center text-brandGreen-mid text-xs font-extrabold py-1 px-4 rounded-lg bg-theme-panelSec">
+                <span>Radar</span>
+            </button>
+            <button onclick="abrirModalAmigos()" class="flex flex-col items-center text-theme-textSec hover:text-theme-text text-xs font-bold py-1 px-4 rounded-lg relative transition">
+                <span>Amigos</span>
+                <span id="friend-req-dot" class="hidden absolute top-1 right-3 w-2 h-2 bg-brandOrange rounded-full"></span>
+            </button>
+        </nav>
+    </main>
+
+    <!-- MODAL LISTA DE AMIGOS Y SOLICITUDES -->
+    <div id="friends-modal" class="hidden fixed inset-0 z-40 bg-black/50 flex items-center justify-center p-4">
+        <div class="bg-theme-panel border border-theme-border rounded-2xl w-full max-w-md p-5 space-y-4 shadow-lg">
+            <div class="flex justify-between items-center border-b border-theme-border pb-3">
+                <div>
+                    <h3 class="font-extrabold text-sm tracking-tight text-theme-text">RED DE AMIGOS</h3>
+                    <p class="text-[11px] text-theme-textSec">Jugadores conectados y solicitudes</p>
+                </div>
+                <button onclick="cerrarModalAmigos()" class="w-7 h-7 rounded-lg bg-theme-panelSec text-theme-textSec hover:text-theme-text text-xs font-bold flex items-center justify-center">✕</button>
+            </div>
+            <div id="friends-list-container" class="space-y-2 max-h-60 overflow-y-auto text-xs">
+                <p class="text-theme-textSec text-center py-4">Cargando conexiones...</p>
+            </div>
+            <button onclick="cerrarModalAmigos()" class="w-full bg-brandOrange hover:bg-brandOrange-hover text-[#202820] font-extrabold py-2.5 rounded-xl text-xs transition">
+                Volver al mapa
+            </button>
         </div>
-        <div id="rankingList" class="space-y-2 text-sm"></div>
-      </div>
-    </section>
-  </div>
-
-  <!-- VISOR AR -->
-  <div id="arModal" class="hidden fixed inset-0 z-50 bg-black flex flex-col justify-between">
-    <video id="arVideo" autoplay playsinline class="absolute inset-0 w-full h-full object-cover opacity-85"></video>
-    
-    <div class="relative z-10 p-4 bg-gradient-to-b from-black/80 to-transparent flex justify-between items-center">
-      <span class="bg-[#0B0F17]/90 border border-white/15 text-slate-200 font-medium text-xs px-3 py-1.5 rounded-full">
-        Cámara AR • Verificá tu entorno
-      </span>
-      <button id="btnCloseAR" class="bg-[#0B0F17]/90 border border-white/15 text-white px-3.5 py-1.5 rounded-full text-xs font-medium">Cerrar</button>
     </div>
 
-    <div class="relative z-10 flex flex-col items-center justify-center my-auto pointer-events-none">
-      <div id="arFlagContainer" class="ar-flag-float transition-transform duration-150">
-        <svg class="w-32 h-32 drop-shadow-[0_8px_24px_rgba(16,185,129,0.65)]" viewBox="0 0 100 100" fill="none">
-          <line x1="25" y1="12" x2="25" y2="92" stroke="#F8FAFC" stroke-width="3.5" stroke-linecap="round"/>
-          <circle cx="25" cy="10" r="3.5" fill="#10B981"/>
-          <path d="M27 16 L82 28 L68 44 L82 60 L27 52 Z" fill="#10B981" stroke="#ECFDF5" stroke-width="1.5"/>
-        </svg>
-      </div>
-      <p class="mt-4 bg-[#0B0F17]/85 px-4 py-1.5 rounded-full text-xs font-medium text-slate-200 border border-white/10">
-        Detenete en un lugar seguro para registrar la captura
-      </p>
-    </div>
+    <script>
+        // ==========================================
+        // 0. GESTIÓN DE APARIENCIA (CLARO / OSCURO / AUTO)
+        // ==========================================
+        const mediaQueryDark = window.matchMedia('(prefers-color-scheme: dark)');
 
-    <div class="relative z-10 p-5 bg-gradient-to-t from-black/90 to-transparent">
-      <button id="btnConfirmCapture" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold py-4 rounded-2xl text-sm btn-press">
-        Confirmar captura
-      </button>
-    </div>
-  </div>
-
-  <!-- MODAL TARJETA DE RESULTADO COMPARTIBLE -->
-  <div id="victoryModal" class="hidden fixed inset-0 z-50 bg-[#0B0F17]/95 backdrop-blur-md flex flex-col items-center justify-center p-4 overflow-y-auto">
-    <div class="max-w-sm w-full space-y-4">
-      <div class="text-center">
-        <p class="text-xs font-medium text-emerald-400">Actividad registrada</p>
-        <h2 class="font-display text-xl font-bold text-white mt-0.5">Bandera conquistada</h2>
-      </div>
-
-      <div class="rounded-2xl overflow-hidden border border-white/10 bg-[#121826]">
-        <canvas id="victoryCanvas" width="600" height="740" class="w-full h-auto block"></canvas>
-      </div>
-
-      <div class="grid grid-cols-2 gap-3">
-        <button id="btnShareCard" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold py-3.5 rounded-xl text-xs flex items-center justify-center gap-1.5 btn-press">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
-          Compartir tarjeta
-        </button>
-        <button id="btnCloseVictory" class="bg-[#121826] hover:bg-slate-800 text-slate-200 font-semibold py-3.5 rounded-xl text-xs border border-white/[0.08] btn-press">
-          Listo
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- NAVEGACIÓN INFERIOR -->
-  <nav id="bottomNav" class="hidden fixed bottom-0 inset-x-0 bg-[#0B0F17]/95 border-t border-white/[0.07] backdrop-blur-md z-30">
-    <div class="max-w-lg mx-auto grid grid-cols-3">
-      <button data-tab="Play" class="nav-btn py-3 flex flex-col items-center justify-center gap-1 text-emerald-400">
-        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
-        <span class="text-[10px] font-medium">Mapa</span>
-      </button>
-      <button data-tab="Clubs" class="nav-btn py-3 flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-white">
-        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        <span class="text-[10px] font-medium">Club</span>
-      </button>
-      <button data-tab="Rankings" class="nav-btn py-3 flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-white">
-        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 9H4.5a2.5 2.5 0 010-5H6M18 9h1.5a2.5 2.5 0 000-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0012 0V2z"/></svg>
-        <span class="text-[10px] font-medium">Ranking</span>
-      </button>
-    </div>
-  </nav>
-
-  <script>
-    (() => {
-      'use strict';
-
-      const CONFIG = Object.freeze({
-        SUPABASE_URL: "https://jmshjdlfyszhcsnfrxbk.supabase.co",
-        SUPABASE_ANON_KEY: "sb_publishable_NduDZ8y0o35IUgrE8cvCdg_Wxz4HlW7",
-        USERNAME_REGEX: /^[a-z0-9._]{3,20}$/,
-        PASSWORD_REGEX: /^(?=.*[A-Z])(?=.*\d).{6,64}$/
-      });
-
-      const sb = (window.supabase && window.supabase.createClient)
-        ? window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY, {
-            auth: { persistSession: true, autoRefreshToken: true }
-          })
-        : null;
-
-      // Estado encapsulado (no accesible desde consola global)
-      const state = {
-        user: null,
-        map: null,
-        userMarker: null,
-        flagMarker: null,
-        routeLine: null,
-        territoryLayer: null,
-        userPos: { lat: -34.5615, lng: -58.4750 },
-        category: 'walk_run',
-        distance: '1km',
-        mode: 'async_record',
-        activeMatch: null,
-        isFlashEvent: false,
-        initialDistance: 1000,
-        recordedPath: [],
-        matchStartTime: null,
-        matchChannel: null,
-        soundEnabled: true,
-        lastVibrateTime: 0,
-        videoStream: null
-      };
-
-      // ==========================================
-      // UTILIDADES DE SEGURIDAD Y UI
-      // ==========================================
-      function escapeHTML(str) {
-        if (str === null || str === undefined) return '';
-        return String(str)
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#39;');
-      }
-
-      function notify(message, type = 'info') {
-        const container = document.getElementById('toastContainer');
-        const el = document.createElement('div');
-        const styles = {
-          info: 'bg-[#121826] border-white/15 text-slate-100',
-          success: 'bg-emerald-950/95 border-emerald-500/40 text-emerald-200',
-          error: 'bg-rose-950/95 border-rose-500/40 text-rose-200'
-        };
-        el.className = `px-4 py-3 rounded-xl border text-xs font-medium shadow-xl backdrop-blur-md transition-opacity duration-300 ${styles[type] || styles.info}`;
-        el.textContent = message;
-        container.appendChild(el);
-        setTimeout(() => {
-          el.style.opacity = '0';
-          setTimeout(() => el.remove(), 300);
-        }, 3600);
-      }
-
-      // ==========================================
-      // FEEDBACK SONORO SUTIL
-      // ==========================================
-      const AudioEngine = (() => {
-        let ctx = null;
-        function tone(freq, dur = 0.12, delay = 0) {
-          if (!state.soundEnabled) return;
-          try {
-            if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
-            if (ctx.state === 'suspended') ctx.resume();
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
-            gain.gain.setValueAtTime(0.08, ctx.currentTime + delay);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + dur);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start(ctx.currentTime + delay);
-            osc.stop(ctx.currentTime + delay + dur);
-          } catch (_) {}
-        }
-        return {
-          tap: () => tone(540, 0.08),
-          ping: () => tone(880, 0.07),
-          success: () => { tone(523.25, 0.12, 0); tone(659.25, 0.12, 0.1); tone(783.99, 0.25, 0.2); }
-        };
-      })();
-
-      // ==========================================
-      // TEMPORIZADOR EVENTO X3
-      // ==========================================
-      let flashSeconds = 44 * 60 + 59;
-      setInterval(() => {
-        if (flashSeconds > 0) flashSeconds--;
-        const m = String(Math.floor(flashSeconds / 60)).padStart(2, '0');
-        const s = String(flashSeconds % 60).padStart(2, '0');
-        const el = document.getElementById('flashTimer');
-        if (el) el.textContent = `${m}:${s}`;
-      }, 1000);
-
-      // ==========================================
-      // AUTENTICACIÓN
-      // ==========================================
-      function setAuthError(msg) {
-        const box = document.getElementById('authError');
-        if (!msg) {
-          box.classList.add('hidden');
-          return;
-        }
-        box.textContent = msg;
-        box.classList.remove('hidden');
-      }
-
-      function switchAuthTab(mode) {
-        setAuthError(null);
-        const isLogin = mode === 'login';
-        document.getElementById('otpVerifyView').classList.add('hidden');
-        document.getElementById('authTabs').classList.remove('hidden');
-        document.getElementById('loginFormView').classList.toggle('hidden', !isLogin);
-        document.getElementById('signupFormView').classList.toggle('hidden', isLogin);
-
-        document.getElementById('tabBtnLogin').className = isLogin
-          ? 'bg-emerald-500 text-slate-950 font-semibold py-2 rounded-lg text-xs transition'
-          : 'text-slate-400 hover:text-white font-semibold py-2 rounded-lg text-xs transition';
-        document.getElementById('tabBtnSignup').className = !isLogin
-          ? 'bg-emerald-500 text-slate-950 font-semibold py-2 rounded-lg text-xs transition'
-          : 'text-slate-400 hover:text-white font-semibold py-2 rounded-lg text-xs transition';
-      }
-
-      async function handleLogin() {
-        setAuthError(null);
-        if (!sb) return setAuthError("No se pudo conectar con el servicio.");
-
-        const username = document.getElementById('loginUsername').value.trim().toLowerCase();
-        const password = document.getElementById('loginPassword').value;
-        const btn = document.getElementById('btnLogin');
-
-        if (!username || !password) return setAuthError("Completá ambos campos.");
-        btn.disabled = true;
-        btn.textContent = "Verificando...";
-
-        try {
-          const { data: perfil } = await sb
-            .from('profiles')
-            .select('email')
-            .eq('username', username)
-            .maybeSingle();
-
-          // Mensaje genérico para evitar enumeración de usuarios
-          if (!perfil || !perfil.email) {
-            throw new Error("Credenciales inválidas.");
-          }
-
-          const { data, error } = await sb.auth.signInWithPassword({
-            email: perfil.email,
-            password
-          });
-
-          if (error || !data.user) {
-            throw new Error("Credenciales inválidas.");
-          }
-
-          AudioEngine.tap();
-          bootApp(data.user);
-        } catch (err) {
-          setAuthError(err.message || "No se pudo iniciar sesión.");
-        } finally {
-          btn.disabled = false;
-          btn.textContent = "Continuar";
-        }
-      }
-
-      async function handleSignup() {
-        setAuthError(null);
-        if (!sb) return setAuthError("No se pudo conectar con el servicio.");
-
-        const username = document.getElementById('regUsername').value.trim().toLowerCase();
-        const email = document.getElementById('regEmail').value.trim().toLowerCase();
-        const password = document.getElementById('regPassword').value;
-        const btn = document.getElementById('btnSignup');
-
-        if (!CONFIG.USERNAME_REGEX.test(username)) {
-          return setAuthError("El usuario debe tener entre 3 y 20 caracteres (letras, números, punto o guion bajo).");
-        }
-        if (!email || !email.includes('@')) {
-          return setAuthError("Ingresá un correo electrónico válido.");
-        }
-        if (!CONFIG.PASSWORD_REGEX.test(password)) {
-          return setAuthError("La clave requiere al menos 6 caracteres, una mayúscula y un número.");
+        function applyEffectiveTheme(pref) {
+            const effective = pref === 'auto' ? (mediaQueryDark.matches ? 'dark' : 'light') : pref;
+            document.documentElement.setAttribute('data-theme', effective);
+            updateThemeButtonsUI(pref);
         }
 
-        btn.disabled = true;
-        btn.textContent = "Procesando...";
+        function setThemePreference(pref) {
+            localStorage.setItem('clb_theme_pref', pref);
+            applyEffectiveTheme(pref);
+        }
 
-        try {
-          const { data: existing } = await sb
-            .from('profiles')
-            .select('username')
-            .eq('username', username)
-            .maybeSingle();
+        function updateThemeButtonsUI(activePref) {
+            ['light', 'auto', 'dark'].forEach(mode => {
+                const btn = document.getElementById(`theme-btn-${mode}`);
+                if (!btn) return;
+                if (mode === activePref) {
+                    btn.className = mode === 'auto'
+                        ? 'px-1.5 py-1 rounded-md text-[10px] font-extrabold bg-brandGreen-dark text-[#F2F1E9] transition'
+                        : 'p-1.5 rounded-md bg-brandGreen-dark text-[#F2F1E9] transition';
+                } else {
+                    btn.className = mode === 'auto'
+                        ? 'px-1.5 py-1 rounded-md text-[10px] font-bold text-theme-textSec hover:text-theme-text transition'
+                        : 'p-1.5 rounded-md text-theme-textSec hover:text-theme-text transition';
+                }
+            });
+        }
 
-          if (existing) {
-            throw new Error("Ese nombre de usuario no está disponible.");
-          }
+        mediaQueryDark.addEventListener('change', () => {
+            const currentPref = localStorage.getItem('clb_theme_pref') || 'auto';
+            if (currentPref === 'auto') applyEffectiveTheme('auto');
+        });
 
-          localStorage.setItem('clb_pending_signup', JSON.stringify({ username, email, password }));
+        // ==========================================
+        // 1. CONFIGURACIÓN SUPABASE Y ENTORNO
+        // ==========================================
+        const SUPABASE_URL = 'TU_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY';
+        const supabaseClient = (SUPABASE_URL !== 'TU_SUPABASE_URL') 
+            ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) 
+            : null;
 
-          const { error } = await sb.auth.signInWithOtp({
-            email,
-            options: {
-              shouldCreateUser: true,
-              emailRedirectTo: window.location.origin
+        const urlParams = new URLSearchParams(window.location.search);
+        const isDev = urlParams.get('env') === 'dev';
+
+        let currentUser = null;
+        let currentRival = { id: '00000000-0000-0000-0000-000000000099', username: 'GhostRunner_99' };
+        let authMode = 'login';
+        let map = null;
+        let userMarker = null;
+
+        // ==========================================
+        // 2. INICIALIZACIÓN Y SPLASH SCREEN
+        // ==========================================
+        window.addEventListener('DOMContentLoaded', async () => {
+            const savedPref = localStorage.getItem('clb_theme_pref') || 'auto';
+            applyEffectiveTheme(savedPref);
+
+            if (isDev) {
+                const badge = document.getElementById('env-badge');
+                badge.innerText = 'DEV';
+                badge.className = 'text-[10px] font-extrabold px-2 py-1 rounded bg-brandOrange-bg text-[#202820] border border-brandOrange-soft';
+                document.getElementById('dev-controls').classList.remove('hidden');
             }
-          });
 
-          if (error) throw error;
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                splash.style.opacity = '0';
+                setTimeout(() => splash.classList.add('hidden'), 400);
+            }, 1000);
 
-          document.getElementById('authTabs').classList.add('hidden');
-          document.getElementById('signupFormView').classList.add('hidden');
-          document.getElementById('otpTargetEmail').textContent = email;
-          document.getElementById('otpVerifyView').classList.remove('hidden');
-        } catch (err) {
-          localStorage.removeItem('clb_pending_signup');
-          setAuthError(err.message || "No se pudo completar el registro.");
-        } finally {
-          btn.disabled = false;
-          btn.textContent = "Registrarme";
-        }
-      }
-
-      if (sb) {
-        sb.auth.onAuthStateChange(async (event, session) => {
-          if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session && session.user) {
-            const raw = localStorage.getItem('clb_pending_signup');
-            if (raw) {
-              try {
-                const pending = JSON.parse(raw);
-                await sb.auth.updateUser({
-                  password: pending.password,
-                  data: { username: pending.username }
-                });
-                await sb.from('profiles').upsert({
-                  id: session.user.id,
-                  username: pending.username,
-                  email: pending.email
-                });
-                localStorage.removeItem('clb_pending_signup');
-              } catch (_) {}
+            if (supabaseClient) {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session) {
+                    iniciarAppConUsuario(session.user);
+                }
             }
-            bootApp(session.user);
-          }
         });
-      }
 
-      // ==========================================
-      // INICIALIZACIÓN DE SESIÓN Y PERFIL
-      // ==========================================
-      function getDivisionName(pts) {
-        if (pts >= 2000) return "División Élite";
-        if (pts >= 800) return "División Oro";
-        if (pts >= 250) return "División Plata";
-        return "División Inicial";
-      }
+        // ==========================================
+        // 3. AUTENTICACIÓN
+        // ==========================================
+        function switchAuthTab(mode) {
+            authMode = mode;
+            const tabLogin = document.getElementById('tab-login');
+            const tabRegister = document.getElementById('tab-register');
+            const userField = document.getElementById('username-field');
+            const errorBox = document.getElementById('auth-error');
+            errorBox.classList.add('hidden');
 
-      async function bootApp(user) {
-        if (state.user && state.user.id === user.id) return;
-        state.user = user;
-
-        document.getElementById('authScreen').classList.add('hidden');
-        document.getElementById('appContainer').classList.remove('hidden');
-        document.getElementById('bottomNav').classList.remove('hidden');
-        const badge = document.getElementById('userBadge');
-        badge.classList.remove('hidden');
-        badge.classList.add('flex');
-
-        const fallback = (user.user_metadata && user.user_metadata.username) || (user.email && user.email.split('@')[0]) || 'jugador';
-        document.getElementById('headerUsername').textContent = `@${fallback}`;
-
-        // Racha diaria
-        const today = new Date().toDateString();
-        const lastDay = localStorage.getItem('clb_last_day');
-        let streak = parseInt(localStorage.getItem('clb_streak') || '1', 10);
-        if (lastDay && lastDay !== today) {
-          const yesterday = new Date(Date.now() - 86400000).toDateString();
-          streak = (lastDay === yesterday) ? streak + 1 : 1;
-        }
-        localStorage.setItem('clb_last_day', today);
-        localStorage.setItem('clb_streak', String(streak));
-        document.getElementById('streakCount').textContent = String(streak);
-        const streakEl = document.getElementById('streakBadge');
-        streakEl.classList.remove('hidden');
-        streakEl.classList.add('flex');
-
-        initMap();
-
-        try {
-          const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).maybeSingle();
-          if (profile) {
-            if (profile.username) document.getElementById('headerUsername').textContent = `@${profile.username}`;
-            const total = (profile.points_walk_run || 0) + (profile.points_bike || 0) + (profile.points_mixed || 0);
-            document.getElementById('userLeagueBadge').textContent = getDivisionName(total);
-          }
-        } catch (_) {}
-      }
-
-      // ==========================================
-      // MAPA Y GEOLOCALIZACIÓN
-      // ==========================================
-      function initMap() {
-        if (state.map) {
-          state.map.invalidateSize();
-          return;
-        }
-
-        state.map = L.map('map', { zoomControl: false }).setView([state.userPos.lat, state.userPos.lng], 15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(state.map);
-
-        const beacon = L.divIcon({
-          className: '',
-          html: '<div class="gps-beacon"></div>',
-          iconSize: [16, 16],
-          iconAnchor: [8, 8]
-        });
-        state.userMarker = L.marker([state.userPos.lat, state.userPos.lng], { icon: beacon }).addTo(state.map);
-
-        renderTerritoryZone(state.userPos.lat, state.userPos.lng);
-        setTimeout(() => state.map.invalidateSize(), 200);
-
-        if ("geolocation" in navigator) {
-          navigator.geolocation.watchPosition(
-            (pos) => {
-              const isFirst = state.userPos.lat === -34.5615;
-              state.userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-              state.userMarker.setLatLng([state.userPos.lat, state.userPos.lng]);
-              document.getElementById('gpsStatus').innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span><span>GPS conectado</span>`;
-
-              if (isFirst) renderTerritoryZone(state.userPos.lat, state.userPos.lng);
-
-              if (state.activeMatch) {
-                state.recordedPath.push([state.userPos.lng, state.userPos.lat]);
-                updateProgress();
-              } else {
-                state.map.setView([state.userPos.lat, state.userPos.lng], 15);
-              }
-            },
-            () => {
-              document.getElementById('gpsStatus').innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400"></span><span>Activar ubicación</span>`;
-            },
-            { enableHighAccuracy: true }
-          );
-        }
-      }
-
-      function renderTerritoryZone(lat, lng) {
-        if (state.territoryLayer) state.map.removeLayer(state.territoryLayer);
-        state.territoryLayer = L.layerGroup().addTo(state.map);
-        L.circle([lat + 0.0042, lng + 0.0038], {
-          radius: 360,
-          color: '#818CF8',
-          fillColor: '#818CF8',
-          fillOpacity: 0.1,
-          weight: 1.5,
-          dashArray: '4, 6'
-        }).bindPopup("<b>Zona controlada</b><br>Capturá banderas acá para sumar dominio.").addTo(state.territoryLayer);
-      }
-
-      // ==========================================
-      // PARTIDA, RADAR Y CAPTURA AR
-      // ==========================================
-      async function generateMatch(isJoining = false) {
-        const btn = document.getElementById('btnGenerateFlag');
-        btn.disabled = true;
-        btn.textContent = "Calculando ruta...";
-        AudioEngine.tap();
-
-        const duelCode = isJoining ? document.getElementById('duelCodeInput').value.trim().toUpperCase() : null;
-        if (isJoining && duelCode.length < 4) {
-          btn.disabled = false;
-          btn.textContent = "Crear sala de duelo";
-          return notify("Ingresá un código de 4 caracteres.", "error");
-        }
-
-        try {
-          const res = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/generate-match`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': CONFIG.SUPABASE_ANON_KEY
-            },
-            body: JSON.stringify({
-              userId: state.user.id,
-              lat: state.userPos.lat,
-              lng: state.userPos.lng,
-              distance: state.distance,
-              category: state.category,
-              mode: state.mode,
-              duelCode
-            })
-          });
-
-          const data = await res.json();
-          if (!res.ok || data.error) throw new Error(data.error || "No se pudo generar la ruta.");
-
-          state.activeMatch = data;
-          state.matchStartTime = Date.now();
-          state.recordedPath = [[state.userPos.lng, state.userPos.lat]];
-          state.initialDistance = Math.max(100, state.map.distance([state.userPos.lat, state.userPos.lng], [data.flag.lat, data.flag.lng]));
-
-          if (state.flagMarker) state.map.removeLayer(state.flagMarker);
-          if (state.routeLine) state.map.removeLayer(state.routeLine);
-
-          const pinColor = state.isFlashEvent ? '#FBBF24' : '#10B981';
-          const flagIcon = L.divIcon({
-            className: '',
-            html: `<svg width="32" height="32" viewBox="0 0 24 24" fill="${pinColor}" stroke="#FFFFFF" stroke-width="1.5"><path d="M4 21V4m0 0l13 3-3 5 3 5-13-3"/></svg>`,
-            iconSize: [32, 32],
-            iconAnchor: [7, 30]
-          });
-
-          state.flagMarker = L.marker([data.flag.lat, data.flag.lng], { icon: flagIcon }).addTo(state.map);
-
-          const coords = (data.route && data.route.coordinates) || (data.route && data.route.geometry && data.route.geometry.coordinates) || [
-            [state.userPos.lng, state.userPos.lat],
-            [data.flag.lng, data.flag.lat]
-          ];
-          const latLngs = coords.map(c => [c[1], c[0]]);
-          state.routeLine = L.polyline(latLngs, { color: pinColor, weight: 4, dashArray: '8, 8' }).addTo(state.map);
-          state.map.fitBounds(state.routeLine.getBounds(), { padding: [32, 32] });
-
-          document.getElementById('setupPanel').classList.add('hidden');
-          document.getElementById('activeHud').classList.remove('hidden');
-          document.getElementById('hudDistanceLabel').textContent = `Distancia total: ${data.realDistanceMeters || Math.round(state.initialDistance)} m`;
-
-          const isDuel = data.mode === 'live_duel' || state.mode === 'live_duel';
-          if (isDuel) {
-            document.getElementById('rivalProgressContainer').classList.remove('hidden');
-            setupDuelChannel(data.matchId, data.status || (isJoining ? 'active' : 'pending'), data.duelCode);
-          } else {
-            document.getElementById('rivalProgressContainer').classList.add('hidden');
-            document.getElementById('duelWaitingBanner').classList.add('hidden');
-          }
-
-          updateProgress();
-        } catch (err) {
-          notify(err.message, "error");
-        } finally {
-          btn.disabled = false;
-          btn.textContent = state.mode === 'live_duel' ? "Crear sala de duelo" : "Generar bandera en ruta";
-        }
-      }
-
-      function setupDuelChannel(matchId, status, duelCode) {
-        if (state.matchChannel) sb.removeChannel(state.matchChannel);
-
-        if (status === 'pending' && duelCode) {
-          document.getElementById('duelWaitingBanner').classList.remove('hidden');
-          document.getElementById('displayDuelCode').textContent = duelCode;
-        } else {
-          document.getElementById('duelWaitingBanner').classList.add('hidden');
-        }
-
-        state.matchChannel = sb.channel(`duel-${matchId}`, { config: { broadcast: { self: false } } });
-        state.matchChannel
-          .on('broadcast', { event: 'rival_progress' }, ({ payload }) => {
-            document.getElementById('duelWaitingBanner').classList.add('hidden');
-            const pct = Math.max(0, Math.min(100, Number(payload.percent) || 0));
-            document.getElementById('rivalProgressPct').textContent = `${pct}%`;
-            document.getElementById('rivalProgressBar').style.width = `${Math.max(2, pct)}%`;
-          })
-          .on('broadcast', { event: 'duel_won' }, ({ payload }) => {
-            notify(`${escapeHTML(payload.winnerName)} capturó su bandera primero.`, "info");
-            resetMatchUI();
-          })
-          .subscribe((st) => {
-            if (st === 'SUBSCRIBED' && status === 'active') {
-              state.matchChannel.send({ type: 'broadcast', event: 'rival_progress', payload: { percent: 0 } });
+            if (mode === 'login') {
+                tabLogin.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-brandOrange text-[#202820] transition';
+                tabRegister.className = 'flex-1 py-2 text-xs font-bold rounded-lg text-theme-textSec hover:text-theme-text transition';
+                userField.classList.add('hidden');
+            } else {
+                tabRegister.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-brandOrange text-[#202820] transition';
+                tabLogin.className = 'flex-1 py-2 text-xs font-bold rounded-lg text-theme-textSec hover:text-theme-text transition';
+                userField.classList.remove('hidden');
             }
-          });
-      }
-
-      function updateProgress() {
-        if (!state.activeMatch) return;
-        const d = state.map.distance([state.userPos.lat, state.userPos.lng], [state.activeMatch.flag.lat, state.activeMatch.flag.lng]);
-        document.getElementById('hudRemaining').textContent = `${Math.round(d)} m`;
-
-        const ring = document.getElementById('sonarRing');
-        const statusText = document.getElementById('sonarStatusText');
-
-        if (d <= 30) {
-          ring.style.setProperty('--pulse-speed', '0.6s');
-          ring.style.borderColor = '#FBBF24';
-          statusText.textContent = "En rango de captura";
-          statusText.className = "text-xs font-semibold text-amber-400";
-          if (Date.now() - state.lastVibrateTime > 3000) {
-            if (navigator.vibrate) navigator.vibrate([100, 60, 100]);
-            AudioEngine.ping();
-            state.lastVibrateTime = Date.now();
-          }
-        } else if (d <= 150) {
-          ring.style.setProperty('--pulse-speed', '1.1s');
-          statusText.textContent = "Cerca del objetivo";
-        } else {
-          ring.style.setProperty('--pulse-speed', '2.1s');
-          statusText.textContent = "Rastreando ubicación";
         }
 
-        const pct = Math.max(0, Math.min(100, Math.round(((state.initialDistance - d) / state.initialDistance) * 100)));
-        document.getElementById('myProgressPct').textContent = `${pct}%`;
-        document.getElementById('myProgressBar').style.width = `${Math.max(2, pct)}%`;
+        async function manejarAuth(e) {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value;
+            const username = document.getElementById('auth-username').value.trim();
+            const errorBox = document.getElementById('auth-error');
+            errorBox.classList.add('hidden');
 
-        if (state.matchChannel && (state.activeMatch.mode === 'live_duel' || state.mode === 'live_duel')) {
-          state.matchChannel.send({ type: 'broadcast', event: 'rival_progress', payload: { percent: pct } });
-        }
-      }
+            if (!supabaseClient) {
+                iniciarAppConUsuario({ id: 'local-user-1', email: email, user_metadata: { username: username || email.split('@')[0] } });
+                return;
+            }
 
-      function getBearing() {
-        if (!state.activeMatch) return 0;
-        const toRad = deg => deg * Math.PI / 180;
-        const toDeg = rad => rad * 180 / Math.PI;
-        const dLon = toRad(state.activeMatch.flag.lng - state.userPos.lng);
-        const lat1 = toRad(state.userPos.lat);
-        const lat2 = toRad(state.activeMatch.flag.lat);
-        const y = Math.sin(dLon) * Math.cos(lat2);
-        const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
-        return (toDeg(Math.atan2(y, x)) + 360) % 360;
-      }
-
-      function onCompassMove(e) {
-        const heading = e.webkitCompassHeading || (360 - (e.alpha || 0));
-        if (!heading || !state.activeMatch) return;
-        const diff = ((getBearing() - heading + 540) % 360) - 180;
-        const shiftX = Math.max(-130, Math.min(130, diff * 2.4));
-        document.getElementById('arFlagContainer').style.transform = `translateX(${shiftX}px)`;
-      }
-
-      async function openARCamera() {
-        if (!state.activeMatch) return;
-        const dist = state.map.distance([state.userPos.lat, state.userPos.lng], [state.activeMatch.flag.lat, state.activeMatch.flag.lng]);
-        if (dist > 30) {
-          return notify(`Estás a ${Math.round(dist)} m. Acercate a menos de 20 m para capturar.`, "info");
-        }
-        document.getElementById('arModal').classList.remove('hidden');
-        window.addEventListener('deviceorientation', onCompassMove);
-        try {
-          state.videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-          document.getElementById('arVideo').srcObject = state.videoStream;
-        } catch (_) {}
-      }
-
-      function closeARCamera() {
-        document.getElementById('arModal').classList.add('hidden');
-        window.removeEventListener('deviceorientation', onCompassMove);
-        if (state.videoStream) state.videoStream.getTracks().forEach(t => t.stop());
-      }
-
-      async function confirmCapture() {
-        const btn = document.getElementById('btnConfirmCapture');
-        btn.disabled = true;
-        btn.textContent = "Validando...";
-
-        try {
-          const res = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/verify-capture`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': CONFIG.SUPABASE_ANON_KEY
-            },
-            body: JSON.stringify({
-              matchId: state.activeMatch.matchId,
-              userId: state.user.id,
-              currentLat: state.userPos.lat,
-              currentLng: state.userPos.lng,
-              currentSpeedKmh: 0,
-              actualRouteCoords: state.recordedPath
-            })
-          });
-
-          const result = await res.json();
-          if (result.error) throw new Error(result.error);
-
-          const handle = document.getElementById('headerUsername').textContent;
-          if (state.matchChannel && (state.activeMatch.mode === 'live_duel' || state.mode === 'live_duel')) {
-            await state.matchChannel.send({ type: 'broadcast', event: 'duel_won', payload: { winnerName: handle } });
-          }
-
-          const points = state.isFlashEvent ? (result.pointsEarned * 3) : result.pointsEarned;
-          const distMeters = state.activeMatch.realDistanceMeters || Math.round(state.initialDistance);
-
-          closeARCamera();
-          AudioEngine.success();
-          if (navigator.vibrate) navigator.vibrate([150, 80, 200]);
-
-          renderShareCard({
-            username: handle,
-            points,
-            distanceMeters: distMeters,
-            avgSpeed: result.avgSpeedKmh || 8.4,
-            path: state.recordedPath,
-            isFlash: state.isFlashEvent
-          });
-
-          resetMatchUI();
-        } catch (err) {
-          notify(err.message, "error");
-        } finally {
-          btn.disabled = false;
-          btn.textContent = "Confirmar captura";
-        }
-      }
-
-      function renderShareCard(stats) {
-        const canvas = document.getElementById('victoryCanvas');
-        const ctx = canvas.getContext('2d');
-        const W = canvas.width, H = canvas.height;
-
-        ctx.fillStyle = '#0B0F17';
-        ctx.fillRect(0, 0, W, H);
-
-        // Marco sutil
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(24, 24, W - 48, H - 48);
-
-        // Título superior
-        ctx.fillStyle = '#10B981';
-        ctx.font = '700 22px "Space Grotesk", sans-serif';
-        ctx.fillText('CONQUISTA LA BANDERA', 48, 76);
-
-        ctx.fillStyle = '#64748B';
-        ctx.font = '500 14px Inter, sans-serif';
-        ctx.fillText(new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase(), 48, 102);
-
-        // Trazo GPS limpio
-        const pts = (stats.path && stats.path.length > 1) ? stats.path : [[0, 0], [0.4, 0.5], [0.8, 0.3], [1, 1]];
-        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-        pts.forEach(p => {
-          if (p[0] < minX) minX = p[0]; if (p[0] > maxX) maxX = p[0];
-          if (p[1] < minY) minY = p[1]; if (p[1] > maxY) maxY = p[1];
-        });
-        const spanX = Math.max(0.0001, maxX - minX);
-        const spanY = Math.max(0.0001, maxY - minY);
-
-        ctx.save();
-        ctx.strokeStyle = stats.isFlash ? '#FBBF24' : '#10B981';
-        ctx.lineWidth = 6;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.beginPath();
-        pts.forEach((p, i) => {
-          const x = 110 + ((p[0] - minX) / spanX) * (W - 220);
-          const y = 420 - ((p[1] - minY) / spanY) * 230;
-          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-        });
-        ctx.stroke();
-        ctx.restore();
-
-        // Puntos principales
-        ctx.fillStyle = '#F8FAFC';
-        ctx.font = '700 58px "Space Grotesk", sans-serif';
-        ctx.fillText(`+${stats.points} PTS`, 48, 525);
-
-        // Métricas
-        ctx.fillStyle = '#64748B';
-        ctx.font = '600 13px Inter, sans-serif';
-        ctx.fillText('DISTANCIA', 48, 585);
-        ctx.fillText('VELOCIDAD PROM.', 235, 585);
-        ctx.fillText('JUGADOR', 425, 585);
-
-        ctx.fillStyle = '#E2E8F0';
-        ctx.font = '700 22px "Space Grotesk", sans-serif';
-        ctx.fillText(`${(stats.distanceMeters / 1000).toFixed(2)} km`, 48, 616);
-        ctx.fillText(`${stats.avgSpeed} km/h`, 235, 616);
-        ctx.fillStyle = '#10B981';
-        ctx.fillText(stats.username, 425, 616);
-
-        ctx.fillStyle = '#475569';
-        ctx.font = '500 13px Inter, sans-serif';
-        ctx.fillText('conquistalabandera.app', 48, 690);
-
-        document.getElementById('victoryModal').classList.remove('hidden');
-      }
-
-      function resetMatchUI() {
-        state.activeMatch = null;
-        state.isFlashEvent = false;
-        if (state.matchChannel) sb.removeChannel(state.matchChannel);
-        if (state.flagMarker) state.map.removeLayer(state.flagMarker);
-        if (state.routeLine) state.map.removeLayer(state.routeLine);
-        document.getElementById('activeHud').classList.add('hidden');
-        document.getElementById('setupPanel').classList.remove('hidden');
-      }
-
-      // ==========================================
-      // CLUBES Y RANKING (CON ESCAPE XSS)
-      // ==========================================
-      async function createClub() {
-        const name = document.getElementById('newClubName').value.trim();
-        if (name.length < 3) return notify("El nombre debe tener al menos 3 caracteres.", "error");
-        const { data: club, error } = await sb.from('clubs').insert({ name, owner_id: state.user.id }).select().single();
-        if (error) return notify(error.message, "error");
-        await sb.from('club_members').insert({ club_id: club.id, user_id: state.user.id, role: 'owner' });
-        notify("Club creado correctamente.", "success");
-        loadMyClub();
-      }
-
-      async function joinClub() {
-        const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
-        if (!code) return;
-        const { data: club } = await sb.from('clubs').select('id').eq('invite_code', code).maybeSingle();
-        if (!club) return notify("Código inválido.", "error");
-        const { error } = await sb.from('club_members').insert({ club_id: club.id, user_id: state.user.id });
-        if (error) return notify(error.message, "error");
-        notify("Te uniste al club.", "success");
-        loadMyClub();
-      }
-
-      async function loadMyClub() {
-        const { data: mem } = await sb.from('club_members').select('club_id, clubs(*)').eq('user_id', state.user.id).maybeSingle();
-        if (!mem || !mem.clubs) {
-          document.getElementById('noClubView').classList.remove('hidden');
-          document.getElementById('myClubView').classList.add('hidden');
-          return;
-        }
-        document.getElementById('noClubView').classList.add('hidden');
-        document.getElementById('myClubView').classList.remove('hidden');
-        document.getElementById('clubNameDisplay').textContent = mem.clubs.name;
-        document.getElementById('clubPointsDisplay').textContent = String(mem.clubs.total_club_points || 0);
-        document.getElementById('clubCodeDisplay').textContent = mem.clubs.invite_code;
-
-        const { data: members } = await sb.from('club_members').select('role, profiles(username, total_wins)').eq('club_id', mem.club_id);
-        document.getElementById('clubMembersList').innerHTML = (members || []).map((m, i) => {
-          const uname = escapeHTML((m.profiles && m.profiles.username) || 'jugador');
-          const wins = Number((m.profiles && m.profiles.total_wins) || 0);
-          const badge = m.role === 'owner' ? '<span class="text-[10px] text-amber-400 ml-1.5">Líder</span>' : '';
-          return `
-            <div class="flex justify-between items-center bg-[#0B0F17] px-3.5 py-2.5 rounded-xl border border-white/[0.05] text-xs">
-              <span class="text-slate-200"><b class="text-slate-500 mr-2">${i + 1}.</b>@${uname}${badge}</span>
-              <span class="text-slate-400">${wins} victorias</span>
-            </div>
-          `;
-        }).join('');
-      }
-
-      async function loadRankings(category) {
-        const allowed = ['walk_run', 'bike', 'mixed'];
-        if (!allowed.includes(category)) return;
-        const col = `points_${category}`;
-        const { data } = await sb.from('profiles').select(`username, ${col}`).order(col, { ascending: false }).limit(15);
-
-        document.getElementById('rankingList').innerHTML = (data || []).map((p, idx) => {
-          const uname = escapeHTML(p.username || 'jugador');
-          const pts = Number(p[col] || 0);
-          const rankColor = idx === 0 ? 'text-amber-400' : idx === 1 ? 'text-slate-300' : idx === 2 ? 'text-amber-600' : 'text-slate-500';
-          return `
-            <div class="flex justify-between items-center bg-[#0B0F17] px-3.5 py-3 rounded-xl border border-white/[0.05]">
-              <span class="text-xs font-medium text-slate-200"><b class="${rankColor} font-mono mr-2.5">#${idx + 1}</b>@${uname}</span>
-              <span class="font-mono text-xs font-semibold text-emerald-400">${pts} pts</span>
-            </div>
-          `;
-        }).join('');
-      }
-
-      // ==========================================
-      // EVENT LISTENERS LIMPIOS
-      // ==========================================
-      document.getElementById('tabBtnLogin').addEventListener('click', () => switchAuthTab('login'));
-      document.getElementById('tabBtnSignup').addEventListener('click', () => switchAuthTab('signup'));
-      document.getElementById('loginFormView').addEventListener('submit', handleLogin);
-      document.getElementById('signupFormView').addEventListener('submit', handleSignup);
-      document.getElementById('btnCancelOtp').addEventListener('click', () => {
-        localStorage.removeItem('clb_pending_signup');
-        switchAuthTab('signup');
-      });
-      document.getElementById('btnLogout').addEventListener('click', async () => {
-        if (sb) await sb.auth.signOut();
-        location.reload();
-      });
-
-      document.getElementById('btnSoundToggle').addEventListener('click', () => {
-        state.soundEnabled = !state.soundEnabled;
-        document.getElementById('iconSoundOn').classList.toggle('hidden', !state.soundEnabled);
-        document.getElementById('iconSoundOff').classList.toggle('hidden', state.soundEnabled);
-      });
-
-      document.getElementById('btnFlashEvent').addEventListener('click', () => {
-        state.isFlashEvent = true;
-        state.distance = '1km';
-        generateMatch(false);
-      });
-
-      document.querySelectorAll('#categoryGroup .cat-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          state.category = btn.dataset.cat;
-          document.querySelectorAll('#categoryGroup .cat-btn').forEach(b => {
-            b.className = 'cat-btn bg-[#0B0F17] border border-white/[0.07] text-slate-300 font-semibold py-2.5 px-2 rounded-xl text-xs btn-press';
-          });
-          btn.className = 'cat-btn bg-emerald-500 text-slate-950 font-semibold py-2.5 px-2 rounded-xl text-xs btn-press';
-        });
-      });
-
-      document.querySelectorAll('#distanceGroup .dist-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          state.distance = btn.dataset.dist;
-          document.querySelectorAll('#distanceGroup .dist-btn').forEach(b => {
-            b.className = 'dist-btn bg-[#0B0F17] border border-white/[0.07] text-slate-300 font-semibold py-2 rounded-xl text-xs btn-press';
-          });
-          btn.className = 'dist-btn bg-emerald-500 text-slate-950 font-semibold py-2 rounded-xl text-xs btn-press';
-        });
-      });
-
-      document.querySelectorAll('#modeGroup .mode-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          state.mode = btn.dataset.mode;
-          document.querySelectorAll('#modeGroup .mode-btn').forEach(b => {
-            b.className = 'mode-btn bg-[#0B0F17] border border-white/[0.07] text-slate-300 font-semibold py-2.5 rounded-xl text-xs btn-press';
-          });
-          btn.className = 'mode-btn bg-emerald-500/15 border border-emerald-500/60 text-emerald-300 font-semibold py-2.5 rounded-xl text-xs btn-press';
-          const isDuel = state.mode === 'live_duel';
-          document.getElementById('duelJoinBox').classList.toggle('hidden', !isDuel);
-          document.getElementById('btnGenerateFlag').textContent = isDuel ? "Crear sala de duelo" : "Generar bandera en ruta";
-        });
-      });
-
-      document.getElementById('btnGenerateFlag').addEventListener('click', () => generateMatch(false));
-      document.getElementById('btnJoinDuel').addEventListener('click', () => generateMatch(true));
-      document.getElementById('btnOpenAR').addEventListener('click', openARCamera);
-      document.getElementById('btnCloseAR').addEventListener('click', closeARCamera);
-      document.getElementById('btnConfirmCapture').addEventListener('click', confirmCapture);
-
-      document.getElementById('btnSimulate').addEventListener('click', () => {
-        if (!state.activeMatch) return;
-        state.userPos = { lat: state.activeMatch.flag.lat, lng: state.activeMatch.flag.lng };
-        state.userMarker.setLatLng([state.userPos.lat, state.userPos.lng]);
-        state.recordedPath = (state.activeMatch.route && state.activeMatch.route.coordinates) || [[state.userPos.lng, state.userPos.lat]];
-        updateProgress();
-        openARCamera();
-      });
-
-      document.getElementById('btnShareCard').addEventListener('click', () => {
-        const canvas = document.getElementById('victoryCanvas');
-        canvas.toBlob(async (blob) => {
-          const file = new File([blob], 'conquista-la-bandera.png', { type: 'image/png' });
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
             try {
-              await navigator.share({ title: 'Conquista la Bandera', files: [file] });
-              return;
-            } catch (_) {}
-          }
-          const a = document.createElement('a');
-          a.download = 'conquista-la-bandera.png';
-          a.href = canvas.toDataURL('image/png');
-          a.click();
-        });
-      });
+                if (authMode === 'register') {
+                    if (!username) throw new Error('Ingresá un nombre de usuario.');
+                    const { data, error } = await supabaseClient.auth.signUp({
+                        email,
+                        password,
+                        options: { data: { username } }
+                    });
+                    if (error) throw error;
+                    if (data.user) iniciarAppConUsuario(data.user);
+                } else {
+                    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                    if (error) throw error;
+                    if (data.user) iniciarAppConUsuario(data.user);
+                }
+            } catch (err) {
+                errorBox.innerText = err.message || 'Error al autenticar.';
+                errorBox.classList.remove('hidden');
+            }
+        }
 
-      document.getElementById('btnCloseVictory').addEventListener('click', () => {
-        document.getElementById('victoryModal').classList.add('hidden');
-      });
+        async function cerrarSesion() {
+            if (supabaseClient) await supabaseClient.auth.signOut();
+            location.reload();
+        }
 
-      document.getElementById('btnCreateClub').addEventListener('click', createClub);
-      document.getElementById('btnJoinClub').addEventListener('click', joinClub);
+        function iniciarAppConUsuario(user) {
+            currentUser = user;
+            const displayName = user.user_metadata?.username || user.email.split('@')[0];
+            
+            document.getElementById('auth-view').classList.add('hidden');
+            document.getElementById('app-view').classList.remove('hidden');
+            document.getElementById('btn-logout').classList.remove('hidden');
+            document.getElementById('user-display-header').innerText = `@${displayName}`;
+            document.getElementById('rival-username').innerText = currentRival.username;
 
-      document.querySelectorAll('#rankingFilterGroup .rank-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('#rankingFilterGroup .rank-btn').forEach(b => {
-            b.className = 'rank-btn bg-[#0B0F17] border border-white/[0.07] text-slate-300 py-2 rounded-xl text-xs font-semibold btn-press';
-          });
-          btn.className = 'rank-btn bg-emerald-500 text-slate-950 py-2 rounded-xl text-xs font-semibold btn-press';
-          loadRankings(btn.dataset.rank);
-        });
-      });
+            inicializarMapa();
+            iniciarRastreoGPS();
+        }
 
-      document.querySelectorAll('#bottomNav .nav-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const tab = btn.dataset.tab;
-          ['Play', 'Clubs', 'Rankings'].forEach(t => {
-            document.getElementById('tab' + t).classList.add('hidden');
-          });
-          document.querySelectorAll('#bottomNav .nav-btn').forEach(b => {
-            b.className = 'nav-btn py-3 flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-white';
-          });
-          document.getElementById('tab' + tab).classList.remove('hidden');
-          btn.className = 'nav-btn py-3 flex flex-col items-center justify-center gap-1 text-emerald-400';
+        // ==========================================
+        // 4. MAPA Y SISTEMA ANTICHEAT GPS
+        // ==========================================
+        let lastCoords = null;
+        let lastTimestamp = null;
+        const MAX_SPEED_KMH = 45;
 
-          if (tab === 'Play' && state.map) setTimeout(() => state.map.invalidateSize(), 150);
-          if (tab === 'Clubs') loadMyClub();
-          if (tab === 'Rankings') loadRankings('walk_run');
-        });
-      });
-    })();
-  </script>
+        function inicializarMapa() {
+            if (map) return;
+            const defaultCoords = [-34.6037, -58.3816];
+            map = L.map('map', { zoomControl: false }).setView(defaultCoords, 16);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19
+            }).addTo(map);
+
+            userMarker = L.circleMarker(defaultCoords, {
+                radius: 9,
+                fillColor: '#477B57',
+                color: '#F2F1E9',
+                weight: 2.5,
+                opacity: 1,
+                fillOpacity: 1
+            }).addTo(map);
+        }
+
+        function calcularDistanciaMetros(lat1, lon1, lat2, lon2) {
+            const R = 6371e3;
+            const p1 = lat1 * Math.PI / 180;
+            const p2 = lat2 * Math.PI / 180;
+            const dp = (lat2 - lat1) * Math.PI / 180;
+            const dl = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dp/2) * Math.sin(dp/2) +
+                      Math.cos(p1) * Math.cos(p2) * Math.sin(dl/2) * Math.sin(dl/2);
+            return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+        }
+
+        function procesarNuevaUbicacion(lat, lon) {
+            const now = Date.now();
+            const badge = document.getElementById('anticheat-badge');
+            const speedDisplay = document.getElementById('gps-speed-display');
+
+            if (lastCoords && lastTimestamp) {
+                const dist = calcularDistanciaMetros(lastCoords.lat, lastCoords.lon, lat, lon);
+                const segundos = (now - lastTimestamp) / 1000;
+
+                if (segundos > 0.5) {
+                    const kmh = (dist / segundos) * 3.6;
+                    speedDisplay.innerText = `${kmh.toFixed(1)} km/h`;
+
+                    if (kmh > MAX_SPEED_KMH) {
+                        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-brandOrange inline-block"></span> Bloqueado: Salto GPS`;
+                        badge.className = 'text-brandOrange flex items-center gap-1.5 font-bold';
+                        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+                        return false;
+                    }
+                }
+            }
+
+            lastCoords = { lat, lon };
+            lastTimestamp = now;
+            badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-brandGreen-mid inline-block"></span> GPS Verificado`;
+            badge.className = 'text-brandGreen-mid flex items-center gap-1.5 font-semibold';
+
+            if (map && userMarker) {
+                userMarker.setLatLng([lat, lon]);
+                map.panTo([lat, lon]);
+            }
+            return true;
+        }
+
+        function iniciarRastreoGPS() {
+            if (!navigator.geolocation) return;
+            navigator.geolocation.watchPosition(
+                (pos) => procesarNuevaUbicacion(pos.coords.latitude, pos.coords.longitude),
+                (err) => console.warn('GPS esperando señal:', err.message),
+                { enableHighAccuracy: true, maximumAge: 2000 }
+            );
+        }
+
+        function simularMovimientoNormal() {
+            const baseLat = lastCoords ? lastCoords.lat : -34.6037;
+            const baseLon = lastCoords ? lastCoords.lon : -58.3816;
+            procesarNuevaUbicacion(baseLat + 0.00004, baseLon + 0.00004);
+        }
+
+        function simularTeletransporte() {
+            const baseLat = lastCoords ? lastCoords.lat : -34.6037;
+            const baseLon = lastCoords ? lastCoords.lon : -58.3816;
+            procesarNuevaUbicacion(baseLat + 0.05, baseLon + 0.05);
+        }
+
+        // ==========================================
+        // 5. SISTEMA DE AMIGOS (SUPABASE)
+        // ==========================================
+        async function enviarSolicitudAmistad() {
+            const btn = document.getElementById('btn-add-friend');
+            btn.disabled = true;
+            btn.innerText = 'Enviando...';
+
+            if (supabaseClient && currentUser) {
+                const { error } = await supabaseClient
+                    .from('friendships')
+                    .insert([{ user_id: currentUser.id, friend_id: currentRival.id, status: 'pending' }]);
+
+                if (error && error.code !== '23505') {
+                    alert('No se pudo enviar la solicitud: ' + error.message);
+                    btn.disabled = false;
+                    btn.innerText = '+ Agregar Amigo';
+                    return;
+                }
+            }
+
+            btn.innerText = '✓ Solicitud enviada';
+            btn.className = 'bg-theme-panelSec text-theme-textSec border border-theme-border text-xs font-bold px-3.5 py-2 rounded-xl';
+        }
+
+        async function abrirModalAmigos() {
+            document.getElementById('friends-modal').classList.remove('hidden');
+            const container = document.getElementById('friends-list-container');
+
+            if (!supabaseClient || !currentUser) {
+                container.innerHTML = `
+                    <div class="flex justify-between items-center bg-theme-bg p-3 rounded-xl border border-theme-border">
+                        <span class="font-bold text-theme-text">${currentRival.username}</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-brandOrange-bg text-[#202820] border border-brandOrange-soft">Pendiente</span>
+                    </div>`;
+                return;
+            }
+
+            const { data, error } = await supabaseClient
+                .from('friendships')
+                .select('*')
+                .or(`user_id.eq.${currentUser.id},friend_id.eq.${currentUser.id}`);
+
+            if (error || !data || data.length === 0) {
+                container.innerHTML = '<p class="text-theme-textSec text-center py-4">Aún no tenés amigos agregados.</p>';
+                return;
+            }
+
+            container.innerHTML = data.map(f => `
+                <div class="flex justify-between items-center bg-theme-bg p-3 rounded-xl border border-theme-border">
+                    <span class="font-mono text-theme-text">ID: ${f.friend_id.slice(0, 8)}...</span>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded ${f.status === 'accepted' ? 'bg-brandGreen-dark text-[#F2F1E9]' : 'bg-brandOrange-bg text-[#202820] border border-brandOrange-soft'}">
+                        ${f.status === 'accepted' ? 'Amigo' : 'Pendiente'}
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        function cerrarModalAmigos() {
+            document.getElementById('friends-modal').classList.add('hidden');
+        }
+    </script>
 </body>
 </html>
