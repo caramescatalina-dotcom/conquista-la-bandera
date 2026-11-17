@@ -320,7 +320,7 @@
                 <p class="text-xs text-theme-textSec">Completá objetivos deportivos para sumar puntos de división.</p>
             </div>
 
-            <!-- DESAFÍO ESPECIAL (NARANJA INSTITUCIONAL) -->
+            <!-- DESAFÍO ESPECIAL -->
             <div class="bg-theme-panel border border-brandOrange rounded-2xl p-4 space-y-3">
                 <div class="flex justify-between items-start">
                     <div>
@@ -331,10 +331,10 @@
                     <span class="text-xs font-black text-brandOrange">+300 PTS</span>
                 </div>
                 <div class="w-full bg-theme-panelSec h-2.5 rounded-full overflow-hidden border border-theme-border">
-                    <div id="challenge-prog-1" class="bg-brandGreen-mid h-full transition-all" style="width: 50%"></div>
+                    <div id="challenge-prog-1" class="bg-brandGreen-mid h-full transition-all" style="width: 0%"></div>
                 </div>
                 <div class="flex justify-between text-[11px] font-bold">
-                    <span class="text-brandGreen-mid">Progreso: 1 / 2 banderas</span>
+                    <span id="challenge-flags-text" class="text-brandGreen-mid">Progreso: 0 / 2 banderas</span>
                     <span class="text-theme-textSec">Expira en 14h</span>
                 </div>
             </div>
@@ -350,7 +350,7 @@
                     <span class="text-xs font-black text-brandOrange">+150 PTS</span>
                 </div>
                 <div class="w-full bg-theme-panelSec h-2.5 rounded-full overflow-hidden border border-theme-border">
-                    <div id="challenge-prog-km" class="bg-brandGreen-mid h-full transition-all" style="width: 20%"></div>
+                    <div id="challenge-prog-km" class="bg-brandGreen-mid h-full transition-all" style="width: 0%"></div>
                 </div>
                 <div class="flex justify-between text-[11px] font-bold">
                     <span id="challenge-km-text" class="text-brandGreen-mid">0.00 / 3.00 km</span>
@@ -408,7 +408,7 @@
         <!-- ===================================================== -->
         <section id="panel-perfil" class="tab-panel hidden flex-1 p-4 max-w-lg w-full mx-auto space-y-4">
             <div class="bg-theme-panel border border-theme-border rounded-2xl p-4 flex items-center space-x-3.5">
-                <div class="w-14 h-14 rounded-2xl bg-brandGreen-dark text-[#F2F1E9] flex items-center justify-center font-black text-xl">
+                <div id="profile-avatar-initials" class="w-14 h-14 rounded-2xl bg-brandGreen-dark text-[#F2F1E9] flex items-center justify-center font-black text-xl">
                     CB
                 </div>
                 <div>
@@ -495,9 +495,11 @@
         // =========================================================
         // 1. CONFIGURACIÓN SUPABASE Y VARIABLES DE ESTADO
         // =========================================================
-        const SUPABASE_URL = 'TU_SUPABASE_URL';
-        const SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY';
-        const supabaseClient = (SUPABASE_URL !== 'TU_SUPABASE_URL')
+        // Reemplazá 'https://TU_ID_DE_PROYECTO.supabase.co' con tu URL de Supabase (Project Settings > API)
+        const SUPABASE_URL = 'https://TU_ID_DE_PROYECTO.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_M5F68YGhfhuHjZrJWR4OMg_R4zJd5vu';
+
+        const supabaseClient = (!SUPABASE_URL.includes('TU_ID_DE_PROYECTO') && SUPABASE_ANON_KEY)
             ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
             : null;
 
@@ -521,6 +523,7 @@
         let totalDistanceKm = 0;
         let elapsedSeconds = 0;
         let sessionPoints = 0;
+        let sessionFlagsCaptured = 0;
         let totalAccountPoints = 1240;
         let timerInterval = null;
         let watchId = null;
@@ -690,10 +693,14 @@
             document.getElementById('user-display-header').innerText = `@${displayName}`;
             document.getElementById('profile-username').innerText = `@${displayName}`;
             document.getElementById('profile-email').innerText = user.email;
+            document.getElementById('profile-avatar-initials').innerText = displayName.slice(0, 2).toUpperCase();
             document.getElementById('ranking-my-name').innerText = `@${displayName} (Vos)`;
             document.getElementById('rival-username').innerText = currentRival.username;
 
             inicializarMapa();
+            setTimeout(() => {
+                if (map) map.invalidateSize();
+            }, 150);
             iniciarRastreoGPSPasivo();
             cargarListaAmigos();
         }
@@ -909,6 +916,7 @@
             totalDistanceKm = 0;
             elapsedSeconds = 0;
             sessionPoints = 0;
+            sessionFlagsCaptured = 0;
             routeCoords = [];
             if (routePolyline) routePolyline.setLatLngs([]);
             actualizarUIEstadisticas();
@@ -928,6 +936,7 @@
 
             if (dist <= 35) {
                 sessionPoints += 150;
+                sessionFlagsCaptured++;
                 actualizarUIEstadisticas();
                 mostrarToast('¡Bandera capturada! +150 puntos');
 
@@ -947,9 +956,13 @@
             document.getElementById('stat-time').innerText = `${mins}:${secs}`;
             document.getElementById('stat-points').innerText = sessionPoints;
 
-            // Actualizar progreso en pestaña Desafíos
-            const pct = Math.min(100, Math.round((totalDistanceKm / 3.0) * 100));
-            document.getElementById('challenge-prog-km').style.width = `${pct}%`;
+            // Actualizar progreso en pestaña Desafíos (Banderas y Kilómetros)
+            const flagPct = Math.min(100, Math.round((sessionFlagsCaptured / 2) * 100));
+            document.getElementById('challenge-prog-1').style.width = `${flagPct}%`;
+            document.getElementById('challenge-flags-text').innerText = `Progreso: ${sessionFlagsCaptured} / 2 banderas`;
+
+            const kmPct = Math.min(100, Math.round((totalDistanceKm / 3.0) * 100));
+            document.getElementById('challenge-prog-km').style.width = `${kmPct}%`;
             document.getElementById('challenge-km-text').innerText = `${totalDistanceKm.toFixed(2)} / 3.00 km`;
         }
 
