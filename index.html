@@ -14,7 +14,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      /* Marca institucional idéntica en ambos temas */
       --orange-main: #FF7900;
       --orange-hover: #E96800;
       --orange-soft: #FFB36B;
@@ -25,7 +24,6 @@
       --green-light: #75C894;
       --green-soft: #A4C9A9;
 
-      /* Variables de tema (Oscuro por defecto) */
       --bg-base: #171D1A;
       --bg-header: rgba(23, 29, 26, 0.92);
       --bg-surface: #222B26;
@@ -40,7 +38,6 @@
       --toast-success-bg: #1B3628;
       --toast-error-bg: #3B1D22;
 
-      /* Acentos verdes adaptados para máximo contraste en cada fondo */
       --green-accent: #75C894;
       --green-accent-fill: #477B57;
       --green-tint-bg: rgba(71, 123, 87, 0.18);
@@ -79,87 +76,31 @@
     }
     .font-display { font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.03em; }
 
-    /* Clases semánticas adaptables a Claro / Oscuro */
-    .app-header {
-      background-color: var(--bg-header);
-      border-bottom: 1px solid var(--border-subtle);
-    }
-    .app-nav {
-      background-color: var(--bg-header);
-      border-top: 1px solid var(--border-subtle);
-    }
-    .surface-card {
-      background-color: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
-      box-shadow: var(--shadow-card);
-    }
-    .surface-card-elevated {
-      background-color: var(--bg-surface-elevated);
-      border: 1px solid var(--border-subtle);
-    }
-    .surface-inset {
-      background-color: var(--bg-surface-elevated);
-      border: 1px solid var(--border-subtle);
-    }
-    .theme-input {
-      background-color: var(--bg-base);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-primary);
-    }
-    .theme-input::placeholder {
-      color: var(--text-secondary);
-      opacity: 0.7;
-    }
-    .theme-input:focus {
-      outline: none;
-      border-color: var(--orange-main);
-    }
+    .app-header { background-color: var(--bg-header); border-bottom: 1px solid var(--border-subtle); }
+    .app-nav { background-color: var(--bg-header); border-top: 1px solid var(--border-subtle); }
+    .surface-card { background-color: var(--bg-surface); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-card); }
+    .surface-card-elevated { background-color: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); }
+    .surface-inset { background-color: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); }
+    .theme-input { background-color: var(--bg-base); border: 1px solid var(--border-subtle); color: var(--text-primary); }
+    .theme-input::placeholder { color: var(--text-secondary); opacity: 0.7; }
+    .theme-input:focus { outline: none; border-color: var(--orange-main); }
     .text-main { color: var(--text-primary); }
     .text-muted { color: var(--text-secondary); }
     .border-theme { border-color: var(--border-subtle); }
     .progress-track { background-color: var(--progress-track); }
 
-    /* Utilidades de Verde Institucional */
     .text-green-brand { color: var(--green-accent); }
     .bg-green-brand-fill { background-color: var(--green-accent-fill); }
     .bg-green-brand-bright { background-color: var(--green-light); }
-    .badge-green-brand {
-      background-color: var(--green-tint-bg);
-      border: 1px solid var(--green-tint-border);
-      color: var(--green-accent);
-    }
-    .card-green-accent {
-      background-color: var(--bg-surface);
-      border: 1px solid var(--green-tint-border);
-      box-shadow: var(--shadow-card);
-    }
-    .btn-brand-green {
-      background-color: var(--green-dark);
-      color: #F2F1E9;
-      border: 1px solid rgba(117, 200, 148, 0.35);
-    }
-    .btn-brand-green:hover {
-      background-color: var(--green-mid);
-    }
+    .badge-green-brand { background-color: var(--green-tint-bg); border: 1px solid var(--green-tint-border); color: var(--green-accent); }
+    .card-green-accent { background-color: var(--bg-surface); border: 1px solid var(--green-tint-border); box-shadow: var(--shadow-card); }
+    .btn-brand-green { background-color: var(--green-dark); color: #F2F1E9; border: 1px solid rgba(117, 200, 148, 0.35); }
+    .btn-brand-green:hover { background-color: var(--green-mid); }
 
-    /* Botones institucionales Naranja */
-    .btn-brand-orange {
-      background-color: var(--orange-main);
-      color: #FFFFFF;
-      box-shadow: 0 6px 18px rgba(255, 121, 0, 0.25);
-    }
-    .btn-brand-orange:hover {
-      background-color: var(--orange-hover);
-    }
-    .btn-choice-inactive {
-      background-color: var(--bg-surface-elevated);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-secondary);
-    }
-    .btn-choice-inactive:hover {
-      color: var(--text-primary);
-      border-color: var(--green-tint-border);
-    }
+    .btn-brand-orange { background-color: var(--orange-main); color: #FFFFFF; box-shadow: 0 6px 18px rgba(255, 121, 0, 0.25); }
+    .btn-brand-orange:hover { background-color: var(--orange-hover); }
+    .btn-choice-inactive { background-color: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); color: var(--text-secondary); }
+    .btn-choice-inactive:hover { color: var(--text-primary); border-color: var(--green-tint-border); }
 
     #map {
       height: 46vh;
@@ -176,10 +117,7 @@
     .btn-press:active { transform: scale(0.97); }
     .btn-press:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-    /* Transición suave entre pestañas */
-    .tab-section {
-      animation: fadeInTab 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
+    .tab-section { animation: fadeInTab 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     @keyframes fadeInTab {
       from { opacity: 0; transform: translateY(6px); }
       to { opacity: 1; transform: translateY(0); }
@@ -197,43 +135,12 @@
     }
     .ar-flag-float { animation: flagHover 2.6s ease-in-out infinite; }
 
-    /* Marcador GPS con cono de orientación en naranja institucional */
-    .gps-player-wrapper {
-      position: relative;
-      width: 48px;
-      height: 48px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .gps-heading-cone {
-      position: absolute;
-      width: 56px;
-      height: 56px;
-      transform-origin: center center;
-      transition: transform 0.1s linear;
-      pointer-events: none;
-    }
-    .gps-beacon {
-      width: 16px; height: 16px;
-      background: var(--orange-main);
-      border: 3px solid #FFFFFF;
-      border-radius: 50%;
-      box-shadow: 0 0 16px var(--orange-main);
-      position: relative;
-      z-index: 2;
-    }
-    .gps-beacon::after {
-      content: '';
-      position: absolute;
-      inset: -7px;
-      border-radius: 50%;
-      border: 1.5px solid var(--orange-main);
-      animation: pulseRing 2s infinite;
-    }
+    .gps-player-wrapper { position: relative; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; }
+    .gps-heading-cone { position: absolute; width: 56px; height: 56px; transform-origin: center center; transition: transform 0.1s linear; pointer-events: none; }
+    .gps-beacon { width: 16px; height: 16px; background: var(--orange-main); border: 3px solid #FFFFFF; border-radius: 50%; box-shadow: 0 0 16px var(--orange-main); position: relative; z-index: 2; }
+    .gps-beacon::after { content: ''; position: absolute; inset: -7px; border-radius: 50%; border: 1.5px solid var(--orange-main); animation: pulseRing 2s infinite; }
     .progress-fill { transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
 
-    /* Toasts adaptables */
     .toast-info { background-color: var(--toast-info-bg); border-color: var(--border-subtle); color: var(--text-primary); }
     .toast-success { background-color: var(--toast-success-bg); border-color: #477B57; color: #75C894; }
     html.theme-light .toast-success { color: #244B37; }
@@ -242,7 +149,7 @@
 </head>
 <body class="min-h-screen flex flex-col justify-between pb-24">
 
-  <!-- SPLASH SCREEN / PANTALLA DE CARGA INICIAL -->
+  <!-- SPLASH SCREEN -->
   <div id="splashScreen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center p-6 transition-opacity duration-500" style="background-color: var(--bg-base);">
     <div class="w-24 h-24 rounded-3xl card-green-accent flex items-center justify-center relative mb-6">
       <div class="absolute inset-0 rounded-3xl border border-[#75C894]/40 sonar-ring" style="--pulse-speed: 2s"></div>
@@ -254,13 +161,13 @@
       </svg>
     </div>
     <h1 class="font-display font-bold text-xl text-main tracking-wide text-center">CONQUISTA <span class="text-[#FF7900]">LA BANDERA</span></h1>
-    <p class="text-xs text-green-brand mt-2 font-semibold">Iniciando sistema táctico...</p>
+    <p class="text-xs text-green-brand mt-2 font-semibold">Sincronizando sistema táctico...</p>
   </div>
 
-  <!-- SISTEMA DE NOTIFICACIONES TOAST -->
+  <!-- TOASTS -->
   <div id="toastContainer" class="fixed top-16 inset-x-4 z-[60] max-w-md mx-auto pointer-events-none flex flex-col gap-2.5"></div>
 
-  <!-- HEADER PROFESIONAL -->
+  <!-- HEADER -->
   <header class="app-header px-4 py-3 flex justify-between items-center sticky top-0 z-30 backdrop-blur-xl">
     <div class="flex items-center gap-2.5 min-w-0">
       <div class="w-9 h-9 rounded-xl badge-green-brand flex items-center justify-center shrink-0 shadow-sm">
@@ -284,7 +191,6 @@
     </div>
 
     <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-      <!-- SELECTOR DE APARIENCIA: CLARO / OSCURO / AUTO -->
       <div class="surface-card-elevated p-0.5 rounded-xl flex items-center text-[10px] font-bold" role="group" aria-label="Selector de tema">
         <button type="button" data-theme-val="light" title="Modo claro" class="theme-opt-btn px-2 py-1.5 rounded-lg text-muted hover:text-main transition">
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
@@ -292,9 +198,7 @@
         <button type="button" data-theme-val="dark" title="Modo oscuro" class="theme-opt-btn px-2 py-1.5 rounded-lg text-muted hover:text-main transition">
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         </button>
-        <button type="button" data-theme-val="auto" title="Automático según dispositivo" class="theme-opt-btn px-2 py-1 rounded-lg text-muted hover:text-main transition">
-          Auto
-        </button>
+        <button type="button" data-theme-val="auto" title="Automático" class="theme-opt-btn px-2 py-1 rounded-lg text-muted hover:text-main transition">Auto</button>
       </div>
 
       <button id="btnSoundToggle" type="button" aria-label="Alternar audio" class="p-2 rounded-xl surface-card-elevated text-main btn-press">
@@ -340,9 +244,7 @@
             </button>
           </div>
         </div>
-        <button id="btnLogin" type="submit" class="w-full btn-brand-orange font-bold py-3.5 rounded-xl text-sm btn-press">
-          Continuar
-        </button>
+        <button id="btnLogin" type="submit" class="w-full btn-brand-orange font-bold py-3.5 rounded-xl text-sm btn-press">Continuar</button>
       </form>
 
       <!-- RECUPERAR CONTRASEÑA -->
@@ -355,9 +257,7 @@
           <label for="forgotEmail" class="text-xs font-semibold text-main">Correo electrónico de tu cuenta</label>
           <input id="forgotEmail" type="email" autocomplete="email" placeholder="nombre@gmail.com" class="theme-input w-full mt-1.5 px-4 py-3 rounded-xl text-sm transition" />
         </div>
-        <button id="btnSendReset" type="submit" class="w-full btn-brand-orange font-bold py-3.5 rounded-xl text-sm btn-press">
-          Enviar enlace de recuperación
-        </button>
+        <button id="btnSendReset" type="submit" class="w-full btn-brand-orange font-bold py-3.5 rounded-xl text-sm btn-press">Enviar enlace de recuperación</button>
         <button id="btnBackToLogin" type="button" class="w-full text-xs font-semibold text-muted hover:text-main transition pt-1">← Volver al inicio de sesión</button>
       </form>
 
@@ -387,9 +287,7 @@
             </button>
           </div>
         </div>
-        <button id="btnUpdatePassword" type="submit" class="w-full btn-brand-orange font-bold py-3.5 rounded-xl text-sm btn-press">
-          Guardar nueva clave
-        </button>
+        <button id="btnUpdatePassword" type="submit" class="w-full btn-brand-orange font-bold py-3.5 rounded-xl text-sm btn-press">Guardar nueva clave</button>
       </form>
 
       <!-- REGISTRO -->
@@ -418,9 +316,7 @@
           </div>
           <p class="text-[11px] text-muted mt-1.5">Debe incluir al menos una mayúscula y un número.</p>
         </div>
-        <button id="btnSignup" type="submit" class="w-full btn-brand-orange font-bold py-3.5 rounded-xl text-sm btn-press">
-          Registrarme
-        </button>
+        <button id="btnSignup" type="submit" class="w-full btn-brand-orange font-bold py-3.5 rounded-xl text-sm btn-press">Registrarme</button>
       </form>
 
       <!-- VERIFICACIÓN OTP -->
@@ -444,7 +340,7 @@
   <!-- INTERFAZ PRINCIPAL -->
   <div id="appContainer" class="hidden max-w-lg mx-auto w-full p-4 space-y-4">
     
-    <!-- PERMISO GPS Y BRÚJULA (DETALLE VERDE INSTITUCIONAL) -->
+    <!-- PERMISO GPS Y BRÚJULA -->
     <div id="gpsPermissionBanner" class="hidden card-green-accent p-4 rounded-2xl space-y-3.5">
       <div class="flex items-start gap-3.5">
         <div class="w-10 h-10 rounded-xl badge-green-brand flex items-center justify-center shrink-0 mt-0.5">
@@ -469,7 +365,7 @@
       </button>
     </div>
 
-    <!-- DESAFÍO TEMPORAL X3 (NARANJA INSTITUCIONAL) -->
+    <!-- DESAFÍO TEMPORAL X3 SINCRONIZADO -->
     <div id="flashBanner" class="surface-card border-[#FF7900]/40 p-3.5 rounded-2xl flex items-center justify-between gap-3">
       <div class="flex items-center gap-3">
         <div class="w-9 h-9 rounded-xl bg-[#FF7900]/15 border border-[#FF7900]/30 flex items-center justify-center text-[#FF7900] shrink-0">
@@ -477,10 +373,10 @@
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-[#FF7900]">Desafío x3 Puntos</span>
-            <span id="flashTimer" class="text-[11px] font-mono text-muted">44:59</span>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-[#FF7900]">Hora Pico x3 Puntos</span>
+            <span id="flashTimer" class="text-[11px] font-mono text-muted">--:--</span>
           </div>
-          <p class="text-xs text-main font-medium mt-0.5">Bandera especial activa en tu radio</p>
+          <p class="text-xs text-main font-medium mt-0.5">Bandera relámpago de 1 km activa</p>
         </div>
       </div>
       <button id="btnFlashEvent" type="button" class="btn-brand-orange font-bold text-xs px-3.5 py-2 rounded-xl shrink-0 btn-press">
@@ -503,17 +399,28 @@
           <button type="button" data-dist="5km" class="dist-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press">5 km</button>
           <button type="button" data-dist="10km" class="dist-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press">10 km</button>
         </div>
+        <p id="circuitHint" class="hidden text-[11px] text-green-brand font-medium px-1">
+          • Ruta circular con posta intermedia para volver cerca de tu punto de inicio.
+        </p>
 
         <div class="grid grid-cols-2 gap-2" id="modeGroup">
           <button type="button" data-mode="async_record" class="mode-btn bg-[#FF7900]/15 border border-[#FF7900] text-[#FF7900] font-bold py-2.5 rounded-xl text-xs btn-press">Contrarreloj</button>
           <button type="button" data-mode="live_duel" class="mode-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press">Duelo 1v1</button>
         </div>
 
-        <div id="duelJoinBox" class="hidden surface-inset p-3.5 rounded-xl space-y-2">
-          <p class="text-[11px] text-muted font-medium">¿Tenés un código de invitación de tu rival?</p>
+        <div id="duelJoinBox" class="hidden surface-inset p-3.5 rounded-xl space-y-2.5">
+          <button id="btnAutoMatchmaking" type="button" class="w-full btn-brand-green font-bold py-2.5 rounded-xl text-xs btn-press flex items-center justify-center gap-2">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            Buscar rival automático en vivo
+          </button>
+          <div class="flex items-center gap-2">
+            <hr class="border-theme flex-1" />
+            <span class="text-[10px] text-muted uppercase font-semibold">o código privado</span>
+            <hr class="border-theme flex-1" />
+          </div>
           <div class="flex gap-2">
             <input id="duelCodeInput" type="text" maxlength="4" placeholder="EJ: K9P2" class="theme-input uppercase flex-1 px-3.5 py-2 rounded-xl text-xs font-mono tracking-wider" />
-            <button id="btnJoinDuel" type="button" class="btn-brand-green font-bold px-4 py-2 rounded-xl text-xs btn-press">Unirme</button>
+            <button id="btnJoinDuel" type="button" class="btn-brand-orange font-bold px-4 py-2 rounded-xl text-xs btn-press">Unirme</button>
           </div>
         </div>
 
@@ -522,8 +429,18 @@
         </button>
       </div>
 
-      <!-- HUD PARTIDA ACTIVA (PROGRESO Y RADAR EN VERDE INSTITUCIONAL) -->
-      <div id="activeHud" class="hidden card-green-accent p-4 rounded-2xl space-y-4">
+      <!-- HUD PARTIDA ACTIVA -->
+      <div id="activeHud" class="hidden card-green-accent p-4 rounded-2xl space-y-3.5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span id="wakeLockIndicator" class="text-[10px] font-semibold badge-green-brand px-2.5 py-1 rounded-lg">Pantalla activa</span>
+            <span id="checkpointBadge" class="hidden text-[10px] font-bold bg-[#FF7900]/15 text-[#FF7900] border border-[#FF7900]/30 px-2.5 py-1 rounded-lg">Posta 1/2</span>
+          </div>
+          <button id="btnCancelMatch" type="button" class="text-[11px] font-semibold text-muted hover:text-rose-500 px-2.5 py-1 rounded-lg surface-inset transition btn-press">
+            Cancelar ruta
+          </button>
+        </div>
+
         <div id="duelWaitingBanner" class="hidden bg-[#FF7900]/15 border border-[#FF7900]/35 p-3.5 rounded-xl flex justify-between items-center">
           <div>
             <p class="text-xs font-bold text-[#FF7900]">Esperando a tu rival</p>
@@ -594,7 +511,7 @@
       </div>
     </section>
 
-    <!-- PESTAÑA 2: CLUBES -->
+    <!-- PESTAÑA 2: CLUBES Y MURO DE FOTOS -->
     <section id="tabClubs" class="tab-section hidden space-y-4">
       <div class="surface-card p-5 rounded-2xl space-y-4">
         <div class="flex items-center justify-between">
@@ -612,17 +529,17 @@
           </div>
           <hr class="border-theme" />
           <div class="space-y-2">
-            <p class="text-xs text-muted font-medium">O creá un club nuevo para competir en grupo:</p>
+            <p class="text-xs text-muted font-medium">O creá un club nuevo para dominar tu zona:</p>
             <input id="newClubName" type="text" maxlength="30" placeholder="Nombre del club" class="theme-input w-full px-4 py-3 rounded-xl text-sm" />
             <button id="btnCreateClub" type="button" class="w-full btn-brand-green font-semibold py-3.5 rounded-xl text-xs btn-press">Crear club</button>
           </div>
         </div>
 
-        <div id="myClubView" class="hidden space-y-3.5">
+        <div id="myClubView" class="hidden space-y-4">
           <div class="flex justify-between items-center surface-inset p-4 rounded-xl border border-[#75C894]/30">
             <div>
               <h3 id="clubNameDisplay" class="font-display font-bold text-base text-main">--</h3>
-              <p class="text-xs text-muted mt-0.5">Puntos acumulados: <span id="clubPointsDisplay" class="text-green-brand font-bold">0</span></p>
+              <p class="text-xs text-muted mt-0.5">Puntos del club: <span id="clubPointsDisplay" class="text-green-brand font-bold">0</span></p>
             </div>
             <div class="text-right">
               <span class="text-[10px] text-muted block uppercase font-semibold">Código</span>
@@ -630,6 +547,17 @@
             </div>
           </div>
           <div id="clubMembersList" class="space-y-2"></div>
+
+          <!-- MURO DE CAPTURAS REALES DEL CLUB -->
+          <div class="pt-3 border-t border-theme space-y-2.5">
+            <div class="flex items-center justify-between">
+              <h4 class="font-display font-bold text-sm text-main">Muro de Conquistas</h4>
+              <span class="text-[11px] text-green-brand font-semibold">Fotos recientes</span>
+            </div>
+            <div id="clubPhotoFeed" class="grid grid-cols-2 gap-2.5">
+              <p class="text-xs text-muted col-span-2 text-center py-3">Aún no hay fotos de conquistas en el club.</p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -803,7 +731,7 @@
   </nav>
 
   <script>
-    // GESTIÓN VISUAL DE TEMA (CLARO / OSCURO / AUTOMÁTICO)
+    // APARIENCIA CLARO / OSCURO / AUTO
     (function initAppearanceSelector() {
       const THEME_KEY = 'clb_theme_pref';
       const htmlEl = document.documentElement;
@@ -866,7 +794,8 @@
         ...ENV_CONFIG,
         USERNAME_REGEX: /^[a-z0-9._]{3,20}$/,
         PASSWORD_REGEX: /^(?=.*[A-Z])(?=.*\d).{6,64}$/,
-        CAPTURE_RADIUS_METERS: 35
+        CAPTURE_RADIUS_METERS: 35,
+        ACTIVE_MATCH_STORAGE_KEY: `clb_active_match_${ENV_CONFIG.ENV_NAME.toLowerCase()}`
       });
 
       if (IS_DEV) {
@@ -896,9 +825,11 @@
       const state = {
         user: null,
         profile: null,
+        myClubId: null,
         map: null,
         userMarker: null,
         flagMarker: null,
+        checkpointMarker: null,
         routeLine: null,
         territoryLayer: null,
         userPos: null,
@@ -912,11 +843,14 @@
         distance: '1km',
         mode: 'async_record',
         activeMatch: null,
+        checkpointPoint: null,
+        checkpointReached: false,
         isFlashEvent: false,
         initialDistance: 1000,
         recordedPath: [],
         matchStartTime: null,
         matchChannel: null,
+        wakeLock: null,
         soundEnabled: true,
         lastVibrateTime: 0,
         videoStream: null,
@@ -936,11 +870,7 @@
       function notify(message, type = 'info') {
         const container = document.getElementById('toastContainer');
         const el = document.createElement('div');
-        const styles = {
-          info: 'toast-info',
-          success: 'toast-success',
-          error: 'toast-error'
-        };
+        const styles = { info: 'toast-info', success: 'toast-success', error: 'toast-error' };
         el.className = `px-4 py-3 rounded-2xl border text-xs font-semibold shadow-2xl backdrop-blur-xl transition-opacity duration-300 ${styles[type] || styles.info}`;
         el.textContent = message;
         container.appendChild(el);
@@ -953,9 +883,7 @@
       async function getAuthHeaders() {
         if (!sb) throw new Error("Cliente Supabase no inicializado.");
         const { data: { session } } = await sb.auth.getSession();
-        if (!session || !session.access_token) {
-          throw new Error("Tu sesión expiró. Volvé a iniciar sesión.");
-        }
+        if (!session || !session.access_token) throw new Error("Tu sesión expiró. Volvé a iniciar sesión.");
         return {
           'Content-Type': 'application/json',
           'apikey': CONFIG.SUPABASE_ANON_KEY,
@@ -963,6 +891,80 @@
         };
       }
 
+      // WAKE LOCK API (MANTENER PANTALLA ENCENDIDA EN PARTIDA)
+      async function requestScreenWakeLock() {
+        try {
+          if ('wakeLock' in navigator && !state.wakeLock) {
+            state.wakeLock = await navigator.wakeLock.request('screen');
+            document.getElementById('wakeLockIndicator').textContent = "Pantalla activa";
+            state.wakeLock.addEventListener('release', () => { state.wakeLock = null; });
+          }
+        } catch (_) {
+          document.getElementById('wakeLockIndicator').textContent = "GPS en curso";
+        }
+      }
+
+      function releaseScreenWakeLock() {
+        if (state.wakeLock) {
+          state.wakeLock.release().catch(() => {});
+          state.wakeLock = null;
+        }
+      }
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && state.activeMatch) {
+          requestScreenWakeLock();
+        }
+      });
+
+      // PERSISTENCIA DE PARTIDA ACTIVA EN LOCALSTORAGE
+      function saveActiveMatchState() {
+        if (!state.activeMatch) {
+          localStorage.removeItem(CONFIG.ACTIVE_MATCH_STORAGE_KEY);
+          return;
+        }
+        try {
+          localStorage.setItem(CONFIG.ACTIVE_MATCH_STORAGE_KEY, JSON.stringify({
+            activeMatch: state.activeMatch,
+            category: state.category,
+            distance: state.distance,
+            mode: state.mode,
+            isFlashEvent: state.isFlashEvent,
+            initialDistance: state.initialDistance,
+            recordedPath: state.recordedPath,
+            matchStartTime: state.matchStartTime,
+            checkpointPoint: state.checkpointPoint,
+            checkpointReached: state.checkpointReached
+          }));
+        } catch (_) {}
+      }
+
+      function restoreActiveMatchIfAny() {
+        try {
+          const raw = localStorage.getItem(CONFIG.ACTIVE_MATCH_STORAGE_KEY);
+          if (!raw) return;
+          const saved = JSON.parse(raw);
+          if (!saved || !saved.activeMatch || !saved.activeMatch.flag) return;
+
+          state.activeMatch = saved.activeMatch;
+          state.category = saved.category || 'walk_run';
+          state.distance = saved.distance || '1km';
+          state.mode = saved.mode || 'async_record';
+          state.isFlashEvent = !!saved.isFlashEvent;
+          state.initialDistance = saved.initialDistance || 1000;
+          state.recordedPath = Array.isArray(saved.recordedPath) ? saved.recordedPath : [];
+          state.matchStartTime = saved.matchStartTime || Date.now();
+          state.checkpointPoint = saved.checkpointPoint || null;
+          state.checkpointReached = !!saved.checkpointReached;
+
+          renderMatchOnMapAndHud();
+          notify("Se restauró tu ruta en curso.", "info");
+        } catch (_) {
+          localStorage.removeItem(CONFIG.ACTIVE_MATCH_STORAGE_KEY);
+        }
+      }
+
+      // MOTOR DE AUDIO SINTETIZADO
       const AudioEngine = (() => {
         let ctx = null;
         function tone(freq, dur = 0.12, delay = 0) {
@@ -985,18 +987,38 @@
         return {
           tap: () => tone(540, 0.08),
           ping: () => tone(880, 0.07),
+          checkpoint: () => { tone(587.33, 0.1, 0); tone(880, 0.18, 0.1); },
           success: () => { tone(523.25, 0.12, 0); tone(659.25, 0.12, 0.1); tone(783.99, 0.25, 0.2); }
         };
       })();
 
-      let flashSeconds = 44 * 60 + 59;
-      setInterval(() => {
-        if (flashSeconds > 0) flashSeconds--;
-        const m = String(Math.floor(flashSeconds / 60)).padStart(2, '0');
-        const s = String(flashSeconds % 60).padStart(2, '0');
+      // DESAFÍO HORA PICO X3 SINCRONIZADO POR RELOJ REAL (CADA HORA EN PUNTO DURANTE 45 MIN)
+      function updateSyncedFlashClock() {
+        const now = new Date();
+        const mins = now.getMinutes();
+        const secs = now.getSeconds();
         const el = document.getElementById('flashTimer');
-        if (el) el.textContent = `${m}:${s}`;
-      }, 1000);
+        const btn = document.getElementById('btnFlashEvent');
+        if (!el || !btn) return;
+
+        if (mins < 45) {
+          const remTotal = (44 - mins) * 60 + (60 - secs);
+          const m = String(Math.floor(remTotal / 60)).padStart(2, '0');
+          const s = String(remTotal % 60).padStart(2, '0');
+          el.textContent = `${m}:${s}`;
+          btn.disabled = false;
+          btn.textContent = "Aceptar";
+        } else {
+          const remWait = (60 - mins) * 60 - secs;
+          const m = String(Math.floor(remWait / 60)).padStart(2, '0');
+          const s = String(remWait % 60).padStart(2, '0');
+          el.textContent = `Próx. en ${m}:${s}`;
+          btn.disabled = true;
+          btn.textContent = "En espera";
+        }
+      }
+      updateSyncedFlashClock();
+      setInterval(updateSyncedFlashClock, 1000);
 
       document.querySelectorAll('.toggle-pass-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1016,10 +1038,7 @@
 
       function setAuthError(msg) {
         const box = document.getElementById('authError');
-        if (!msg) {
-          box.classList.add('hidden');
-          return;
-        }
+        if (!msg) { box.classList.add('hidden'); return; }
         box.textContent = msg;
         box.classList.remove('hidden');
       }
@@ -1048,15 +1067,14 @@
       async function handleLogin(e) {
         if (e) e.preventDefault();
         setAuthError(null);
-        if (!sb) return setAuthError("No se pudo conectar con Supabase. Recargá la página.");
+        if (!sb) return setAuthError("No se pudo conectar con Supabase.");
 
         const identifier = document.getElementById('loginIdentifier').value.trim().toLowerCase();
         const password = document.getElementById('loginPassword').value;
         const btn = document.getElementById('btnLogin');
 
         if (!identifier || !password) return setAuthError("Completá ambos campos.");
-        btn.disabled = true;
-        btn.textContent = "Verificando...";
+        btn.disabled = true; btn.textContent = "Verificando...";
 
         try {
           let emailToUse = identifier;
@@ -1065,17 +1083,14 @@
             if (!perfil || !perfil.email) throw new Error("Usuario o clave incorrectos.");
             emailToUse = perfil.email;
           }
-
           const { data, error } = await sb.auth.signInWithPassword({ email: emailToUse, password });
           if (error || !data.user) throw new Error("Usuario o clave incorrectos.");
-
           AudioEngine.tap();
           bootApp(data.user);
         } catch (err) {
           setAuthError(err.message || "No se pudo iniciar sesión.");
         } finally {
-          btn.disabled = false;
-          btn.textContent = "Continuar";
+          btn.disabled = false; btn.textContent = "Continuar";
         }
       }
 
@@ -1086,8 +1101,7 @@
         if (!email || !email.includes('@')) return setAuthError("Ingresá un correo electrónico válido.");
 
         const btn = document.getElementById('btnSendReset');
-        btn.disabled = true;
-        btn.textContent = "Enviando...";
+        btn.disabled = true; btn.textContent = "Enviando...";
 
         try {
           const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
@@ -1096,10 +1110,9 @@
           document.getElementById('otpTargetEmail').textContent = email;
           document.getElementById('otpVerifyView').classList.remove('hidden');
         } catch (err) {
-          setAuthError(err.message || "No se pudo enviar el correo de recuperación.");
+          setAuthError(err.message || "No se pudo enviar el correo.");
         } finally {
-          btn.disabled = false;
-          btn.textContent = "Enviar enlace de recuperación";
+          btn.disabled = false; btn.textContent = "Enviar enlace de recuperación";
         }
       }
 
@@ -1113,8 +1126,7 @@
         if (p1 !== p2) return setAuthError("Las contraseñas no coinciden.");
 
         const btn = document.getElementById('btnUpdatePassword');
-        btn.disabled = true;
-        btn.textContent = "Guardando...";
+        btn.disabled = true; btn.textContent = "Guardando...";
 
         try {
           const { data, error } = await sb.auth.updateUser({ password: p1 });
@@ -1124,8 +1136,7 @@
         } catch (err) {
           setAuthError(err.message || "No se pudo actualizar la contraseña.");
         } finally {
-          btn.disabled = false;
-          btn.textContent = "Guardar nueva clave";
+          btn.disabled = false; btn.textContent = "Guardar nueva clave";
         }
       }
 
@@ -1143,8 +1154,7 @@
         if (!email || !email.includes('@')) return setAuthError("Ingresá un correo electrónico válido.");
         if (!CONFIG.PASSWORD_REGEX.test(password)) return setAuthError("La clave requiere al menos 6 caracteres, una mayúscula y un número.");
 
-        btn.disabled = true;
-        btn.textContent = "Procesando...";
+        btn.disabled = true; btn.textContent = "Procesando...";
 
         try {
           const { data: existing } = await sb.from('profiles').select('username').eq('username', username).maybeSingle();
@@ -1164,8 +1174,7 @@
           localStorage.removeItem(`clb_pending_signup_${CONFIG.ENV_NAME}`);
           setAuthError(err.message || "No se pudo completar el registro.");
         } finally {
-          btn.disabled = false;
-          btn.textContent = "Registrarme";
+          btn.disabled = false; btn.textContent = "Registrarme";
         }
       }
 
@@ -1232,32 +1241,35 @@
         const fallback = (user.user_metadata && user.user_metadata.username) || (user.email && user.email.split('@')[0]) || 'jugador';
         document.getElementById('headerUsername').textContent = `@${fallback}`;
 
-        const today = new Date().toDateString();
-        const lastDay = localStorage.getItem('clb_last_day');
-        let streak = parseInt(localStorage.getItem('clb_streak') || '1', 10);
-        if (lastDay && lastDay !== today) {
-          const yesterday = new Date(Date.now() - 86400000).toDateString();
-          streak = (lastDay === yesterday) ? streak + 1 : 1;
-        }
-        localStorage.setItem('clb_last_day', today);
-        localStorage.setItem('clb_streak', String(streak));
-        document.getElementById('streakCount').textContent = String(streak);
-        const streakEl = document.getElementById('streakBadge');
-        streakEl.classList.remove('hidden');
-        streakEl.classList.add('flex');
-
         initMap();
-        await checkAndManageGpsPermission();
         await loadUserProfile();
+        await checkAndManageGpsPermission();
+        restoreActiveMatchIfAny();
         hideSplashScreen();
       }
 
+      // PERFIL Y RACHA SINCRONIZADA EN BASE DE DATOS
       async function loadUserProfile() {
         if (!sb || !state.user) return;
         try {
           const { data: profile } = await sb.from('profiles').select('*').eq('id', state.user.id).maybeSingle();
+          const { data: mem } = await sb.from('club_members').select('club_id').eq('user_id', state.user.id).maybeSingle();
+          state.myClubId = mem ? mem.club_id : null;
+
           if (profile) {
-            state.profile = profile;
+            // Sincronización de racha diaria en BD
+            const todayStr = new Date().toISOString().split('T')[0];
+            const yesterdayStr = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+            let streak = Number(profile.streak_days || 1);
+
+            if (profile.last_active_date && profile.last_active_date !== todayStr) {
+              streak = (profile.last_active_date === yesterdayStr) ? streak + 1 : 1;
+              await sb.from('profiles').update({ streak_days: streak, last_active_date: todayStr }).eq('id', state.user.id);
+            } else if (!profile.last_active_date) {
+              await sb.from('profiles').update({ streak_days: 1, last_active_date: todayStr }).eq('id', state.user.id);
+            }
+
+            state.profile = { ...profile, streak_days: streak };
             const uname = profile.username || 'jugador';
             const displayName = profile.full_name || uname;
             document.getElementById('headerUsername').textContent = `@${uname}`;
@@ -1265,6 +1277,11 @@
             document.getElementById('profileDisplayName').textContent = displayName;
             document.getElementById('editFullName').value = profile.full_name || '';
             document.getElementById('profileAvatarInitials').textContent = displayName.slice(0, 2).toUpperCase();
+
+            document.getElementById('streakCount').textContent = String(streak);
+            const streakEl = document.getElementById('streakBadge');
+            streakEl.classList.remove('hidden');
+            streakEl.classList.add('flex');
 
             const totalPts = (profile.points_walk_run || 0) + (profile.points_bike || 0) + (profile.points_mixed || 0);
             const totalWins = Number(profile.total_wins || 0);
@@ -1277,11 +1294,12 @@
             document.getElementById('profileXpBar').style.width = `${Math.max(6, Math.round((xpInLevel / 150) * 100))}%`;
             document.getElementById('statTotalPoints').textContent = String(totalPts);
             document.getElementById('statTotalWins').textContent = String(totalWins);
-            document.getElementById('statStreak').textContent = `${localStorage.getItem('clb_streak') || '1'}d`;
+            document.getElementById('statStreak').textContent = `${streak}d`;
           }
         } catch (_) {}
       }
 
+      // BRÚJULA Y GPS
       function onDeviceHeadingChange(e) {
         let heading = null;
         if (typeof e.webkitCompassHeading === 'number' && !isNaN(e.webkitCompassHeading)) heading = e.webkitCompassHeading;
@@ -1452,9 +1470,9 @@
 
         if (!state.hasRealGps || isInitial) {
           state.hasRealGps = true;
-          if (state.map) state.map.setView([newLat, newLng], 16);
-          renderTerritoryZone(newLat, newLng);
-        } else if (state.map) {
+          if (state.map && !state.activeMatch) state.map.setView([newLat, newLng], 16);
+          renderRealTerritoryZones(newLat, newLng);
+        } else if (state.map && !state.activeMatch) {
           state.map.panTo([newLat, newLng]);
         }
 
@@ -1462,21 +1480,72 @@
           const lastPt = state.recordedPath[state.recordedPath.length - 1];
           if (!lastPt || state.map.distance([lastPt[1], lastPt[0]], [newLat, newLng]) >= 3) {
             state.recordedPath.push([newLng, newLat]);
+            saveActiveMatchState();
           }
           updateProgress();
         }
       }
 
-      function renderTerritoryZone(lat, lng) {
-        if (!state.map) return;
+      // CONTROL TERRITORIAL REAL BASADO EN CONQUISTAS DE CLUBES EN LA ZONA
+      async function renderRealTerritoryZones(lat, lng) {
+        if (!state.map || !sb) return;
         if (state.territoryLayer) state.map.removeLayer(state.territoryLayer);
         state.territoryLayer = L.layerGroup().addTo(state.map);
-        L.circle([lat + 0.0042, lng + 0.0038], {
-          radius: 360, color: '#75C894', fillColor: '#75C894', fillOpacity: 0.16, weight: 2, dashArray: '4, 6'
-        }).bindPopup("<b>Zona de club</b><br>Capturá banderas acá.").addTo(state.territoryLayer);
+
+        try {
+          const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+          const { data: recentWins } = await sb
+            .from('matches')
+            .select('user_id, flag_lat, flag_lng')
+            .eq('status', 'completed')
+            .gte('created_at', sevenDaysAgo)
+            .not('flag_lat', 'is', null)
+            .limit(100);
+
+          if (!recentWins || recentWins.length === 0) {
+            L.circle([lat, lng], {
+              radius: 450, color: '#75C894', fillColor: '#75C894', fillOpacity: 0.08, weight: 1.5, dashArray: '5, 7'
+            }).bindPopup("<b>Territorio Neutral</b><br>Conquistá banderas acá para reclamar la zona para tu club.").addTo(state.territoryLayer);
+            return;
+          }
+
+          // Filtrar conquistas dentro de 1.5 km y agrupar por club
+          const nearbyWins = recentWins.filter(w => state.map.distance([lat, lng], [w.flag_lat, w.flag_lng]) <= 1500);
+          if (nearbyWins.length === 0) return;
+
+          const userIds = [...new Set(nearbyWins.map(w => w.user_id))];
+          const { data: memberships } = await sb
+            .from('club_members')
+            .select('user_id, club_id, clubs(id, name)')
+            .in('user_id', userIds);
+
+          const clubCounts = {};
+          (nearbyWins || []).forEach(w => {
+            const m = (memberships || []).find(mem => mem.user_id === w.user_id);
+            if (m && m.clubs) {
+              if (!clubCounts[m.club_id]) clubCounts[m.club_id] = { id: m.club_id, name: m.clubs.name, count: 0, latSum: 0, lngSum: 0 };
+              clubCounts[m.club_id].count++;
+              clubCounts[m.club_id].latSum += w.flag_lat;
+              clubCounts[m.club_id].lngSum += w.flag_lng;
+            }
+          });
+
+          const dominantClub = Object.values(clubCounts).sort((a, b) => b.count - a.count)[0];
+          if (dominantClub) {
+            const centerLat = dominantClub.latSum / dominantClub.count;
+            const centerLng = dominantClub.lngSum / dominantClub.count;
+            const isMyClub = state.myClubId && dominantClub.id === state.myClubId;
+            const zoneColor = isMyClub ? '#75C894' : '#FF7900';
+
+            L.circle([centerLat, centerLng], {
+              radius: 420, color: zoneColor, fillColor: zoneColor, fillOpacity: 0.16, weight: 2, dashArray: '4, 6'
+            }).bindPopup(`<b>Territorio de ${escapeHTML(dominantClub.name)}</b><br>${dominantClub.count} conquistas esta semana.`).addTo(state.territoryLayer);
+          }
+        } catch (_) {}
       }
 
-      async function generateMatch(isJoining = false) {
+      // GENERACIÓN DE PARTIDA (CON CIRCUITO DE POSTAS PARA 5K/10K Y MATCHMAKING PÚBLICO)
+      async function generateMatch(isJoining = false, isPublicQueue = false) {
         if (!state.hasRealGps || !state.userPos) {
           showGpsPermissionCard('prompt');
           return notify("Confirmá tu ubicación GPS arriba.", "error");
@@ -1484,12 +1553,33 @@
 
         const btn = document.getElementById('btnGenerateFlag');
         btn.disabled = true;
-        btn.textContent = "Calculando ruta...";
+        btn.textContent = isPublicQueue ? "Buscando rival..." : "Calculando ruta...";
         AudioEngine.tap();
 
-        const duelCode = isJoining ? document.getElementById('duelCodeInput').value.trim().toUpperCase() : null;
+        let duelCode = isJoining ? document.getElementById('duelCodeInput').value.trim().toUpperCase() : null;
 
         try {
+          // Si es matchmaking público, buscar una sala pendiente compatible antes de crear una nueva
+          if (isPublicQueue && sb) {
+            const tenMinsAgo = new Date(Date.now() - 10 * 60000).toISOString();
+            const { data: openRooms } = await sb
+              .from('matches')
+              .select('duel_code')
+              .eq('status', 'pending')
+              .eq('mode', 'live_duel')
+              .eq('category', state.category)
+              .neq('user_id', state.user.id)
+              .gte('created_at', tenMinsAgo)
+              .not('duel_code', 'is', null)
+              .limit(1);
+
+            if (openRooms && openRooms.length > 0) {
+              duelCode = openRooms[0].duel_code;
+              isJoining = true;
+              notify(`¡Rival encontrado! Uniéndote a sala ${duelCode}...`, "success");
+            }
+          }
+
           const headers = await getAuthHeaders();
           const res = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/generate-match`, {
             method: 'POST',
@@ -1505,41 +1595,94 @@
           state.recordedPath = [[state.userPos.lng, state.userPos.lat]];
           state.initialDistance = Math.max(100, state.map.distance([state.userPos.lat, state.userPos.lng], [data.flag.lat, data.flag.lng]));
 
-          if (state.flagMarker) state.map.removeLayer(state.flagMarker);
-          if (state.routeLine) state.map.removeLayer(state.routeLine);
-
-          const pinColor = state.isFlashEvent ? '#FF7900' : '#75C894';
-          const flagIcon = L.divIcon({
-            className: '',
-            html: `<svg width="34" height="34" viewBox="0 0 24 24" fill="${pinColor}" stroke="#244B37" stroke-width="2"><path d="M4 21V4m0 0l13 3-3 5 3 5-13-3"/></svg>`,
-            iconSize: [34, 34], iconAnchor: [7, 32]
-          });
-
-          state.flagMarker = L.marker([data.flag.lat, data.flag.lng], { icon: flagIcon }).addTo(state.map);
-          const coords = data.route?.coordinates || [[state.userPos.lng, state.userPos.lat], [data.flag.lng, data.flag.lat]];
-          const latLngs = coords.map(c => [c[1], c[0]]);
-          state.routeLine = L.polyline(latLngs, { color: pinColor, weight: 4.5, dashArray: '8, 8' }).addTo(state.map);
-          state.map.fitBounds(state.routeLine.getBounds(), { padding: [32, 32] });
-
-          document.getElementById('setupPanel').classList.add('hidden');
-          document.getElementById('activeHud').classList.remove('hidden');
-          document.getElementById('hudDistanceLabel').textContent = `Distancia total: ${data.realDistanceMeters || Math.round(state.initialDistance)} m`;
-
-          const isDuel = data.mode === 'live_duel' || state.mode === 'live_duel';
-          if (isDuel) {
-            document.getElementById('rivalProgressContainer').classList.remove('hidden');
-            setupDuelChannel(data.matchId, data.status || (isJoining ? 'active' : 'pending'), data.duelCode);
+          // Configurar posta intermedia (Checkpoint) si es 5km o 10km y la ruta tiene suficientes puntos
+          const coords = data.route?.coordinates || [];
+          if ((state.distance === '5km' || state.distance === '10km') && coords.length >= 6) {
+            const midPt = coords[Math.floor(coords.length / 2)];
+            state.checkpointPoint = { lat: midPt[1], lng: midPt[0] };
+            state.checkpointReached = false;
           } else {
-            document.getElementById('rivalProgressContainer').classList.add('hidden');
-            document.getElementById('duelWaitingBanner').classList.add('hidden');
+            state.checkpointPoint = null;
+            state.checkpointReached = true;
           }
-          updateProgress();
+
+          // Guardar coordenadas de la bandera en BD para control territorial
+          if (sb && data.matchId) {
+            sb.from('matches').update({ flag_lat: data.flag.lat, flag_lng: data.flag.lng, is_public_matchmaking: isPublicQueue }).eq('id', data.matchId).then(() => {});
+          }
+
+          saveActiveMatchState();
+          renderMatchOnMapAndHud(isJoining);
         } catch (err) {
           notify(err.message, "error");
         } finally {
           btn.disabled = false;
-          btn.textContent = state.mode === 'live_duel' ? "Crear sala de duelo" : "Generar bandera en ruta";
+          btn.textContent = state.mode === 'live_duel' ? "Crear sala privada de duelo" : "Generar bandera en ruta";
         }
+      }
+
+      function renderMatchOnMapAndHud(isJoining = false) {
+        const data = state.activeMatch;
+        if (!data || !state.map) return;
+
+        if (state.flagMarker) state.map.removeLayer(state.flagMarker);
+        if (state.checkpointMarker) state.map.removeLayer(state.checkpointMarker);
+        if (state.routeLine) state.map.removeLayer(state.routeLine);
+
+        const pinColor = state.isFlashEvent ? '#FF7900' : '#75C894';
+        const flagIcon = L.divIcon({
+          className: '',
+          html: `<svg width="34" height="34" viewBox="0 0 24 24" fill="${pinColor}" stroke="#244B37" stroke-width="2"><path d="M4 21V4m0 0l13 3-3 5 3 5-13-3"/></svg>`,
+          iconSize: [34, 34], iconAnchor: [7, 32]
+        });
+
+        state.flagMarker = L.marker([data.flag.lat, data.flag.lng], { icon: flagIcon }).addTo(state.map);
+
+        if (state.checkpointPoint && !state.checkpointReached) {
+          const cpIcon = L.divIcon({
+            className: '',
+            html: `<div style="width:22px;height:22px;border-radius:50%;background:#FF7900;border:3px solid #FFF;color:#FFF;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.4);">1</div>`,
+            iconSize: [22, 22], iconAnchor: [11, 11]
+          });
+          state.checkpointMarker = L.marker([state.checkpointPoint.lat, state.checkpointPoint.lng], { icon: cpIcon })
+            .bindPopup("<b>Posta intermedia obligatoria</b><br>Pasá por acá antes de ir a la bandera final.")
+            .addTo(state.map);
+          document.getElementById('checkpointBadge').classList.remove('hidden');
+          document.getElementById('checkpointBadge').textContent = "Posta 1/2 pendiente";
+        } else {
+          document.getElementById('checkpointBadge').classList.add('hidden');
+        }
+
+        const coords = data.route?.coordinates || [[state.userPos.lng, state.userPos.lat], [data.flag.lng, data.flag.lat]];
+        const latLngs = coords.map(c => [c[1], c[0]]);
+        state.routeLine = L.polyline(latLngs, { color: pinColor, weight: 4.5, dashArray: '8, 8' }).addTo(state.map);
+        state.map.fitBounds(state.routeLine.getBounds(), { padding: [32, 32] });
+
+        document.getElementById('setupPanel').classList.add('hidden');
+        document.getElementById('activeHud').classList.remove('hidden');
+        document.getElementById('hudDistanceLabel').textContent = `Distancia total: ${data.realDistanceMeters || Math.round(state.initialDistance)} m`;
+
+        requestScreenWakeLock();
+
+        const isDuel = data.mode === 'live_duel' || state.mode === 'live_duel';
+        if (isDuel) {
+          document.getElementById('rivalProgressContainer').classList.remove('hidden');
+          setupDuelChannel(data.matchId, data.status || (isJoining ? 'active' : 'pending'), data.duelCode);
+        } else {
+          document.getElementById('rivalProgressContainer').classList.add('hidden');
+          document.getElementById('duelWaitingBanner').classList.add('hidden');
+        }
+        updateProgress();
+      }
+
+      async function cancelActiveMatch() {
+        if (!state.activeMatch) return;
+        const matchId = state.activeMatch.matchId;
+        if (sb && matchId) {
+          try { await sb.from('matches').update({ status: 'cancelled' }).eq('id', matchId); } catch (_) {}
+        }
+        notify("Ruta cancelada.", "info");
+        resetMatchUI();
       }
 
       function setupDuelChannel(matchId, status, duelCode) {
@@ -1572,6 +1715,26 @@
 
       function updateProgress() {
         if (!state.activeMatch || !state.map || !state.userPos) return;
+
+        // Verificar posta intermedia si existe y aún no se completó
+        if (state.checkpointPoint && !state.checkpointReached) {
+          const distToCp = state.map.distance([state.userPos.lat, state.userPos.lng], [state.checkpointPoint.lat, state.checkpointPoint.lng]);
+          document.getElementById('hudRemaining').textContent = `${Math.round(distToCp)} m`;
+          document.getElementById('sonarStatusText').textContent = "Dirigite a la Posta 1/2";
+
+          if (distToCp <= CONFIG.CAPTURE_RADIUS_METERS) {
+            state.checkpointReached = true;
+            if (state.checkpointMarker) state.map.removeLayer(state.checkpointMarker);
+            document.getElementById('checkpointBadge').textContent = "Posta 1/2 completada";
+            document.getElementById('checkpointBadge').className = "text-[10px] font-bold badge-green-brand px-2.5 py-1 rounded-lg";
+            AudioEngine.checkpoint();
+            if (navigator.vibrate) navigator.vibrate([100, 60, 150]);
+            notify("¡Posta intermedia completada! Ahora vamos por la bandera final.", "success");
+            saveActiveMatchState();
+          }
+          return;
+        }
+
         const d = state.map.distance([state.userPos.lat, state.userPos.lng], [state.activeMatch.flag.lat, state.activeMatch.flag.lng]);
         document.getElementById('hudRemaining').textContent = `${Math.round(d)} m`;
 
@@ -1619,6 +1782,7 @@
         }
       }
 
+      // CÁMARA AR Y CAPTURA
       function getBearing() {
         if (!state.activeMatch || !state.userPos) return 0;
         const toRad = deg => deg * Math.PI / 180;
@@ -1651,6 +1815,9 @@
 
       async function openARCamera() {
         if (!state.activeMatch || !state.userPos) return;
+        if (state.checkpointPoint && !state.checkpointReached) {
+          return notify("Primero tenés que pasar por la Posta 1/2 en el mapa.", "info");
+        }
         const dist = state.map.distance([state.userPos.lat, state.userPos.lng], [state.activeMatch.flag.lat, state.activeMatch.flag.lng]);
         if (dist > CONFIG.CAPTURE_RADIUS_METERS) {
           return notify(`Estás a ${Math.round(dist)} m. Acercate a menos de ${CONFIG.CAPTURE_RADIUS_METERS} m para conquistar.`, "info");
@@ -1672,19 +1839,22 @@
         const video = document.getElementById('arVideo');
         const canvas = document.getElementById('arPhotoCanvas');
         const ctx = canvas.getContext('2d');
-        canvas.width = video.videoWidth || 720;
-        canvas.height = video.videoHeight || 1280;
+        // Comprimir resolución para subida rápida al muro del club
+        const targetW = 720;
+        const ratio = (video.videoHeight && video.videoWidth) ? (video.videoHeight / video.videoWidth) : 1.33;
+        canvas.width = targetW;
+        canvas.height = Math.round(targetW * ratio);
 
         if (video.readyState >= 2) ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         else { ctx.fillStyle = '#171D1A'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
 
         ctx.fillStyle = 'rgba(23, 29, 26, 0.85)';
-        ctx.fillRect(0, canvas.height - 70, canvas.width, 70);
+        ctx.fillRect(0, canvas.height - 56, canvas.width, 56);
         ctx.fillStyle = '#75C894';
-        ctx.font = 'bold 20px "Space Grotesk", sans-serif';
-        ctx.fillText(`CONQUISTA LA BANDERA • ${new Date().toLocaleTimeString('es-AR')}`, 30, canvas.height - 28);
+        ctx.font = 'bold 16px "Space Grotesk", sans-serif';
+        ctx.fillText(`CONQUISTA LA BANDERA • ${new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}`, 22, canvas.height - 22);
 
-        state.capturedPhotoDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        state.capturedPhotoDataUrl = canvas.toDataURL('image/jpeg', 0.72);
         video.classList.add('hidden');
         canvas.classList.remove('hidden');
         document.getElementById('arLiveOverlay').classList.add('hidden');
@@ -1703,6 +1873,21 @@
         }
       }
 
+      async function uploadCapturePhotoToStorage(matchId) {
+        if (!sb || !state.user || !state.capturedPhotoDataUrl) return null;
+        try {
+          const res = await fetch(state.capturedPhotoDataUrl);
+          const blob = await res.blob();
+          const filePath = `${state.user.id}/${matchId || Date.now()}.jpg`;
+          const { error } = await sb.storage.from('captures').upload(filePath, blob, { contentType: 'image/jpeg', upsert: true });
+          if (error) return null;
+          const { data } = sb.storage.from('captures').getPublicUrl(filePath);
+          return data ? data.publicUrl : null;
+        } catch (_) {
+          return null;
+        }
+      }
+
       async function confirmCapture() {
         if (!state.capturedPhotoDataUrl) return notify("Primero tenés que sacar la foto.", "error");
         const btn = document.getElementById('btnConfirmCapture');
@@ -1710,8 +1895,17 @@
         btn.textContent = "Registrando...";
 
         try {
+          const distMeters = state.activeMatch.realDistanceMeters || Math.round(state.initialDistance);
+          const elapsedHours = Math.max(0.01, (Date.now() - (state.matchStartTime || Date.now())) / 3600000);
+          let avgSpeed = Number(((distMeters / 1000) / elapsedHours).toFixed(1));
+          if (!isFinite(avgSpeed) || avgSpeed > 90) avgSpeed = 8.5;
+
+          // Validación antitrampas en categoría A pie / Run (máx 24 km/h reales si no es simulación DEV)
+          if (!state.isSimulated && state.category === 'walk_run' && avgSpeed > 24) {
+            throw new Error(`Velocidad detectada (${avgSpeed} km/h) incompatible con A pie / Run.`);
+          }
+
           let points = state.isFlashEvent ? 300 : 100;
-          let avgSpeed = 8.4;
           let verifiedByServer = false;
 
           try {
@@ -1729,15 +1923,27 @@
             }
           } catch (_) {}
 
-          if (!verifiedByServer && sb && state.user) {
-            const distMeters = state.activeMatch.realDistanceMeters || Math.round(state.initialDistance);
+          const photoUrl = await uploadCapturePhotoToStorage(state.activeMatch.matchId);
+
+          if (sb && state.user) {
             if (state.activeMatch.matchId) {
-              await sb.from('matches').update({ status: 'completed', points_earned: points, distance_meters: distMeters }).eq('id', state.activeMatch.matchId);
+              const updatePayload = {
+                status: 'completed',
+                points_earned: points,
+                distance_meters: distMeters,
+                flag_lat: state.activeMatch.flag.lat,
+                flag_lng: state.activeMatch.flag.lng
+              };
+              if (photoUrl) updatePayload.capture_photo_url = photoUrl;
+              await sb.from('matches').update(updatePayload).eq('id', state.activeMatch.matchId);
             }
-            const catCol = `points_${state.category}`;
-            const currentCatPts = Number((state.profile && state.profile[catCol]) || 0);
-            const currentWins = Number((state.profile && state.profile.total_wins) || 0);
-            await sb.from('profiles').update({ [catCol]: currentCatPts + points, total_wins: currentWins + 1 }).eq('id', state.user.id);
+
+            if (!verifiedByServer) {
+              const catCol = `points_${state.category}`;
+              const currentCatPts = Number((state.profile && state.profile[catCol]) || 0);
+              const currentWins = Number((state.profile && state.profile.total_wins) || 0);
+              await sb.from('profiles').update({ [catCol]: currentCatPts + points, total_wins: currentWins + 1 }).eq('id', state.user.id);
+            }
           }
 
           const handle = document.getElementById('headerUsername').textContent;
@@ -1745,14 +1951,14 @@
             await state.matchChannel.send({ type: 'broadcast', event: 'duel_won', payload: { winnerName: handle } });
           }
 
-          const distMeters = state.activeMatch.realDistanceMeters || Math.round(state.initialDistance);
           closeARCamera();
           AudioEngine.success();
           if (navigator.vibrate) navigator.vibrate([150, 80, 200]);
 
           renderShareCard({ username: handle, points, distanceMeters: distMeters, avgSpeed, path: state.recordedPath, isFlash: state.isFlashEvent });
           resetMatchUI();
-          loadUserProfile();
+          await loadUserProfile();
+          if (state.userPos) renderRealTerritoryZones(state.userPos.lat, state.userPos.lng);
         } catch (err) {
           notify(err.message, "error");
         } finally {
@@ -1827,15 +2033,22 @@
 
       function resetMatchUI() {
         state.activeMatch = null;
+        state.checkpointPoint = null;
+        state.checkpointReached = false;
         state.isFlashEvent = false;
         state.isSimulated = false;
+        localStorage.removeItem(CONFIG.ACTIVE_MATCH_STORAGE_KEY);
+        releaseScreenWakeLock();
+
         if (state.matchChannel) sb.removeChannel(state.matchChannel);
         if (state.flagMarker) state.map.removeLayer(state.flagMarker);
+        if (state.checkpointMarker) state.map.removeLayer(state.checkpointMarker);
         if (state.routeLine) state.map.removeLayer(state.routeLine);
         document.getElementById('activeHud').classList.add('hidden');
         document.getElementById('setupPanel').classList.remove('hidden');
       }
 
+      // CLUBES Y MURO DE FOTOS REALES
       async function createClub() {
         const name = document.getElementById('newClubName').value.trim();
         if (name.length < 3) return notify("El nombre debe tener al menos 3 caracteres.", "error");
@@ -1864,13 +2077,14 @@
           document.getElementById('myClubView').classList.add('hidden');
           return;
         }
+        state.myClubId = mem.club_id;
         document.getElementById('noClubView').classList.add('hidden');
         document.getElementById('myClubView').classList.remove('hidden');
         document.getElementById('clubNameDisplay').textContent = mem.clubs.name;
         document.getElementById('clubPointsDisplay').textContent = String(mem.clubs.total_club_points || 0);
         document.getElementById('clubCodeDisplay').textContent = mem.clubs.invite_code;
 
-        const { data: members } = await sb.from('club_members').select('role, profiles(username, total_wins)').eq('club_id', mem.club_id);
+        const { data: members } = await sb.from('club_members').select('user_id, role, profiles(username, total_wins)').eq('club_id', mem.club_id);
         document.getElementById('clubMembersList').innerHTML = (members || []).map((m, i) => {
           const uname = escapeHTML((m.profiles && m.profiles.username) || 'jugador');
           const wins = Number((m.profiles && m.profiles.total_wins) || 0);
@@ -1882,6 +2096,39 @@
             </div>
           `;
         }).join('');
+
+        // Cargar Muro de Fotos de Conquistas del Club
+        const memberIds = (members || []).map(m => m.user_id);
+        const feedContainer = document.getElementById('clubPhotoFeed');
+        if (memberIds.length > 0) {
+          const { data: photos } = await sb
+            .from('matches')
+            .select('user_id, capture_photo_url, distance_meters, created_at')
+            .in('user_id', memberIds)
+            .eq('status', 'completed')
+            .not('capture_photo_url', 'is', null)
+            .order('created_at', { ascending: false })
+            .limit(6);
+
+          if (photos && photos.length > 0) {
+            feedContainer.innerHTML = photos.map(p => {
+              const owner = (members || []).find(m => m.user_id === p.user_id);
+              const uname = escapeHTML((owner && owner.profiles && owner.profiles.username) || 'jugador');
+              const dist = p.distance_meters ? `${(p.distance_meters / 1000).toFixed(1)} km` : 'Ruta';
+              return `
+                <div class="surface-inset rounded-xl overflow-hidden border border-[#75C894]/25">
+                  <img src="${escapeHTML(p.capture_photo_url)}" alt="Conquista" loading="lazy" class="w-full h-28 object-cover" />
+                  <div class="p-2 flex justify-between items-center text-[10px]">
+                    <span class="font-bold text-main truncate">@${uname}</span>
+                    <span class="text-green-brand font-mono font-bold shrink-0">${dist}</span>
+                  </div>
+                </div>
+              `;
+            }).join('');
+          } else {
+            feedContainer.innerHTML = `<p class="text-xs text-muted col-span-2 text-center py-3">Aún no hay fotos de conquistas en el club.</p>`;
+          }
+        }
       }
 
       async function loadRankings(category) {
@@ -1932,7 +2179,7 @@
         }
       }
 
-      // Event Listeners
+      // EVENT LISTENERS
       document.getElementById('tabBtnLogin').addEventListener('click', () => switchAuthTab('login'));
       document.getElementById('tabBtnSignup').addEventListener('click', () => switchAuthTab('signup'));
       document.getElementById('loginFormView').addEventListener('submit', handleLogin);
@@ -1968,7 +2215,7 @@
       document.getElementById('btnFlashEvent').addEventListener('click', () => {
         state.isFlashEvent = true;
         state.distance = '1km';
-        generateMatch(false);
+        generateMatch(false, false);
       });
 
       document.querySelectorAll('#categoryGroup .cat-btn').forEach(btn => {
@@ -1988,6 +2235,8 @@
             b.className = 'dist-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press';
           });
           btn.className = 'dist-btn bg-[#FF7900] text-white font-bold py-2.5 rounded-xl text-xs btn-press shadow-sm';
+          const isCircuit = state.distance === '5km' || state.distance === '10km';
+          document.getElementById('circuitHint').classList.toggle('hidden', !isCircuit);
         });
       });
 
@@ -2000,12 +2249,14 @@
           btn.className = 'mode-btn bg-[#FF7900]/15 border border-[#FF7900] text-[#FF7900] font-bold py-2.5 rounded-xl text-xs btn-press';
           const isDuel = state.mode === 'live_duel';
           document.getElementById('duelJoinBox').classList.toggle('hidden', !isDuel);
-          document.getElementById('btnGenerateFlag').textContent = isDuel ? "Crear sala de duelo" : "Generar bandera en ruta";
+          document.getElementById('btnGenerateFlag').textContent = isDuel ? "Crear sala privada de duelo" : "Generar bandera en ruta";
         });
       });
 
-      document.getElementById('btnGenerateFlag').addEventListener('click', () => generateMatch(false));
-      document.getElementById('btnJoinDuel').addEventListener('click', () => generateMatch(true));
+      document.getElementById('btnGenerateFlag').addEventListener('click', () => generateMatch(false, false));
+      document.getElementById('btnAutoMatchmaking').addEventListener('click', () => generateMatch(false, true));
+      document.getElementById('btnJoinDuel').addEventListener('click', () => generateMatch(true, false));
+      document.getElementById('btnCancelMatch').addEventListener('click', cancelActiveMatch);
       document.getElementById('btnOpenAR').addEventListener('click', openARCamera);
       document.getElementById('btnCloseAR').addEventListener('click', closeARCamera);
       document.getElementById('btnTakePhoto').addEventListener('click', takeCapturePhoto);
@@ -2017,6 +2268,12 @@
         simBtnEl.addEventListener('click', () => {
           if (!state.activeMatch) return;
           state.isSimulated = true;
+          if (state.checkpointPoint && !state.checkpointReached) {
+            state.userPos = { lat: state.checkpointPoint.lat, lng: state.checkpointPoint.lng };
+            if (state.userMarker) state.userMarker.setLatLng([state.userPos.lat, state.userPos.lng]);
+            updateProgress();
+            return;
+          }
           state.userPos = { lat: state.activeMatch.flag.lat, lng: state.activeMatch.flag.lng };
           if (state.userMarker) state.userMarker.setLatLng([state.userPos.lat, state.userPos.lng]);
           state.recordedPath = state.activeMatch.route?.coordinates || [[state.userPos.lng, state.userPos.lat]];
