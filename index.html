@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
@@ -128,12 +129,6 @@
       100% { transform: scale(2.2); opacity: 0; }
     }
     .sonar-ring { animation: pulseRing var(--pulse-speed, 2s) cubic-bezier(0.16, 1, 0.3, 1) infinite; }
-
-    @keyframes flagHover {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-8px); }
-    }
-    .ar-flag-float { animation: flagHover 2.6s ease-in-out infinite; }
 
     .gps-player-wrapper { position: relative; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; }
     .gps-heading-cone { position: absolute; width: 56px; height: 56px; transform-origin: center center; transition: transform 0.1s linear; pointer-events: none; }
@@ -373,7 +368,7 @@
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-[#FF7900]">Hora Pico x3 Puntos</span>
+            <span id="flashBannerTitle" class="text-[10px] font-bold uppercase tracking-wider text-[#FF7900]">Hora Pico x3 Puntos</span>
             <span id="flashTimer" class="text-[11px] font-mono text-muted">--:--</span>
           </div>
           <p class="text-xs text-main font-medium mt-0.5">Bandera relámpago de 1 km activa</p>
@@ -490,7 +485,7 @@
 
         <div id="actionButtonsGrid" class="grid grid-cols-1 gap-2.5">
           <button id="btnOpenAR" type="button" class="btn-brand-orange font-bold py-3.5 rounded-xl text-xs btn-press">
-            Conquistar bandera (Cámara)
+            Conquistar bandera (Cámara 3D)
           </button>
           <button id="btnSimulate" type="button" class="hidden surface-inset hover:opacity-90 text-[#FF7900] font-semibold py-3.5 rounded-xl text-xs border border-[#FF7900]/40 btn-press">
             Simular llegada (DEV)
@@ -642,28 +637,28 @@
     </section>
   </div>
 
-  <!-- VISOR AR -->
+  <!-- VISOR AR 3D EN EL SUELO -->
   <div id="arModal" class="hidden fixed inset-0 z-50 bg-black flex flex-col justify-between">
     <video id="arVideo" autoplay playsinline class="absolute inset-0 w-full h-full object-cover"></video>
     <canvas id="arPhotoCanvas" class="hidden absolute inset-0 w-full h-full object-cover z-10"></canvas>
     
     <div class="relative z-20 p-4 bg-gradient-to-b from-black/80 to-transparent flex justify-between items-center">
       <span id="arHeaderBadge" class="bg-[#171D1A]/90 border border-[#75C894]/40 text-[#F2F1E9] font-medium text-xs px-3.5 py-2 rounded-full backdrop-blur-md">
-        Cámara AR • Apuntá hacia el entorno
+        Cámara AR 3D • Apuntá hacia el suelo
       </span>
       <button id="btnCloseAR" type="button" class="bg-[#171D1A]/90 border border-white/15 text-white px-4 py-2 rounded-full text-xs font-semibold backdrop-blur-md">Cerrar</button>
     </div>
 
-    <div id="arLiveOverlay" class="relative z-20 flex flex-col items-center justify-center my-auto pointer-events-none">
-      <div id="arFlagContainer" class="ar-flag-float transition-transform duration-150">
-        <svg class="w-32 h-32 drop-shadow-[0_8px_24px_rgba(117,200,148,0.85)]" viewBox="0 0 100 100" fill="none">
-          <line x1="25" y1="12" x2="25" y2="92" stroke="#F2F1E9" stroke-width="3.5" stroke-linecap="round"/>
-          <circle cx="25" cy="10" r="3.5" fill="#FF7900"/>
-          <path d="M27 16 L82 28 L68 44 L82 60 L27 52 Z" fill="#75C894" stroke="#F2F1E9" stroke-width="1.5"/>
-        </svg>
+    <div id="arLiveOverlay" class="relative z-20 flex flex-col items-center justify-between h-full my-auto pointer-events-none py-16">
+      <div class="bg-[#171D1A]/85 px-3.5 py-1.5 rounded-full text-[11px] font-mono font-bold text-[#75C894] border border-[#75C894]/40 backdrop-blur-md">
+        Distancia al objetivo: <span id="arLiveDistText">-- m</span>
       </div>
-      <p class="mt-4 bg-[#171D1A]/85 px-4 py-2 rounded-full text-xs font-semibold text-[#F2F1E9] border border-[#75C894]/30 backdrop-blur-md">
-        Sacá una foto del lugar para registrar la conquista
+
+      <!-- Canvas transparente Three.js donde se dibuja la bandera 3D apoyada en el piso -->
+      <canvas id="ar3dCanvas" class="w-full h-full absolute inset-0 pointer-events-none"></canvas>
+
+      <p class="relative z-10 mt-auto bg-[#171D1A]/85 px-4 py-2 rounded-full text-xs font-semibold text-[#F2F1E9] border border-[#75C894]/30 backdrop-blur-md text-center mx-4">
+        Movete o incliná el teléfono para ver la bandera 3D desde distintos ángulos
       </p>
     </div>
 
@@ -992,15 +987,47 @@
         };
       })();
 
-      // DESAFÍO HORA PICO X3 SINCRONIZADO POR RELOJ REAL (CADA HORA EN PUNTO DURANTE 45 MIN)
+      // DESAFÍO HORA PICO X3 SINCRONIZADO
+      let activeDbEventEndMs = null;
+      async function syncGlobalEvents() {
+        if (!sb) return;
+        try {
+          const nowIso = new Date().toISOString();
+          const { data: ev } = await sb
+            .from('events')
+            .select('*')
+            .eq('is_active', true)
+            .lte('starts_at', nowIso)
+            .gte('ends_at', nowIso)
+            .limit(1)
+            .maybeSingle();
+
+          if (ev) {
+            activeDbEventEndMs = new Date(ev.ends_at).getTime();
+            const titleEl = document.getElementById('flashBannerTitle');
+            if (titleEl) titleEl.textContent = ev.title;
+          }
+        } catch (_) {}
+      }
+
       function updateSyncedFlashClock() {
-        const now = new Date();
-        const mins = now.getMinutes();
-        const secs = now.getSeconds();
         const el = document.getElementById('flashTimer');
         const btn = document.getElementById('btnFlashEvent');
         if (!el || !btn) return;
 
+        if (activeDbEventEndMs && activeDbEventEndMs > Date.now()) {
+          const remSec = Math.floor((activeDbEventEndMs - Date.now()) / 1000);
+          const m = String(Math.floor(remSec / 60)).padStart(2, '0');
+          const s = String(remSec % 60).padStart(2, '0');
+          el.textContent = `${m}:${s}`;
+          btn.disabled = false;
+          btn.textContent = "Aceptar";
+          return;
+        }
+
+        const now = new Date();
+        const mins = now.getMinutes();
+        const secs = now.getSeconds();
         if (mins < 45) {
           const remTotal = (44 - mins) * 60 + (60 - secs);
           const m = String(Math.floor(remTotal / 60)).padStart(2, '0');
@@ -1243,6 +1270,7 @@
 
         initMap();
         await loadUserProfile();
+        await syncGlobalEvents();
         await checkAndManageGpsPermission();
         restoreActiveMatchIfAny();
         hideSplashScreen();
@@ -1257,7 +1285,6 @@
           state.myClubId = mem ? mem.club_id : null;
 
           if (profile) {
-            // Sincronización de racha diaria en BD
             const todayStr = new Date().toISOString().split('T')[0];
             const yesterdayStr = new Date(Date.now() - 86400000).toISOString().split('T')[0];
             let streak = Number(profile.streak_days || 1);
@@ -1509,7 +1536,6 @@
             return;
           }
 
-          // Filtrar conquistas dentro de 1.5 km y agrupar por club
           const nearbyWins = recentWins.filter(w => state.map.distance([lat, lng], [w.flag_lat, w.flag_lng]) <= 1500);
           if (nearbyWins.length === 0) return;
 
@@ -1544,7 +1570,7 @@
         } catch (_) {}
       }
 
-      // GENERACIÓN DE PARTIDA (CON CIRCUITO DE POSTAS PARA 5K/10K Y MATCHMAKING PÚBLICO)
+      // GENERACIÓN DE PARTIDA
       async function generateMatch(isJoining = false, isPublicQueue = false) {
         if (!state.hasRealGps || !state.userPos) {
           showGpsPermissionCard('prompt');
@@ -1559,7 +1585,6 @@
         let duelCode = isJoining ? document.getElementById('duelCodeInput').value.trim().toUpperCase() : null;
 
         try {
-          // Si es matchmaking público, buscar una sala pendiente compatible antes de crear una nueva
           if (isPublicQueue && sb) {
             const tenMinsAgo = new Date(Date.now() - 10 * 60000).toISOString();
             const { data: openRooms } = await sb
@@ -1595,9 +1620,11 @@
           state.recordedPath = [[state.userPos.lng, state.userPos.lat]];
           state.initialDistance = Math.max(100, state.map.distance([state.userPos.lat, state.userPos.lng], [data.flag.lat, data.flag.lng]));
 
-          // Configurar posta intermedia (Checkpoint) si es 5km o 10km y la ruta tiene suficientes puntos
           const coords = data.route?.coordinates || [];
-          if ((state.distance === '5km' || state.distance === '10km') && coords.length >= 6) {
+          if (data.checkpoint && data.checkpoint.lat && data.checkpoint.lng) {
+            state.checkpointPoint = { lat: data.checkpoint.lat, lng: data.checkpoint.lng };
+            state.checkpointReached = false;
+          } else if ((state.distance === '5km' || state.distance === '10km') && coords.length >= 6) {
             const midPt = coords[Math.floor(coords.length / 2)];
             state.checkpointPoint = { lat: midPt[1], lng: midPt[0] };
             state.checkpointReached = false;
@@ -1606,7 +1633,6 @@
             state.checkpointReached = true;
           }
 
-          // Guardar coordenadas de la bandera en BD para control territorial
           if (sb && data.matchId) {
             sb.from('matches').update({ flag_lat: data.flag.lat, flag_lng: data.flag.lng, is_public_matchmaking: isPublicQueue }).eq('id', data.matchId).then(() => {});
           }
@@ -1716,7 +1742,6 @@
       function updateProgress() {
         if (!state.activeMatch || !state.map || !state.userPos) return;
 
-        // Verificar posta intermedia si existe y aún no se completó
         if (state.checkpointPoint && !state.checkpointReached) {
           const distToCp = state.map.distance([state.userPos.lat, state.userPos.lng], [state.checkpointPoint.lat, state.checkpointPoint.lng]);
           document.getElementById('hudRemaining').textContent = `${Math.round(distToCp)} m`;
@@ -1782,7 +1807,23 @@
         }
       }
 
-      // CÁMARA AR Y CAPTURA
+      // =======================================================================
+      // MOTOR DE BANDERA 3D ANCLADA AL SUELO (THREE.JS + SENSORES DE MOVIMIENTO)
+      // =======================================================================
+      const AR3D = {
+        scene: null,
+        camera: null,
+        renderer: null,
+        flagGroup: null,
+        clothGeo: null,
+        clothBasePos: null,
+        animId: null,
+        pitch: 65,
+        yawDiff: 0,
+        currentDist: 10,
+        targetDist: 10
+      };
+
       function getBearing() {
         if (!state.activeMatch || !state.userPos) return 0;
         const toRad = deg => deg * Math.PI / 180;
@@ -1795,12 +1836,158 @@
         return (toDeg(Math.atan2(y, x)) + 360) % 360;
       }
 
+      function initAR3DScene() {
+        const canvas = document.getElementById('ar3dCanvas');
+        if (!canvas || !window.THREE) return;
+
+        if (AR3D.animId) {
+          cancelAnimationFrame(AR3D.animId);
+          AR3D.animId = null;
+        }
+
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+
+        AR3D.scene = new THREE.Scene();
+        AR3D.camera = new THREE.PerspectiveCamera(55, w / h, 0.1, 100);
+        AR3D.renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, preserveDrawingBuffer: true });
+        AR3D.renderer.setSize(w, h);
+        AR3D.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x244B37, 1.25);
+        AR3D.scene.add(hemiLight);
+        const dirLight = new THREE.DirectionalLight(0xfff5e4, 1.15);
+        dirLight.position.set(4, 10, 6);
+        AR3D.scene.add(dirLight);
+
+        AR3D.flagGroup = new THREE.Group();
+
+        // 1. Sombra proyectada en el piso
+        const shadowGeo = new THREE.CircleGeometry(1.15, 32);
+        const shadowMat = new THREE.MeshBasicMaterial({ color: 0x0a120e, transparent: true, opacity: 0.45 });
+        const shadowMesh = new THREE.Mesh(shadowGeo, shadowMat);
+        shadowMesh.rotation.x = -Math.PI / 2;
+        shadowMesh.position.y = 0.01;
+        AR3D.flagGroup.add(shadowMesh);
+
+        // 2. Base / Anclaje metálico al suelo + anillo naranja institucional
+        const baseGeo = new THREE.CylinderGeometry(0.45, 0.55, 0.12, 24);
+        const baseMat = new THREE.MeshStandardMaterial({ color: 0x244B37, roughness: 0.4, metalness: 0.35 });
+        const baseMesh = new THREE.Mesh(baseGeo, baseMat);
+        baseMesh.position.y = 0.06;
+        AR3D.flagGroup.add(baseMesh);
+
+        const ringGeo = new THREE.RingGeometry(0.56, 0.68, 32);
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0xFF7900, side: THREE.DoubleSide });
+        const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+        ringMesh.rotation.x = -Math.PI / 2;
+        ringMesh.position.y = 0.02;
+        AR3D.flagGroup.add(ringMesh);
+
+        // 3. Mástil vertical
+        const poleGeo = new THREE.CylinderGeometry(0.045, 0.055, 3.2, 16);
+        const poleMat = new THREE.MeshStandardMaterial({ color: 0xF2F1E9, roughness: 0.25, metalness: 0.8 });
+        const poleMesh = new THREE.Mesh(poleGeo, poleMat);
+        poleMesh.position.y = 1.6;
+        AR3D.flagGroup.add(poleMesh);
+
+        // Esfera superior naranja
+        const finialGeo = new THREE.SphereGeometry(0.11, 16, 16);
+        const finialMat = new THREE.MeshStandardMaterial({ color: 0xFF7900, roughness: 0.3 });
+        const finialMesh = new THREE.Mesh(finialGeo, finialMat);
+        finialMesh.position.y = 3.25;
+        AR3D.flagGroup.add(finialMesh);
+
+        // 4. Tela de la bandera con subdivisión para onda de viento
+        const flagW = 1.75;
+        const flagH = 1.05;
+        AR3D.clothGeo = new THREE.PlaneGeometry(flagW, flagH, 20, 12);
+        AR3D.clothGeo.translate(flagW / 2 + 0.04, 0, 0);
+        AR3D.clothBasePos = Float32Array.from(AR3D.clothGeo.attributes.position.array);
+
+        // Textura bicolor institucional (Verde + franja Naranja)
+        const texCanvas = document.createElement('canvas');
+        texCanvas.width = 512; texCanvas.height = 300;
+        const tCtx = texCanvas.getContext('2d');
+        tCtx.fillStyle = '#477B57';
+        tCtx.fillRect(0, 0, 512, 300);
+        tCtx.fillStyle = '#75C894';
+        tCtx.fillRect(0, 0, 512, 195);
+        tCtx.fillStyle = '#FF7900';
+        tCtx.fillRect(0, 195, 512, 42);
+        tCtx.fillStyle = '#F2F1E9';
+        tCtx.beginPath();
+        tCtx.moveTo(220, 65); tCtx.lineTo(295, 100); tCtx.lineTo(220, 135);
+        tCtx.closePath(); tCtx.fill();
+
+        const flagTex = new THREE.CanvasTexture(texCanvas);
+        const clothMat = new THREE.MeshStandardMaterial({
+          map: flagTex,
+          side: THREE.DoubleSide,
+          roughness: 0.55
+        });
+
+        const clothMesh = new THREE.Mesh(AR3D.clothGeo, clothMat);
+        clothMesh.position.y = 2.62;
+        AR3D.flagGroup.add(clothMesh);
+
+        AR3D.scene.add(AR3D.flagGroup);
+
+        const clock = new THREE.Clock();
+        function animate() {
+          AR3D.animId = requestAnimationFrame(animate);
+          const t = clock.getElapsedTime();
+
+          // Ondulación de viento en tiempo real
+          const pos = AR3D.clothGeo.attributes.position;
+          for (let i = 0; i < pos.count; i++) {
+            const x = AR3D.clothBasePos[i * 3];
+            const y = AR3D.clothBasePos[i * 3 + 1];
+            const pinFactor = Math.min(1, x / 1.75);
+            const wave = Math.sin(x * 4.5 - t * 6.5) * 0.14 * pinFactor + Math.cos(y * 3 + t * 4) * 0.04 * pinFactor;
+            pos.setZ(i, wave);
+          }
+          pos.needsUpdate = true;
+          AR3D.clothGeo.computeVertexNormals();
+
+          // Suavizar acercamiento/alejamiento según distancia GPS
+          AR3D.currentDist += (AR3D.targetDist - AR3D.currentDist) * 0.08;
+
+          // Perspectiva dinámica según inclinación del teléfono (suelo vs horizonte) y giro
+          const clampedPitch = Math.max(15, Math.min(88, AR3D.pitch));
+          const radPitch = (clampedPitch * Math.PI) / 180;
+          const camHeight = Math.max(0.8, Math.cos(radPitch) * AR3D.currentDist * 0.85 + 1.35);
+          const camBack = Math.max(2.2, Math.sin(radPitch) * AR3D.currentDist);
+
+          const yawRad = (AR3D.yawDiff * Math.PI) / 180;
+          AR3D.camera.position.set(
+            Math.sin(yawRad) * camBack,
+            camHeight,
+            Math.cos(yawRad) * camBack
+          );
+          AR3D.camera.lookAt(0, 1.1, 0);
+
+          AR3D.flagGroup.rotation.y = Math.sin(t * 0.4) * 0.15;
+          AR3D.renderer.render(AR3D.scene, AR3D.camera);
+        }
+        animate();
+      }
+
       function onCompassMove(e) {
+        if (!state.activeMatch) return;
         const heading = e.webkitCompassHeading || (360 - (e.alpha || 0));
-        if (!heading || !state.activeMatch) return;
-        const diff = ((getBearing() - heading + 540) % 360) - 180;
-        const shiftX = Math.max(-130, Math.min(130, diff * 2.4));
-        document.getElementById('arFlagContainer').style.transform = `translateX(${shiftX}px)`;
+        if (heading) {
+          AR3D.yawDiff = ((getBearing() - heading + 540) % 360) - 180;
+        }
+        if (typeof e.beta === 'number' && !isNaN(e.beta)) {
+          AR3D.pitch = e.beta;
+        }
+        if (state.userPos && state.map) {
+          const d = state.map.distance([state.userPos.lat, state.userPos.lng], [state.activeMatch.flag.lat, state.activeMatch.flag.lng]);
+          AR3D.targetDist = Math.max(2.6, Math.min(18, d * 0.52 + 2.6));
+          const distLabel = document.getElementById('arLiveDistText');
+          if (distLabel) distLabel.textContent = `${Math.round(d)} m`;
+        }
       }
 
       function resetCameraPreviewState() {
@@ -1810,7 +1997,7 @@
         document.getElementById('arLiveOverlay').classList.remove('hidden');
         document.getElementById('btnTakePhoto').classList.remove('hidden');
         document.getElementById('arConfirmControls').classList.add('hidden');
-        document.getElementById('arHeaderBadge').textContent = "Cámara AR • Apuntá hacia el entorno";
+        document.getElementById('arHeaderBadge').textContent = "Cámara AR 3D • Apuntá hacia el suelo";
       }
 
       async function openARCamera() {
@@ -1824,7 +2011,13 @@
         }
         requestCompassPermission();
         resetCameraPreviewState();
+        AR3D.targetDist = Math.max(2.6, Math.min(18, dist * 0.52 + 2.6));
+        AR3D.currentDist = AR3D.targetDist;
+        const distLabel = document.getElementById('arLiveDistText');
+        if (distLabel) distLabel.textContent = `${Math.round(dist)} m`;
+
         document.getElementById('arModal').classList.remove('hidden');
+        initAR3DScene();
         window.addEventListener('deviceorientation', onCompassMove);
 
         try {
@@ -1838,23 +2031,31 @@
       function takeCapturePhoto() {
         const video = document.getElementById('arVideo');
         const canvas = document.getElementById('arPhotoCanvas');
+        const canvas3d = document.getElementById('ar3dCanvas');
         const ctx = canvas.getContext('2d');
-        // Comprimir resolución para subida rápida al muro del club
+
         const targetW = 720;
         const ratio = (video.videoHeight && video.videoWidth) ? (video.videoHeight / video.videoWidth) : 1.33;
         canvas.width = targetW;
         canvas.height = Math.round(targetW * ratio);
 
+        // 1. Dibujar cuadro real de la cámara
         if (video.readyState >= 2) ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         else { ctx.fillStyle = '#171D1A'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
 
+        // 2. Superponer bandera 3D desde la perspectiva exacta en la que estaba
+        if (canvas3d) {
+          ctx.drawImage(canvas3d, 0, 0, canvas.width, canvas.height);
+        }
+
+        // 3. Sello institucional inferior
         ctx.fillStyle = 'rgba(23, 29, 26, 0.85)';
         ctx.fillRect(0, canvas.height - 56, canvas.width, 56);
         ctx.fillStyle = '#75C894';
         ctx.font = 'bold 16px "Space Grotesk", sans-serif';
         ctx.fillText(`CONQUISTA LA BANDERA • ${new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}`, 22, canvas.height - 22);
 
-        state.capturedPhotoDataUrl = canvas.toDataURL('image/jpeg', 0.72);
+        state.capturedPhotoDataUrl = canvas.toDataURL('image/jpeg', 0.75);
         video.classList.add('hidden');
         canvas.classList.remove('hidden');
         document.getElementById('arLiveOverlay').classList.add('hidden');
@@ -1867,6 +2068,10 @@
       function closeARCamera() {
         document.getElementById('arModal').classList.add('hidden');
         window.removeEventListener('deviceorientation', onCompassMove);
+        if (AR3D.animId) {
+          cancelAnimationFrame(AR3D.animId);
+          AR3D.animId = null;
+        }
         if (state.videoStream) {
           state.videoStream.getTracks().forEach(t => t.stop());
           state.videoStream = null;
@@ -1900,7 +2105,6 @@
           let avgSpeed = Number(((distMeters / 1000) / elapsedHours).toFixed(1));
           if (!isFinite(avgSpeed) || avgSpeed > 90) avgSpeed = 8.5;
 
-          // Validación antitrampas en categoría A pie / Run (máx 24 km/h reales si no es simulación DEV)
           if (!state.isSimulated && state.category === 'walk_run' && avgSpeed > 24) {
             throw new Error(`Velocidad detectada (${avgSpeed} km/h) incompatible con A pie / Run.`);
           }
@@ -1912,7 +2116,13 @@
             const headers = await getAuthHeaders();
             const res = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/verify-capture`, {
               method: 'POST', headers,
-              body: JSON.stringify({ matchId: state.activeMatch.matchId, currentLat: state.userPos.lat, currentLng: state.userPos.lng, isSimulated: state.isSimulated })
+              body: JSON.stringify({
+                matchId: state.activeMatch.matchId,
+                currentLat: state.userPos.lat,
+                currentLng: state.userPos.lng,
+                isSimulated: state.isSimulated,
+                isFlashEvent: state.isFlashEvent
+              })
             });
             if (res.ok) {
               const result = await res.json();
@@ -1939,10 +2149,11 @@
             }
 
             if (!verifiedByServer) {
-              const catCol = `points_${state.category}`;
-              const currentCatPts = Number((state.profile && state.profile[catCol]) || 0);
-              const currentWins = Number((state.profile && state.profile.total_wins) || 0);
-              await sb.from('profiles').update({ [catCol]: currentCatPts + points, total_wins: currentWins + 1 }).eq('id', state.user.id);
+              await sb.rpc('award_capture_points', {
+                p_user_id: state.user.id,
+                p_category: state.category,
+                p_points: points
+              });
             }
           }
 
@@ -2097,7 +2308,6 @@
           `;
         }).join('');
 
-        // Cargar Muro de Fotos de Conquistas del Club
         const memberIds = (members || []).map(m => m.user_id);
         const feedContainer = document.getElementById('clubPhotoFeed');
         if (memberIds.length > 0) {
