@@ -39,6 +39,12 @@
       --toast-info-bg: #222B26;
       --toast-success-bg: #1B3628;
       --toast-error-bg: #3B1D22;
+
+      /* Acentos verdes adaptados para máximo contraste en cada fondo */
+      --green-accent: #75C894;
+      --green-accent-fill: #477B57;
+      --green-tint-bg: rgba(71, 123, 87, 0.18);
+      --green-tint-border: rgba(117, 200, 148, 0.38);
     }
 
     html.theme-light {
@@ -55,6 +61,11 @@
       --toast-info-bg: #FFFFFF;
       --toast-success-bg: #EBF7EF;
       --toast-error-bg: #FDECEC;
+
+      --green-accent: #244B37;
+      --green-accent-fill: #477B57;
+      --green-tint-bg: rgba(117, 200, 148, 0.22);
+      --green-tint-border: rgba(71, 123, 87, 0.42);
     }
 
     * { -webkit-tap-highlight-color: transparent; }
@@ -108,7 +119,30 @@
     .border-theme { border-color: var(--border-subtle); }
     .progress-track { background-color: var(--progress-track); }
 
-    /* Botones institucionales */
+    /* Utilidades de Verde Institucional */
+    .text-green-brand { color: var(--green-accent); }
+    .bg-green-brand-fill { background-color: var(--green-accent-fill); }
+    .bg-green-brand-bright { background-color: var(--green-light); }
+    .badge-green-brand {
+      background-color: var(--green-tint-bg);
+      border: 1px solid var(--green-tint-border);
+      color: var(--green-accent);
+    }
+    .card-green-accent {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--green-tint-border);
+      box-shadow: var(--shadow-card);
+    }
+    .btn-brand-green {
+      background-color: var(--green-dark);
+      color: #F2F1E9;
+      border: 1px solid rgba(117, 200, 148, 0.35);
+    }
+    .btn-brand-green:hover {
+      background-color: var(--green-mid);
+    }
+
+    /* Botones institucionales Naranja */
     .btn-brand-orange {
       background-color: var(--orange-main);
       color: #FFFFFF;
@@ -124,6 +158,7 @@
     }
     .btn-choice-inactive:hover {
       color: var(--text-primary);
+      border-color: var(--green-tint-border);
     }
 
     #map {
@@ -131,7 +166,7 @@
       width: 100%;
       border-radius: 20px;
       z-index: 10;
-      border: 1px solid var(--border-subtle);
+      border: 1.5px solid var(--green-tint-border);
       box-shadow: var(--shadow-card);
     }
     .leaflet-tile-pane { filter: var(--map-filter); }
@@ -209,17 +244,17 @@
 
   <!-- SPLASH SCREEN / PANTALLA DE CARGA INICIAL -->
   <div id="splashScreen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center p-6 transition-opacity duration-500" style="background-color: var(--bg-base);">
-    <div class="w-24 h-24 rounded-3xl surface-card flex items-center justify-center relative mb-6">
-      <div class="absolute inset-0 rounded-3xl border border-[#FF7900]/40 sonar-ring" style="--pulse-speed: 2s"></div>
+    <div class="w-24 h-24 rounded-3xl card-green-accent flex items-center justify-center relative mb-6">
+      <div class="absolute inset-0 rounded-3xl border border-[#75C894]/40 sonar-ring" style="--pulse-speed: 2s"></div>
       <svg class="w-14 h-14 relative z-10" viewBox="0 0 64 64" fill="none">
         <path d="M22 48L20 32L30 24L42 28L46 20" stroke="#FF7900" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
         <circle cx="36" cy="14" r="5" fill="#FF7900"/>
         <path d="M20 28L14 36M32 38L28 52" stroke="#FF7900" stroke-width="4" stroke-linecap="round"/>
-        <path d="M42 16V40L54 28L42 16Z" fill="#477B57"/>
+        <path d="M42 16V40L54 28L42 16Z" fill="#75C894"/>
       </svg>
     </div>
     <h1 class="font-display font-bold text-xl text-main tracking-wide text-center">CONQUISTA <span class="text-[#FF7900]">LA BANDERA</span></h1>
-    <p class="text-xs text-muted mt-2 font-medium">Iniciando sistema táctico...</p>
+    <p class="text-xs text-green-brand mt-2 font-semibold">Iniciando sistema táctico...</p>
   </div>
 
   <!-- SISTEMA DE NOTIFICACIONES TOAST -->
@@ -228,7 +263,7 @@
   <!-- HEADER PROFESIONAL -->
   <header class="app-header px-4 py-3 flex justify-between items-center sticky top-0 z-30 backdrop-blur-xl">
     <div class="flex items-center gap-2.5 min-w-0">
-      <div class="w-9 h-9 rounded-xl bg-[#FF7900]/15 border border-[#FF7900]/30 flex items-center justify-center text-[#FF7900] shrink-0 shadow-sm">
+      <div class="w-9 h-9 rounded-xl badge-green-brand flex items-center justify-center shrink-0 shadow-sm">
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 21V4m0 0l11 3-3 5 3 5-11-3" />
         </svg>
@@ -239,7 +274,7 @@
           <span id="devEnvBadge" class="hidden text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded bg-[#FF7900]/15 text-[#FF7900] border border-[#FF7900]/30 shrink-0">DEV</span>
         </div>
         <div class="flex items-center gap-1.5 mt-1">
-          <span id="userLeagueBadge" class="text-[10px] font-bold uppercase tracking-widest text-[#477B57] dark:text-[#75C894]">División Inicial</span>
+          <span id="userLeagueBadge" class="text-[10px] font-bold uppercase tracking-widest text-green-brand">División Inicial</span>
           <span id="streakBadge" class="hidden items-center gap-1 text-[10px] font-semibold text-[#FF7900]">
             <span>•</span>
             <span id="streakCount">1</span> días
@@ -390,7 +425,7 @@
 
       <!-- VERIFICACIÓN OTP -->
       <div id="otpVerifyView" class="hidden space-y-4 py-2">
-        <div class="w-12 h-12 rounded-2xl bg-[#FF7900]/15 border border-[#FF7900]/30 flex items-center justify-center text-[#FF7900]">
+        <div class="w-12 h-12 rounded-2xl badge-green-brand flex items-center justify-center">
           <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
         </div>
         <div>
@@ -409,10 +444,10 @@
   <!-- INTERFAZ PRINCIPAL -->
   <div id="appContainer" class="hidden max-w-lg mx-auto w-full p-4 space-y-4">
     
-    <!-- PERMISO GPS Y BRÚJULA -->
-    <div id="gpsPermissionBanner" class="hidden surface-card border-[#477B57]/50 p-4 rounded-2xl space-y-3.5">
+    <!-- PERMISO GPS Y BRÚJULA (DETALLE VERDE INSTITUCIONAL) -->
+    <div id="gpsPermissionBanner" class="hidden card-green-accent p-4 rounded-2xl space-y-3.5">
       <div class="flex items-start gap-3.5">
-        <div class="w-10 h-10 rounded-xl bg-[#477B57]/15 border border-[#477B57]/35 flex items-center justify-center text-[#477B57] shrink-0 mt-0.5">
+        <div class="w-10 h-10 rounded-xl badge-green-brand flex items-center justify-center shrink-0 mt-0.5">
           <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/>
             <circle cx="12" cy="11" r="2.5"/>
@@ -478,7 +513,7 @@
           <p class="text-[11px] text-muted font-medium">¿Tenés un código de invitación de tu rival?</p>
           <div class="flex gap-2">
             <input id="duelCodeInput" type="text" maxlength="4" placeholder="EJ: K9P2" class="theme-input uppercase flex-1 px-3.5 py-2 rounded-xl text-xs font-mono tracking-wider" />
-            <button id="btnJoinDuel" type="button" class="bg-[#244B37] hover:bg-[#477B57] text-white font-bold px-4 py-2 rounded-xl text-xs btn-press">Unirme</button>
+            <button id="btnJoinDuel" type="button" class="btn-brand-green font-bold px-4 py-2 rounded-xl text-xs btn-press">Unirme</button>
           </div>
         </div>
 
@@ -487,8 +522,8 @@
         </button>
       </div>
 
-      <!-- HUD PARTIDA ACTIVA -->
-      <div id="activeHud" class="hidden surface-card border-[#477B57]/50 p-4 rounded-2xl space-y-4">
+      <!-- HUD PARTIDA ACTIVA (PROGRESO Y RADAR EN VERDE INSTITUCIONAL) -->
+      <div id="activeHud" class="hidden card-green-accent p-4 rounded-2xl space-y-4">
         <div id="duelWaitingBanner" class="hidden bg-[#FF7900]/15 border border-[#FF7900]/35 p-3.5 rounded-xl flex justify-between items-center">
           <div>
             <p class="text-xs font-bold text-[#FF7900]">Esperando a tu rival</p>
@@ -501,10 +536,10 @@
           <div>
             <div class="flex justify-between text-[11px] font-semibold mb-1.5">
               <span class="text-main">Tu recorrido</span>
-              <span id="myProgressPct" class="text-[#477B57] font-mono font-bold">0%</span>
+              <span id="myProgressPct" class="text-green-brand font-mono font-bold">0%</span>
             </div>
-            <div class="w-full progress-track h-2 rounded-full overflow-hidden">
-              <div id="myProgressBar" class="progress-fill bg-[#477B57] h-full rounded-full" style="width: 2%"></div>
+            <div class="w-full progress-track h-2.5 rounded-full overflow-hidden">
+              <div id="myProgressBar" class="progress-fill bg-green-brand-bright h-full rounded-full" style="width: 2%"></div>
             </div>
           </div>
 
@@ -513,7 +548,7 @@
               <span class="text-main">Rival</span>
               <span id="rivalProgressPct" class="text-[#FF7900] font-mono font-bold">0%</span>
             </div>
-            <div class="w-full progress-track h-2 rounded-full overflow-hidden">
+            <div class="w-full progress-track h-2.5 rounded-full overflow-hidden">
               <div id="rivalProgressBar" class="progress-fill bg-[#FF7900] h-full rounded-full" style="width: 2%"></div>
             </div>
           </div>
@@ -522,8 +557,8 @@
         <div class="flex justify-between items-center surface-inset p-3.5 rounded-xl">
           <div class="flex items-center gap-3">
             <div class="relative w-9 h-9 flex items-center justify-center">
-              <div id="sonarRing" class="sonar-ring absolute inset-0 rounded-full border border-[#477B57]" style="--pulse-speed: 2s"></div>
-              <div class="w-2.5 h-2.5 rounded-full bg-[#477B57]"></div>
+              <div id="sonarRing" class="sonar-ring absolute inset-0 rounded-full border-2 border-[#75C894]" style="--pulse-speed: 2s"></div>
+              <div class="w-2.5 h-2.5 rounded-full bg-[#75C894]"></div>
             </div>
             <div>
               <p class="text-[11px] text-muted font-medium" id="hudDistanceLabel">Distancia total: -- m</p>
@@ -532,7 +567,7 @@
           </div>
           <div class="text-right">
             <span class="text-[10px] text-muted block font-medium uppercase tracking-wider">Restante</span>
-            <span class="font-display text-xl font-bold text-main" id="hudRemaining">-- m</span>
+            <span class="font-display text-xl font-bold text-green-brand" id="hudRemaining">-- m</span>
           </div>
         </div>
 
@@ -553,7 +588,7 @@
           <span class="w-2 h-2 rounded-full bg-[#FF7900] animate-pulse"></span>
           <span>Esperando confirmación GPS...</span>
         </div>
-        <button id="btnRecenterMap" type="button" aria-label="Centrar en mi ubicación" class="surface-card absolute bottom-3 right-3 z-20 backdrop-blur-md p-3 rounded-full text-main hover:text-[#FF7900] btn-press">
+        <button id="btnRecenterMap" type="button" aria-label="Centrar en mi ubicación" class="surface-card absolute bottom-3 right-3 z-20 backdrop-blur-md p-3 rounded-full text-green-brand hover:text-[#FF7900] btn-press">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>
         </button>
       </div>
@@ -564,7 +599,7 @@
       <div class="surface-card p-5 rounded-2xl space-y-4">
         <div class="flex items-center justify-between">
           <h2 class="font-display font-bold text-lg text-main">Club y Territorio</h2>
-          <span class="text-[11px] font-semibold surface-inset text-muted px-3 py-1.5 rounded-xl">Máx. 10 miembros</span>
+          <span class="text-[11px] font-semibold badge-green-brand px-3 py-1.5 rounded-xl">Máx. 10 miembros</span>
         </div>
 
         <div id="noClubView" class="space-y-4">
@@ -579,15 +614,15 @@
           <div class="space-y-2">
             <p class="text-xs text-muted font-medium">O creá un club nuevo para competir en grupo:</p>
             <input id="newClubName" type="text" maxlength="30" placeholder="Nombre del club" class="theme-input w-full px-4 py-3 rounded-xl text-sm" />
-            <button id="btnCreateClub" type="button" class="w-full bg-[#244B37] hover:bg-[#477B57] text-white font-semibold py-3.5 rounded-xl text-xs btn-press">Crear club</button>
+            <button id="btnCreateClub" type="button" class="w-full btn-brand-green font-semibold py-3.5 rounded-xl text-xs btn-press">Crear club</button>
           </div>
         </div>
 
         <div id="myClubView" class="hidden space-y-3.5">
-          <div class="flex justify-between items-center surface-inset p-4 rounded-xl">
+          <div class="flex justify-between items-center surface-inset p-4 rounded-xl border border-[#75C894]/30">
             <div>
               <h3 id="clubNameDisplay" class="font-display font-bold text-base text-main">--</h3>
-              <p class="text-xs text-muted mt-0.5">Puntos acumulados: <span id="clubPointsDisplay" class="text-[#477B57] font-bold">0</span></p>
+              <p class="text-xs text-muted mt-0.5">Puntos acumulados: <span id="clubPointsDisplay" class="text-green-brand font-bold">0</span></p>
             </div>
             <div class="text-right">
               <span class="text-[10px] text-muted block uppercase font-semibold">Código</span>
@@ -626,17 +661,17 @@
             </div>
           </div>
           <div class="text-right">
-            <span id="profileLevelBadge" class="inline-block bg-[#477B57]/15 border border-[#477B57]/35 text-[#477B57] text-xs font-bold px-3 py-1.5 rounded-xl">Nivel 1</span>
+            <span id="profileLevelBadge" class="inline-block badge-green-brand text-xs font-bold px-3 py-1.5 rounded-xl">Nivel 1</span>
           </div>
         </div>
 
         <div class="surface-inset p-3.5 rounded-xl space-y-2">
           <div class="flex justify-between text-[11px] font-semibold">
             <span class="text-muted">Experiencia acumulada</span>
-            <span id="profileXpText" class="text-[#477B57] font-mono font-bold">0 XP</span>
+            <span id="profileXpText" class="text-green-brand font-mono font-bold">0 XP</span>
           </div>
-          <div class="w-full progress-track h-2 rounded-full overflow-hidden">
-            <div id="profileXpBar" class="bg-[#477B57] h-full rounded-full" style="width: 10%"></div>
+          <div class="w-full progress-track h-2.5 rounded-full overflow-hidden">
+            <div id="profileXpBar" class="bg-green-brand-bright h-full rounded-full" style="width: 10%"></div>
           </div>
         </div>
 
@@ -645,8 +680,8 @@
             <span class="font-display text-lg font-bold text-main block" id="statTotalPoints">0</span>
             <span class="text-[10px] text-muted uppercase font-semibold tracking-wider">Puntos</span>
           </div>
-          <div class="surface-inset p-3.5 rounded-xl">
-            <span class="font-display text-lg font-bold text-[#477B57] block" id="statTotalWins">0</span>
+          <div class="surface-inset p-3.5 rounded-xl border border-[#75C894]/25">
+            <span class="font-display text-lg font-bold text-green-brand block" id="statTotalWins">0</span>
             <span class="text-[10px] text-muted uppercase font-semibold tracking-wider">Conquistas</span>
           </div>
           <div class="surface-inset p-3.5 rounded-xl">
@@ -661,7 +696,7 @@
             <label for="editFullName" class="text-[11px] text-muted font-medium">Nombre visible</label>
             <input id="editFullName" type="text" maxlength="40" placeholder="Tu nombre o apodo" class="theme-input w-full mt-1 px-3.5 py-2.5 rounded-xl text-xs" />
           </div>
-          <button type="submit" id="btnSaveProfile" class="w-full bg-[#244B37] hover:bg-[#477B57] text-white font-semibold py-3 rounded-xl text-xs btn-press">
+          <button type="submit" id="btnSaveProfile" class="w-full btn-brand-green font-semibold py-3 rounded-xl text-xs btn-press">
             Guardar cambios
           </button>
         </form>
@@ -670,7 +705,7 @@
       <div class="surface-card p-5 rounded-2xl space-y-3">
         <div class="flex items-center justify-between">
           <h3 class="font-display font-bold text-base text-main">Historial de Conquistas</h3>
-          <span class="text-[11px] text-muted font-medium">Últimas 15</span>
+          <span class="text-[11px] text-green-brand font-semibold">Últimas 15</span>
         </div>
         <div id="matchHistoryList" class="space-y-2.5">
           <p class="text-xs text-muted text-center py-4">Cargando historial...</p>
@@ -685,7 +720,7 @@
     <canvas id="arPhotoCanvas" class="hidden absolute inset-0 w-full h-full object-cover z-10"></canvas>
     
     <div class="relative z-20 p-4 bg-gradient-to-b from-black/80 to-transparent flex justify-between items-center">
-      <span id="arHeaderBadge" class="bg-[#171D1A]/90 border border-white/15 text-[#F2F1E9] font-medium text-xs px-3.5 py-2 rounded-full backdrop-blur-md">
+      <span id="arHeaderBadge" class="bg-[#171D1A]/90 border border-[#75C894]/40 text-[#F2F1E9] font-medium text-xs px-3.5 py-2 rounded-full backdrop-blur-md">
         Cámara AR • Apuntá hacia el entorno
       </span>
       <button id="btnCloseAR" type="button" class="bg-[#171D1A]/90 border border-white/15 text-white px-4 py-2 rounded-full text-xs font-semibold backdrop-blur-md">Cerrar</button>
@@ -693,13 +728,13 @@
 
     <div id="arLiveOverlay" class="relative z-20 flex flex-col items-center justify-center my-auto pointer-events-none">
       <div id="arFlagContainer" class="ar-flag-float transition-transform duration-150">
-        <svg class="w-32 h-32 drop-shadow-[0_8px_24px_rgba(71,123,87,0.85)]" viewBox="0 0 100 100" fill="none">
+        <svg class="w-32 h-32 drop-shadow-[0_8px_24px_rgba(117,200,148,0.85)]" viewBox="0 0 100 100" fill="none">
           <line x1="25" y1="12" x2="25" y2="92" stroke="#F2F1E9" stroke-width="3.5" stroke-linecap="round"/>
           <circle cx="25" cy="10" r="3.5" fill="#FF7900"/>
-          <path d="M27 16 L82 28 L68 44 L82 60 L27 52 Z" fill="#477B57" stroke="#A4C9A9" stroke-width="1.5"/>
+          <path d="M27 16 L82 28 L68 44 L82 60 L27 52 Z" fill="#75C894" stroke="#F2F1E9" stroke-width="1.5"/>
         </svg>
       </div>
-      <p class="mt-4 bg-[#171D1A]/85 px-4 py-2 rounded-full text-xs font-semibold text-[#F2F1E9] border border-white/10 backdrop-blur-md">
+      <p class="mt-4 bg-[#171D1A]/85 px-4 py-2 rounded-full text-xs font-semibold text-[#F2F1E9] border border-[#75C894]/30 backdrop-blur-md">
         Sacá una foto del lugar para registrar la conquista
       </p>
     </div>
@@ -729,7 +764,7 @@
         <h2 class="font-display text-2xl font-bold text-[#F2F1E9] mt-1">Bandera conquistada</h2>
       </div>
 
-      <div class="rounded-3xl overflow-hidden border border-[#354139] bg-[#222B26] shadow-2xl">
+      <div class="rounded-3xl overflow-hidden border border-[#477B57] bg-[#222B26] shadow-2xl">
         <canvas id="victoryCanvas" width="600" height="740" class="w-full h-auto block"></canvas>
       </div>
 
@@ -1275,7 +1310,7 @@
 
       function updateGpsIndicator(statusType, text) {
         const el = document.getElementById('gpsStatus');
-        const colors = { searching: 'bg-[#FF7900] animate-pulse', ok: 'bg-[#477B57]', warn: 'bg-[#FF7900]', error: 'bg-rose-500' };
+        const colors = { searching: 'bg-[#FF7900] animate-pulse', ok: 'bg-[#75C894]', warn: 'bg-[#FF7900]', error: 'bg-rose-500' };
         el.innerHTML = `<span class="w-2 h-2 rounded-full ${colors[statusType] || colors.searching}"></span><span>${escapeHTML(text)}</span>`;
       }
 
@@ -1437,7 +1472,7 @@
         if (state.territoryLayer) state.map.removeLayer(state.territoryLayer);
         state.territoryLayer = L.layerGroup().addTo(state.map);
         L.circle([lat + 0.0042, lng + 0.0038], {
-          radius: 360, color: '#477B57', fillColor: '#75C894', fillOpacity: 0.14, weight: 1.5, dashArray: '4, 6'
+          radius: 360, color: '#75C894', fillColor: '#75C894', fillOpacity: 0.16, weight: 2, dashArray: '4, 6'
         }).bindPopup("<b>Zona de club</b><br>Capturá banderas acá.").addTo(state.territoryLayer);
       }
 
@@ -1473,17 +1508,17 @@
           if (state.flagMarker) state.map.removeLayer(state.flagMarker);
           if (state.routeLine) state.map.removeLayer(state.routeLine);
 
-          const pinColor = state.isFlashEvent ? '#FF7900' : '#477B57';
+          const pinColor = state.isFlashEvent ? '#FF7900' : '#75C894';
           const flagIcon = L.divIcon({
             className: '',
-            html: `<svg width="32" height="32" viewBox="0 0 24 24" fill="${pinColor}" stroke="#FFFFFF" stroke-width="2"><path d="M4 21V4m0 0l13 3-3 5 3 5-13-3"/></svg>`,
-            iconSize: [32, 32], iconAnchor: [7, 30]
+            html: `<svg width="34" height="34" viewBox="0 0 24 24" fill="${pinColor}" stroke="#244B37" stroke-width="2"><path d="M4 21V4m0 0l13 3-3 5 3 5-13-3"/></svg>`,
+            iconSize: [34, 34], iconAnchor: [7, 32]
           });
 
           state.flagMarker = L.marker([data.flag.lat, data.flag.lng], { icon: flagIcon }).addTo(state.map);
           const coords = data.route?.coordinates || [[state.userPos.lng, state.userPos.lat], [data.flag.lng, data.flag.lat]];
           const latLngs = coords.map(c => [c[1], c[0]]);
-          state.routeLine = L.polyline(latLngs, { color: pinColor, weight: 4, dashArray: '8, 8' }).addTo(state.map);
+          state.routeLine = L.polyline(latLngs, { color: pinColor, weight: 4.5, dashArray: '8, 8' }).addTo(state.map);
           state.map.fitBounds(state.routeLine.getBounds(), { padding: [32, 32] });
 
           document.getElementById('setupPanel').classList.add('hidden');
@@ -1545,9 +1580,9 @@
 
         if (d <= CONFIG.CAPTURE_RADIUS_METERS) {
           ring.style.setProperty('--pulse-speed', '0.6s');
-          ring.style.borderColor = '#477B57';
+          ring.style.borderColor = '#75C894';
           statusText.textContent = "¡En rango! Abrí la cámara";
-          statusText.className = "text-xs font-bold text-[#477B57]";
+          statusText.className = "text-xs font-bold text-green-brand";
           if (Date.now() - state.lastVibrateTime > 2000) {
             if (navigator.vibrate) navigator.vibrate([120, 50, 120, 50, 200]);
             AudioEngine.ping();
@@ -1556,7 +1591,7 @@
         } else if (d <= 100) {
           ring.style.setProperty('--pulse-speed', '1.0s');
           statusText.textContent = "¡Muy cerca del objetivo!";
-          statusText.className = "text-xs font-semibold text-[#75C894]";
+          statusText.className = "text-xs font-semibold text-green-brand";
           if (Date.now() - state.lastVibrateTime > 5000) {
             if (navigator.vibrate) navigator.vibrate(100);
             state.lastVibrateTime = Date.now();
@@ -1645,7 +1680,7 @@
 
         ctx.fillStyle = 'rgba(23, 29, 26, 0.85)';
         ctx.fillRect(0, canvas.height - 70, canvas.width, 70);
-        ctx.fillStyle = '#FF7900';
+        ctx.fillStyle = '#75C894';
         ctx.font = 'bold 20px "Space Grotesk", sans-serif';
         ctx.fillText(`CONQUISTA LA BANDERA • ${new Date().toLocaleTimeString('es-AR')}`, 30, canvas.height - 28);
 
@@ -1733,7 +1768,7 @@
 
         ctx.fillStyle = '#171D1A';
         ctx.fillRect(0, 0, W, H);
-        ctx.strokeStyle = '#354139';
+        ctx.strokeStyle = '#477B57';
         ctx.lineWidth = 2;
         ctx.strokeRect(24, 24, W - 48, H - 48);
 
@@ -1741,7 +1776,7 @@
         ctx.font = '700 22px "Space Grotesk", sans-serif';
         ctx.fillText('CONQUISTA LA BANDERA', 48, 76);
 
-        ctx.fillStyle = '#AAB5AC';
+        ctx.fillStyle = '#A4C9A9';
         ctx.font = '600 14px "Plus Jakarta Sans", sans-serif';
         ctx.fillText(new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase(), 48, 104);
 
@@ -1766,7 +1801,7 @@
         ctx.stroke();
         ctx.restore();
 
-        ctx.fillStyle = '#F2F1E9';
+        ctx.fillStyle = '#75C894';
         ctx.font = '700 58px "Space Grotesk", sans-serif';
         ctx.fillText(`+${stats.points} PTS`, 48, 525);
 
@@ -1783,7 +1818,7 @@
         ctx.fillStyle = '#FF7900';
         ctx.fillText(stats.username, 425, 616);
 
-        ctx.fillStyle = '#777D75';
+        ctx.fillStyle = '#75C894';
         ctx.font = '600 13px "Plus Jakarta Sans", sans-serif';
         ctx.fillText('conquistalabandera.com.ar', 48, 690);
 
@@ -1843,7 +1878,7 @@
           return `
             <div class="surface-inset flex justify-between items-center px-4 py-3 rounded-xl text-xs">
               <span class="text-main font-medium"><b class="text-muted mr-2">#${i + 1}</b>@${uname}${badge}</span>
-              <span class="text-muted font-semibold">${wins} victorias</span>
+              <span class="text-green-brand font-semibold">${wins} victorias</span>
             </div>
           `;
         }).join('');
@@ -1862,7 +1897,7 @@
           return `
             <div class="surface-inset flex justify-between items-center px-4 py-3.5 rounded-xl">
               <span class="text-xs font-semibold text-main"><b class="${rankColor} font-mono mr-3">#${idx + 1}</b>@${uname}</span>
-              <span class="font-mono text-xs font-bold text-[#477B57]">${pts} pts</span>
+              <span class="font-mono text-xs font-bold text-green-brand">${pts} pts</span>
             </div>
           `;
         }).join('');
@@ -1888,7 +1923,7 @@
                   <p class="text-xs font-semibold text-main">Bandera conquistada • ${escapeHTML(dist)}</p>
                   <p class="text-[11px] text-muted mt-0.5">${escapeHTML(dateStr)}</p>
                 </div>
-                <span class="font-mono text-xs font-bold text-[#477B57]">+${pts} pts</span>
+                <span class="font-mono text-xs font-bold text-green-brand">+${pts} pts</span>
               </div>
             `;
           }).join('');
