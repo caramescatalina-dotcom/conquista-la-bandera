@@ -74,7 +74,18 @@
             transition: background-color 0.2s ease, color 0.2s ease;
         }
 
+        #map-wrapper {
+            position: relative;
+            width: 100%;
+            height: 360px;
+            flex: 1 1 auto;
+            min-height: 320px;
+            background-color: var(--bg-panel-sec);
+        }
+
         #map {
+            position: absolute;
+            inset: 0;
             height: 100%;
             width: 100%;
             z-index: 1;
@@ -197,11 +208,11 @@
     <main id="app-view" class="hidden flex-1 flex flex-col pb-16">
 
         <!-- ===================================================== -->
-        <!-- PESTAÑA 1: RADAR Y JUEGO EN VIVO (MAPA + RECORRIDO)   -->
+        <!-- PESTAÑA 1: RADAR, DISTANCIA (1/3/5/10 KM) Y CAPTURA   -->
         <!-- ===================================================== -->
         <section id="panel-mapa" class="tab-panel flex-1 flex flex-col">
             
-            <!-- BARRA SUPERIOR DE PARTIDA: CONTRINCANTE + AMIGO + ANTICHEAT -->
+            <!-- BARRA SUPERIOR DE PARTIDA: CONTRINCANTE + DISTANCIA + ANTICHEAT -->
             <div class="p-3 bg-theme-bg border-b border-theme-border">
                 <div class="max-w-lg mx-auto bg-theme-panel border border-theme-border rounded-2xl p-3 space-y-2.5">
                     <div class="flex justify-between items-center">
@@ -219,49 +230,62 @@
                         </button>
                     </div>
 
-                    <!-- SELECTOR DE MODO DE JUEGO -->
-                    <div class="grid grid-cols-4 gap-1.5 pt-2 border-t border-theme-border">
-                        <button type="button" onclick="seleccionarModo('Libre')" id="mode-Libre" class="mode-btn py-1.5 px-1 rounded-lg text-[10px] font-extrabold bg-brandGreen-dark text-[#F2F1E9] transition">Libre</button>
-                        <button type="button" onclick="seleccionarModo('Duelo 1v1')" id="mode-Duelo 1v1" class="mode-btn py-1.5 px-1 rounded-lg text-[10px] font-bold bg-theme-panelSec text-theme-textSec hover:text-theme-text transition">Duelo 1v1</button>
-                        <button type="button" onclick="seleccionarModo('Territorio')" id="mode-Territorio" class="mode-btn py-1.5 px-1 rounded-lg text-[10px] font-bold bg-theme-panelSec text-theme-textSec hover:text-theme-text transition">Territorio</button>
-                        <button type="button" onclick="seleccionarModo('Contrarreloj')" id="mode-Contrarreloj" class="mode-btn py-1.5 px-1 rounded-lg text-[10px] font-bold bg-theme-panelSec text-theme-textSec hover:text-theme-text transition">Tiempo</button>
+                    <!-- SELECTOR DE DISTANCIA DE LA BANDERA: 1, 3, 5 O 10 KM -->
+                    <div class="pt-2 border-t border-theme-border space-y-1.5">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-theme-textSec">Distancia de la Bandera</span>
+                            <span id="distance-reward-badge" class="text-[10px] font-extrabold text-brandOrange">+150 PTS al capturar</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-1.5">
+                            <button type="button" onclick="seleccionarDistanciaObjetivo(1)" id="dist-btn-1" class="dist-btn py-1.5 px-1 rounded-lg text-xs font-extrabold bg-brandGreen-dark text-[#F2F1E9] transition">1 km</button>
+                            <button type="button" onclick="seleccionarDistanciaObjetivo(3)" id="dist-btn-3" class="dist-btn py-1.5 px-1 rounded-lg text-xs font-bold bg-theme-panelSec text-theme-textSec hover:text-theme-text transition">3 km</button>
+                            <button type="button" onclick="seleccionarDistanciaObjetivo(5)" id="dist-btn-5" class="dist-btn py-1.5 px-1 rounded-lg text-xs font-bold bg-theme-panelSec text-theme-textSec hover:text-theme-text transition">5 km</button>
+                            <button type="button" onclick="seleccionarDistanciaObjetivo(10)" id="dist-btn-10" class="dist-btn py-1.5 px-1 rounded-lg text-xs font-bold bg-theme-panelSec text-theme-textSec hover:text-theme-text transition">10 km</button>
+                        </div>
                     </div>
 
-                    <!-- INDICADORES ANTICHEAT Y PROGRESO GPS -->
+                    <!-- INDICADORES ANTICHEAT Y ESTADO -->
                     <div class="flex justify-between items-center text-[11px] pt-1">
                         <span id="anticheat-badge" class="text-brandGreen-mid flex items-center gap-1.5 font-bold">
                             <span class="w-2 h-2 rounded-full bg-brandGreen-mid inline-block"></span>
                             GPS Verificado
                         </span>
                         <span id="game-status-pill" class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-theme-panelSec text-theme-textSec border border-theme-border">
-                            LISTO PARA INICIAR
+                            META: 1 KM
                         </span>
                     </div>
                 </div>
             </div>
 
-            <!-- MAPA INTERACTIVO -->
-            <div class="relative flex-1 min-h-[300px] w-full">
+            <!-- CONTENEDOR DEL MAPA INTERACTIVO -->
+            <div id="map-wrapper">
                 <div id="map"></div>
 
-                <!-- PROXIMIDAD A LA BANDERA OBJETIVO -->
-                <div class="absolute top-3 left-3 right-3 z-10 max-w-lg mx-auto pointer-events-none">
-                    <div class="bg-theme-panel border border-theme-border rounded-xl px-3.5 py-2 flex items-center justify-between pointer-events-auto">
-                        <div class="flex items-center space-x-2.5">
-                            <span class="w-2.5 h-2.5 rounded-full bg-brandOrange"></span>
-                            <div>
-                                <p class="text-[11px] font-extrabold text-theme-text leading-tight">Bandera Objetivo: Sector Central</p>
-                                <p class="text-[10px] text-theme-textSec">Distancia al objetivo: <strong id="flag-distance" class="text-theme-text">120 m</strong></p>
+                <!-- PROXIMIDAD A LA BANDERA OBJETIVO Y BOTÓN DE FOTO CAPTURA -->
+                <div class="absolute top-3 left-3 right-3 z-20 max-w-lg mx-auto pointer-events-none">
+                    <div class="bg-theme-panel border border-theme-border rounded-xl px-3.5 py-2.5 flex items-center justify-between gap-2 pointer-events-auto">
+                        <div class="flex items-center space-x-2.5 min-w-0">
+                            <span class="w-2.5 h-2.5 rounded-full bg-brandOrange shrink-0"></span>
+                            <div class="min-w-0">
+                                <p id="flag-target-title" class="text-[11px] font-extrabold text-theme-text leading-tight truncate">Bandera a 1 km</p>
+                                <p class="text-[10px] text-theme-textSec">Restante: <strong id="flag-distance" class="text-theme-text">1000 m</strong></p>
                             </div>
                         </div>
-                        <button type="button" id="btn-capture-flag" onclick="intentarCapturarBandera()" class="bg-brandOrange hover:bg-brandOrange-hover text-[#202820] text-[11px] font-extrabold px-3 py-1.5 rounded-lg transition">
-                            Capturar
+                        <button type="button" id="btn-capture-flag" onclick="abrirCamaraCapturaBandera()" class="bg-brandOrange hover:bg-brandOrange-hover text-[#202820] text-[11px] font-extrabold px-3 py-1.5 rounded-lg transition shrink-0 flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                                <circle cx="12" cy="13" r="4"></circle>
+                            </svg>
+                            <span>Foto Bandera</span>
                         </button>
                     </div>
                 </div>
 
+                <!-- INPUT OCULTO PARA CÁMARA / CAPTURA DE BANDERA -->
+                <input type="file" id="flag-photo-input" accept="image/*" capture="environment" class="hidden" onchange="procesarFotoCaptura(event)">
+
                 <!-- CONTROLES DE SIMULACIÓN DEV -->
-                <div id="dev-controls" class="hidden absolute bottom-3 left-3 z-20 bg-theme-panel border border-theme-border p-2.5 rounded-xl space-y-1.5 max-w-[190px]">
+                <div id="dev-controls" class="hidden absolute bottom-3 left-3 z-20 bg-theme-panel border border-theme-border p-2.5 rounded-xl space-y-1.5 max-w-[195px]">
                     <div class="text-[10px] font-extrabold text-brandOrange uppercase">Simulador DEV</div>
                     <button type="button" onclick="simularAcercamientoBandera()" class="w-full text-left text-[11px] font-bold bg-theme-panelSec px-2.5 py-1.5 rounded-lg text-brandGreen-mid border border-theme-border">
                         ▶ Avanzar hacia bandera
@@ -270,6 +294,13 @@
                         ⚡ Probar trampa GPS
                     </button>
                 </div>
+
+                <!-- BOTÓN CENTRAR MI UBICACIÓN -->
+                <button type="button" onclick="centrarEnUsuario()" title="Centrar en mi ubicación" class="absolute bottom-3 right-3 z-20 bg-theme-panel border border-theme-border text-theme-text p-2.5 rounded-xl">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+                    </svg>
+                </button>
             </div>
 
             <!-- PANEL DE MÉTRICAS Y CONTROLES DE PARTIDA -->
@@ -278,7 +309,7 @@
                     <!-- MÉTRICAS DE RECORRIDO -->
                     <div class="grid grid-cols-4 gap-2 text-center">
                         <div class="bg-theme-panelSec rounded-xl p-2 border border-theme-border">
-                            <span class="text-[10px] text-theme-textSec block font-semibold">Distancia</span>
+                            <span class="text-[10px] text-theme-textSec block font-semibold">Recorrido</span>
                             <strong id="stat-distance" class="text-sm font-black text-brandGreen-mid">0.00 km</strong>
                         </div>
                         <div class="bg-theme-panelSec rounded-xl p-2 border border-theme-border">
@@ -326,7 +357,7 @@
                     <div>
                         <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-brandOrange text-[#202820]">Desafío Especial</span>
                         <h3 class="text-base font-extrabold text-theme-text mt-1.5">Conquistador Urbano</h3>
-                        <p class="text-xs text-theme-textSec mt-0.5">Capturá 2 banderas en una misma sesión de entrenamiento.</p>
+                        <p class="text-xs text-theme-textSec mt-0.5">Capturá 2 banderas con foto verificada en una misma sesión.</p>
                     </div>
                     <span class="text-xs font-black text-brandOrange">+300 PTS</span>
                 </div>
@@ -404,7 +435,7 @@
         </section>
 
         <!-- ===================================================== -->
-        <!-- PESTAÑA 4: PERFIL Y RED DE AMIGOS                     -->
+        <!-- PESTAÑA 4: PERFIL, CAPTURAS Y RED DE AMIGOS            -->
         <!-- ===================================================== -->
         <section id="panel-perfil" class="tab-panel hidden flex-1 p-4 max-w-lg w-full mx-auto space-y-4">
             <div class="bg-theme-panel border border-theme-border rounded-2xl p-4 flex items-center space-x-3.5">
@@ -415,6 +446,14 @@
                     <h2 id="profile-username" class="text-base font-extrabold text-theme-text">Jugador</h2>
                     <p id="profile-email" class="text-xs text-theme-textSec">jugador@correo.com</p>
                     <span class="inline-block mt-1 text-[10px] font-extrabold px-2 py-0.5 rounded bg-theme-panelSec text-brandGreen-mid border border-theme-border">GPS Verificado Activo</span>
+                </div>
+            </div>
+
+            <!-- GALERÍA DE CAPTURAS DE BANDERA -->
+            <div class="bg-theme-panel border border-theme-border rounded-2xl p-4 space-y-3">
+                <h3 class="text-sm font-extrabold text-theme-text">Mis Banderas Capturadas</h3>
+                <div id="captured-flags-gallery" class="grid grid-cols-2 gap-2.5 text-xs">
+                    <p class="text-theme-textSec col-span-2 py-2">Llegá a una bandera y sacale foto para registrar tu conquista.</p>
                 </div>
             </div>
 
@@ -431,6 +470,25 @@
         </section>
 
     </main>
+
+    <!-- ========================================================= -->
+    <!-- MODAL DE CONFIRMACIÓN DE CAPTURA DE BANDERA CON FOTO      -->
+    <!-- ========================================================= -->
+    <div id="capture-modal" class="hidden fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+        <div class="bg-theme-panel border border-theme-border rounded-2xl max-w-sm w-full p-4 space-y-3.5">
+            <div class="flex justify-between items-center">
+                <span class="text-xs font-extrabold uppercase tracking-wider text-brandOrange">¡Bandera Conquistada!</span>
+                <span id="modal-points-awarded" class="text-xs font-black px-2 py-0.5 rounded bg-brandGreen-dark text-[#F2F1E9]">+150 PTS</span>
+            </div>
+            <div class="rounded-xl overflow-hidden border border-theme-border bg-theme-panelSec aspect-video flex items-center justify-center">
+                <img id="captured-photo-preview" src="" alt="Captura de bandera" class="w-full h-full object-cover">
+            </div>
+            <p id="capture-modal-desc" class="text-xs text-theme-textSec">Captura verificada por GPS en la ubicación objetivo.</p>
+            <button type="button" onclick="cerrarModalCaptura()" class="w-full bg-brandOrange hover:bg-brandOrange-hover text-[#202820] font-extrabold py-2.5 rounded-xl text-sm transition">
+                Continuar Recorrido
+            </button>
+        </div>
+    </div>
 
     <!-- ========================================================= -->
     <!-- MENÚ DE NAVEGACIÓN INFERIOR (4 PESTAÑAS)                  -->
@@ -451,7 +509,7 @@
     </nav>
 
     <!-- NOTIFICACIÓN TOAST LIMPIA -->
-    <div id="toast-msg" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-brandGreen-dark text-[#F2F1E9] px-4 py-2.5 rounded-xl text-xs font-extrabold border border-brandGreen-mid"></div>
+    <div id="toast-msg" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-brandGreen-dark text-[#F2F1E9] px-4 py-2.5 rounded-xl text-xs font-extrabold border border-brandGreen-mid text-center max-w-[90vw]"></div>
 
     <script>
         // =========================================================
@@ -495,7 +553,7 @@
         // =========================================================
         // 1. CONFIGURACIÓN SUPABASE Y VARIABLES DE ESTADO
         // =========================================================
-        // Reemplazá 'https://TU_ID_DE_PROYECTO.supabase.co' con tu URL de Supabase (Project Settings > API)
+        // Reemplazá 'https://TU_ID_DE_PROYECTO.supabase.co' con la URL real de tu proyecto
         const SUPABASE_URL = 'https://TU_ID_DE_PROYECTO.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_M5F68YGhfhuHjZrJWR4OMg_R4zJd5vu';
 
@@ -509,14 +567,16 @@
         let currentUser = null;
         let currentRival = { id: '00000000-0000-0000-0000-000000000099', username: 'GhostRunner_99' };
         let authMode = 'login';
-        let selectedMode = 'Libre';
+        let selectedDistanceKm = 1;
 
         // Estado de partida y GPS
         let map = null;
         let userMarker = null;
         let flagMarker = null;
+        let targetGuideLine = null;
         let routePolyline = null;
         let routeCoords = [];
+        let capturedPhotos = [];
 
         let isRunning = false;
         let isPaused = false;
@@ -530,14 +590,15 @@
 
         let lastCoords = null;
         let lastTimestamp = null;
-        let flagCoords = [-34.6027, -58.3806];
+        let flagCoords = [-34.5965, -58.3755];
         const MAX_SPEED_KMH = 45;
+        const CAPTURE_RADIUS_METERS = 40;
 
         function mostrarToast(texto) {
             const toast = document.getElementById('toast-msg');
             toast.innerText = texto;
             toast.classList.remove('hidden');
-            setTimeout(() => toast.classList.add('hidden'), 3000);
+            setTimeout(() => toast.classList.add('hidden'), 3200);
         }
 
         // =========================================================
@@ -557,7 +618,7 @@
                 const splash = document.getElementById('splash-screen');
                 splash.style.opacity = '0';
                 setTimeout(() => splash.classList.add('hidden'), 300);
-            }, 800);
+            }, 600);
 
             if (supabaseClient) {
                 const { data: { session } } = await supabaseClient.auth.getSession();
@@ -697,16 +758,22 @@
             document.getElementById('ranking-my-name').innerText = `@${displayName} (Vos)`;
             document.getElementById('rival-username').innerText = currentRival.username;
 
-            inicializarMapa();
-            setTimeout(() => {
-                if (map) map.invalidateSize();
-            }, 150);
+            requestAnimationFrame(() => {
+                inicializarMapa();
+                setTimeout(() => {
+                    if (map) {
+                        map.invalidateSize();
+                        ubicarBanderaADistancia(selectedDistanceKm);
+                    }
+                }, 200);
+            });
+
             iniciarRastreoGPSPasivo();
             cargarListaAmigos();
         }
 
         // =========================================================
-        // 4. NAVEGACIÓN ENTRE PESTAÑAS
+        // 4. NAVEGACIÓN ENTRE PESTAÑAS Y SELECTOR DE DISTANCIA
         // =========================================================
         function cambiarPestana(tabName) {
             ['mapa', 'desafios', 'ranking', 'perfil'].forEach(t => {
@@ -720,32 +787,82 @@
             activeBtn.className = 'nav-btn flex-1 py-1.5 mx-1 rounded-xl bg-theme-panelSec text-brandGreen-mid font-extrabold text-xs transition';
 
             if (tabName === 'mapa' && map) {
-                setTimeout(() => map.invalidateSize(), 100);
+                setTimeout(() => map.invalidateSize(), 120);
             }
         }
 
-        function seleccionarModo(modo) {
-            selectedMode = modo;
-            document.querySelectorAll('.mode-btn').forEach(btn => {
-                btn.className = 'mode-btn py-1.5 px-1 rounded-lg text-[10px] font-bold bg-theme-panelSec text-theme-textSec hover:text-theme-text transition';
+        function seleccionarDistanciaObjetivo(km) {
+            selectedDistanceKm = km;
+            [1, 3, 5, 10].forEach(d => {
+                const btn = document.getElementById(`dist-btn-${d}`);
+                if (!btn) return;
+                btn.className = d === km
+                    ? 'dist-btn py-1.5 px-1 rounded-lg text-xs font-extrabold bg-brandGreen-dark text-[#F2F1E9] transition'
+                    : 'dist-btn py-1.5 px-1 rounded-lg text-xs font-bold bg-theme-panelSec text-theme-textSec hover:text-theme-text transition';
             });
-            const active = document.getElementById(`mode-${modo}`);
-            if (active) {
-                active.className = 'mode-btn py-1.5 px-1 rounded-lg text-[10px] font-extrabold bg-brandGreen-dark text-[#F2F1E9] transition';
+
+            const puntosPremio = km * 150;
+            document.getElementById('distance-reward-badge').innerText = `+${puntosPremio} PTS al capturar`;
+            document.getElementById('flag-target-title').innerText = `Bandera a ${km} km`;
+
+            if (!isRunning) {
+                document.getElementById('game-status-pill').innerText = `META: ${km} KM`;
             }
-            mostrarToast(`Modo seleccionado: ${modo}`);
+
+            ubicarBanderaADistancia(km);
+            mostrarToast(`Bandera ubicada a ${km} km de tu posición`);
+        }
+
+        function ubicarBanderaADistancia(km) {
+            const origin = lastCoords ? [lastCoords.lat, lastCoords.lon] : [-34.6037, -58.3816];
+            const meters = km * 1000;
+            const bearing = Math.random() * 2 * Math.PI;
+            const R = 6371e3;
+
+            const lat1 = origin[0] * Math.PI / 180;
+            const lon1 = origin[1] * Math.PI / 180;
+            const dR = meters / R;
+
+            const lat2 = Math.asin(Math.sin(lat1) * Math.cos(dR) + Math.cos(lat1) * Math.sin(dR) * Math.cos(bearing));
+            const lon2 = lon1 + Math.atan2(Math.sin(bearing) * Math.sin(dR) * Math.cos(lat1), Math.cos(dR) - Math.sin(lat1) * Math.sin(lat2));
+
+            flagCoords = [lat2 * 180 / Math.PI, lon2 * 180 / Math.PI];
+
+            if (flagMarker) {
+                flagMarker.setLatLng(flagCoords);
+            }
+            if (targetGuideLine && map) {
+                targetGuideLine.setLatLngs([origin, flagCoords]);
+                const bounds = L.latLngBounds([origin, flagCoords]);
+                map.fitBounds(bounds, { padding: [55, 55] });
+            }
+
+            actualizarDistanciaBandera(origin[0], origin[1]);
         }
 
         // =========================================================
-        // 5. MAPA, RECORRIDO, CAPTURA Y ANTICHEAT GPS
+        // 5. MAPA, RECORRIDO, CAPTURA CON FOTO Y ANTICHEAT GPS
         // =========================================================
         function inicializarMapa() {
             if (map) return;
             const startCoords = [-34.6037, -58.3816];
-            map = L.map('map', { zoomControl: false }).setView(startCoords, 16);
+            map = L.map('map', { zoomControl: false }).setView(startCoords, 15);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19
+            }).addTo(map);
+
+            targetGuideLine = L.polyline([startCoords, flagCoords], {
+                color: '#FF7900',
+                weight: 2.5,
+                dashArray: '6, 8',
+                opacity: 0.75
+            }).addTo(map);
+
+            routePolyline = L.polyline([], {
+                color: '#477B57',
+                weight: 4.5,
+                opacity: 0.9
             }).addTo(map);
 
             userMarker = L.circleMarker(startCoords, {
@@ -758,21 +875,21 @@
             }).addTo(map);
 
             flagMarker = L.circleMarker(flagCoords, {
-                radius: 10,
+                radius: 11,
                 fillColor: '#FF7900',
                 color: '#202820',
-                weight: 2,
+                weight: 2.5,
                 opacity: 1,
                 fillOpacity: 0.95
             }).addTo(map);
 
-            routePolyline = L.polyline([], {
-                color: '#477B57',
-                weight: 4,
-                opacity: 0.85
-            }).addTo(map);
-
             actualizarDistanciaBandera(startCoords[0], startCoords[1]);
+        }
+
+        function centrarEnUsuario() {
+            if (!map) return;
+            const pos = lastCoords ? [lastCoords.lat, lastCoords.lon] : [-34.6037, -58.3816];
+            map.setView(pos, 16);
         }
 
         function calcularDistanciaMetros(lat1, lon1, lat2, lon2) {
@@ -788,7 +905,15 @@
 
         function actualizarDistanciaBandera(lat, lon) {
             const distM = Math.round(calcularDistanciaMetros(lat, lon, flagCoords[0], flagCoords[1]));
-            document.getElementById('flag-distance').innerText = `${distM} m`;
+            const text = distM >= 1000 ? `${(distM / 1000).toFixed(2)} km` : `${distM} m`;
+            document.getElementById('flag-distance').innerText = text;
+
+            const btn = document.getElementById('btn-capture-flag');
+            if (distM <= CAPTURE_RADIUS_METERS) {
+                btn.classList.add('ring-2', 'ring-brandGreen-mid');
+            } else {
+                btn.classList.remove('ring-2', 'ring-brandGreen-mid');
+            }
             return distM;
         }
 
@@ -815,7 +940,7 @@
                     // Sumar recorrido si la partida está activa
                     if (isRunning && !isPaused && distM > 1) {
                         totalDistanceKm += (distM / 1000);
-                        sessionPoints += Math.round(distM * 0.15);
+                        sessionPoints += Math.round(distM * 0.1);
                         actualizarUIEstadisticas();
                     }
                 }
@@ -830,6 +955,10 @@
             if (map && userMarker) {
                 userMarker.setLatLng([lat, lon]);
                 map.panTo([lat, lon]);
+
+                if (targetGuideLine) {
+                    targetGuideLine.setLatLngs([[lat, lon], flagCoords]);
+                }
 
                 if (isRunning && !isPaused) {
                     routeCoords.push([lat, lon]);
@@ -846,12 +975,11 @@
             watchId = navigator.geolocation.watchPosition(
                 (pos) => {
                     const { latitude, longitude } = pos.coords;
-                    if (!lastCoords) {
-                        // Ubicar bandera objetivo cerca del jugador real (~110m)
-                        flagCoords = [latitude + 0.0009, longitude + 0.0007];
-                        if (flagMarker) flagMarker.setLatLng(flagCoords);
-                    }
+                    const firstFix = !lastCoords;
                     procesarCoordenadas(latitude, longitude);
+                    if (firstFix) {
+                        ubicarBanderaADistancia(selectedDistanceKm);
+                    }
                 },
                 (err) => console.warn('Esperando señal GPS:', err.message),
                 { enableHighAccuracy: true, maximumAge: 2000 }
@@ -859,8 +987,74 @@
         }
 
         // =========================================================
-        // 6. CONTROLES DE PARTIDA Y CAPTURA DE BANDERA
+        // 6. CAPTURA CON FOTO AL LLEGAR A LA BANDERA Y CONTROLES
         // =========================================================
+        function abrirCamaraCapturaBandera() {
+            const currentPos = lastCoords ? [lastCoords.lat, lastCoords.lon] : [-34.6037, -58.3816];
+            const dist = actualizarDistanciaBandera(currentPos[0], currentPos[1]);
+
+            if (dist <= CAPTURE_RADIUS_METERS || isDev) {
+                document.getElementById('flag-photo-input').click();
+            } else {
+                const restante = dist >= 1000 ? `${(dist / 1000).toFixed(2)} km` : `${dist} m`;
+                mostrarToast(`Te faltan ${restante}. Acercate a menos de ${CAPTURE_RADIUS_METERS}m para sacarle foto.`);
+            }
+        }
+
+        function procesarFotoCaptura(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const photoDataUrl = e.target.result;
+                const puntosGanados = selectedDistanceKm * 150;
+
+                sessionPoints += puntosGanados;
+                sessionFlagsCaptured++;
+                actualizarUIEstadisticas();
+
+                // Guardar captura en la galería del perfil
+                capturedPhotos.unshift({
+                    img: photoDataUrl,
+                    km: selectedDistanceKm,
+                    pts: puntosGanados,
+                    hora: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                });
+                renderizarGaleriaCapturas();
+
+                // Mostrar modal con la foto sacada
+                document.getElementById('captured-photo-preview').src = photoDataUrl;
+                document.getElementById('modal-points-awarded').innerText = `+${puntosGanados} PTS`;
+                document.getElementById('capture-modal-desc').innerText = `Bandera de ${selectedDistanceKm} km conquistada con foto verificada.`;
+                document.getElementById('capture-modal').classList.remove('hidden');
+
+                // Generar nueva bandera objetivo a la misma distancia elegida
+                ubicarBanderaADistancia(selectedDistanceKm);
+                event.target.value = '';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function cerrarModalCaptura() {
+            document.getElementById('capture-modal').classList.add('hidden');
+        }
+
+        function renderizarGaleriaCapturas() {
+            const container = document.getElementById('captured-flags-gallery');
+            if (capturedPhotos.length === 0) return;
+
+            container.innerHTML = capturedPhotos.map(item => `
+                <div class="bg-theme-bg border border-theme-border rounded-xl overflow-hidden">
+                    <img src="${item.img}" alt="Bandera ${item.km}km" class="w-full h-24 object-cover">
+                    <div class="p-2 flex justify-between items-center">
+                        <span class="font-extrabold text-theme-text">${item.km} km • ${item.hora}</span>
+                        <span class="font-black text-brandOrange">+${item.pts}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
         function iniciarPartida() {
             isRunning = true;
             isPaused = false;
@@ -870,7 +1064,7 @@
             document.getElementById('btn-stop-run').classList.remove('hidden');
 
             const pill = document.getElementById('game-status-pill');
-            pill.innerText = `EN CURSO • ${selectedMode.toUpperCase()}`;
+            pill.innerText = `EN CURSO • ${selectedDistanceKm} KM`;
             pill.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded bg-brandGreen-dark text-[#F2F1E9]';
 
             if (!timerInterval) {
@@ -881,7 +1075,7 @@
                     }
                 }, 1000);
             }
-            mostrarToast('¡Recorrido iniciado! Acercate a la bandera.');
+            mostrarToast(`¡Recorrido iniciado! Llegá a la bandera de ${selectedDistanceKm} km y sacale foto.`);
         }
 
         function pausarPartida() {
@@ -895,7 +1089,7 @@
                 pill.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded bg-brandOrange-bg text-[#202820] border border-brandOrange-soft';
             } else {
                 btnPause.innerText = 'Pausar';
-                pill.innerText = `EN CURSO • ${selectedMode.toUpperCase()}`;
+                pill.innerText = `EN CURSO • ${selectedDistanceKm} KM`;
                 pill.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded bg-brandGreen-dark text-[#F2F1E9]';
             }
         }
@@ -912,7 +1106,6 @@
 
             mostrarToast(`Sesión finalizada: +${sessionPoints} pts ganados`);
 
-            // Resetear controles
             totalDistanceKm = 0;
             elapsedSeconds = 0;
             sessionPoints = 0;
@@ -926,27 +1119,8 @@
             document.getElementById('btn-stop-run').classList.add('hidden');
 
             const pill = document.getElementById('game-status-pill');
-            pill.innerText = 'LISTO PARA INICIAR';
+            pill.innerText = `META: ${selectedDistanceKm} KM`;
             pill.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded bg-theme-panelSec text-theme-textSec border border-theme-border';
-        }
-
-        function intentarCapturarBandera() {
-            const currentPos = lastCoords ? [lastCoords.lat, lastCoords.lon] : [-34.6037, -58.3816];
-            const dist = actualizarDistanciaBandera(currentPos[0], currentPos[1]);
-
-            if (dist <= 35) {
-                sessionPoints += 150;
-                sessionFlagsCaptured++;
-                actualizarUIEstadisticas();
-                mostrarToast('¡Bandera capturada! +150 puntos');
-
-                // Reubicar nueva bandera
-                flagCoords = [currentPos[0] + (Math.random() - 0.5) * 0.002, currentPos[1] + (Math.random() - 0.5) * 0.002];
-                if (flagMarker) flagMarker.setLatLng(flagCoords);
-                actualizarDistanciaBandera(currentPos[0], currentPos[1]);
-            } else {
-                mostrarToast(`Estás a ${dist}m. Acercate a menos de 35m para capturar.`);
-            }
         }
 
         function actualizarUIEstadisticas() {
@@ -956,7 +1130,6 @@
             document.getElementById('stat-time').innerText = `${mins}:${secs}`;
             document.getElementById('stat-points').innerText = sessionPoints;
 
-            // Actualizar progreso en pestaña Desafíos (Banderas y Kilómetros)
             const flagPct = Math.min(100, Math.round((sessionFlagsCaptured / 2) * 100));
             document.getElementById('challenge-prog-1').style.width = `${flagPct}%`;
             document.getElementById('challenge-flags-text').innerText = `Progreso: ${sessionFlagsCaptured} / 2 banderas`;
@@ -969,8 +1142,11 @@
         // Simulación DEV
         function simularAcercamientoBandera() {
             const curr = lastCoords ? [lastCoords.lat, lastCoords.lon] : [-34.6037, -58.3816];
-            const nextLat = curr[0] + (flagCoords[0] - curr[0]) * 0.45;
-            const nextLon = curr[1] + (flagCoords[1] - curr[1]) * 0.45;
+            const dist = calcularDistanciaMetros(curr[0], curr[1], flagCoords[0], flagCoords[1]);
+            const factor = dist < 120 ? 0.92 : 0.55;
+            const nextLat = curr[0] + (flagCoords[0] - curr[0]) * factor;
+            const nextLon = curr[1] + (flagCoords[1] - curr[1]) * factor;
+            lastTimestamp = Date.now() - 60000;
             procesarCoordenadas(nextLat, nextLon);
         }
 
