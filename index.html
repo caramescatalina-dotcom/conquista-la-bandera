@@ -656,7 +656,6 @@
         Distancia al objetivo: <span id="arLiveDistText">-- m</span>
       </div>
 
-      <!-- Canvas transparente Three.js donde se dibuja la bandera 3D apoyada en el piso -->
       <canvas id="ar3dCanvas" class="w-full h-full absolute inset-0 pointer-events-none"></canvas>
 
       <p class="relative z-10 mt-auto bg-[#171D1A]/85 px-4 py-2 rounded-full text-xs font-semibold text-[#F2F1E9] border border-[#75C894]/30 backdrop-blur-md text-center mx-4">
@@ -1406,13 +1405,13 @@
         requestCompassPermission();
         const btn = document.getElementById('btnConfirmGpsPermission');
         const btnText = document.getElementById('btnConfirmGpsText');
-        btn.disabled = true;
-        btnText.textContent = "Conectando satélites GPS...";
+        if (btn) btn.disabled = true;
+        if (btnText) btnText.textContent = "Conectando satélites GPS...";
         updateGpsIndicator('searching', 'Obteniendo ubicación real...');
 
         navigator.geolocation.getCurrentPosition(
-          (pos) => { btn.disabled = false; hideGpsPermissionCard(); handleRealPositionUpdate(pos, true); },
-          (err) => { btn.disabled = false; handleGpsError(err); },
+          (pos) => { if (btn) btn.disabled = false; hideGpsPermissionCard(); handleRealPositionUpdate(pos, true); },
+          (err) => { if (btn) btn.disabled = false; handleGpsError(err); },
           { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
         );
 
