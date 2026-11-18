@@ -1642,7 +1642,90 @@
         } catch (_) {}
       }
 
-      async function generateMatch(isJoining = false, isPublicQueue = false) {
+      // MATCHMAKING AUTOMÁTICO EN VIVO MEDIANTE LOBBY REALTIME PRESENCE
+      let matchmakingChannel = null;
+
+      async function startAutoMatchmaking() {
+        if (!state.hasRealGps || !state.userPos) {
+          showGpsPermissionCard('prompt');
+          return notify("Confirmá tu ubicación GPS arriba.", "error");
+        }
+        if (!sb || !state.user) return;
+
+        const btn = document.getElementById('btnAutoMatchmaking');
+        const defaultBtnHTML = `
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          Buscar rival automático en vivo
+        `;
+
+        if (matchmakingChannel) {
+          sb.removeChannel(matchmakingChannel);
+          matchmakingChannel = null;
+          btn.innerHTML = defaultBtnHTML;
+          return notify("Búsqueda de rival cancelada.", "info");
+        }
+
+        AudioEngine.tap();
+        btn.textContent = "Buscando rival en vivo... (Tocar para cancelar)";
+
+        const lobbyName = `lobby-${CONFIG.ENV_NAME.toLowerCase()}-${state.category}`;
+        let matched = false;
+
+        function cleanupLobby() {
+          if (matchmakingChannel) {
+            sb.removeChannel(matchmakingChannel);
+            matchmakingChannel = null;
+          }
+          btn.innerHTML = defaultBtnHTML;
+        }
+
+        matchmakingChannel = sb.channel(lobbyName, {
+          config: { presence: { key: state.user.id }, broadcast: { self: false } }
+        });
+
+        matchmakingChannel
+          .on('presence', { event: 'sync' }, async () => {
+            if (matched) return;
+            const users = Object.keys(matchmakingChannel.presenceState()).sort();
+            const rivalId = users.find(id => id !== state.user.id);
+            if (!rivalId) return;
+
+            matched = true;
+            const amIHost = state.user.id < rivalId;
+
+            if (amIHost) {
+              await generateMatch(false, false, async (createdMatch) => {
+                if (createdMatch && createdMatch.duelCode && matchmakingChannel) {
+                  await matchmakingChannel.send({
+                    type: 'broadcast',
+                    event: 'match_found',
+                    payload: { targetUserId: rivalId, duelCode: createdMatch.duelCode }
+                  });
+                }
+                cleanupLobby();
+              });
+            }
+          })
+          .on('broadcast', { event: 'match_found' }, async ({ payload }) => {
+            if (payload.targetUserId !== state.user.id || !payload.duelCode) return;
+            matched = true;
+            cleanupLobby();
+            notify(`¡Rival encontrado! Conectando a sala ${payload.duelCode}...`, "success");
+            document.getElementById('duelCodeInput').value = payload.duelCode;
+            await generateMatch(true, false);
+          })
+          .subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+              await matchmakingChannel.track({
+                user_id: state.user.id,
+                distance: state.distance,
+                joined_at: Date.now()
+              });
+            }
+          });
+      }
+
+      async function generateMatch(isJoining = false, isPublicQueue = false, onCreatedCallback = null) {
         if (!state.hasRealGps || !state.userPos) {
           showGpsPermissionCard('prompt');
           return notify("Confirmá tu ubicación GPS arriba.", "error");
@@ -1650,32 +1733,17 @@
 
         const btn = document.getElementById('btnGenerateFlag');
         btn.disabled = true;
-        btn.textContent = isPublicQueue ? "Buscando rival..." : "Generando sala...";
+        btn.textContent = isJoining ? "Uniéndose a sala..." : "Generando sala...";
         AudioEngine.tap();
 
-        let duelCode = isJoining ? document.getElementById('duelCodeInput').value.trim().toUpperCase() : null;
+        const duelCode = isJoining ? document.getElementById('duelCodeInput').value.trim().toUpperCase() : null;
+        if (isJoining && !duelCode) {
+          btn.disabled = false;
+          btn.textContent = state.mode === 'live_duel' ? "Crear sala privada de duelo" : "Generar bandera libre";
+          return notify("Ingresá un código de sala.", "error");
+        }
 
         try {
-          if (isPublicQueue && sb) {
-            const tenMinsAgo = new Date(Date.now() - 10 * 60000).toISOString();
-            const { data: openRooms } = await sb
-              .from('matches')
-              .select('duel_code')
-              .eq('status', 'pending')
-              .eq('mode', 'live_duel')
-              .eq('category', state.category)
-              .neq('user_id', state.user.id)
-              .gte('created_at', tenMinsAgo)
-              .not('duel_code', 'is', null)
-              .limit(1);
-
-            if (openRooms && openRooms.length > 0) {
-              duelCode = openRooms[0].duel_code;
-              isJoining = true;
-              notify(`¡Rival encontrado! Conectando a sala ${duelCode}...`, "success");
-            }
-          }
-
           const headers = await getAuthHeaders();
           const res = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/generate-match`, {
             method: 'POST',
@@ -1695,11 +1763,15 @@
           state.initialDistance = Math.max(100, state.map.distance([state.userPos.lat, state.userPos.lng], [data.flag.lat, data.flag.lng]));
 
           if (sb && data.matchId) {
-            sb.from('matches').update({ flag_lat: data.flag.lat, flag_lng: data.flag.lng, is_public_matchmaking: isPublicQueue }).eq('id', data.matchId).then(() => {});
+            sb.from('matches').update({ flag_lat: data.flag.lat, flag_lng: data.flag.lng }).eq('id', data.matchId).then(() => {});
           }
 
           saveActiveMatchState();
           renderMatchOnMapAndHud(isJoining);
+
+          if (typeof onCreatedCallback === 'function') {
+            await onCreatedCallback(data);
+          }
         } catch (err) {
           notify(err.message, "error");
         } finally {
@@ -2354,6 +2426,10 @@
         localStorage.removeItem(CONFIG.ACTIVE_MATCH_STORAGE_KEY);
         releaseScreenWakeLock();
 
+        if (matchmakingChannel) {
+          sb.removeChannel(matchmakingChannel);
+          matchmakingChannel = null;
+        }
         if (state.matchChannel) sb.removeChannel(state.matchChannel);
         if (state.flagMarker) state.map.removeLayer(state.flagMarker);
         if (state.routeLine) state.map.removeLayer(state.routeLine);
@@ -2566,7 +2642,7 @@
       });
 
       document.getElementById('btnGenerateFlag').addEventListener('click', () => generateMatch(false, false));
-      document.getElementById('btnAutoMatchmaking').addEventListener('click', () => generateMatch(false, true));
+      document.getElementById('btnAutoMatchmaking').addEventListener('click', startAutoMatchmaking);
       document.getElementById('btnJoinDuel').addEventListener('click', () => generateMatch(true, false));
       document.getElementById('btnCancelMatch').addEventListener('click', cancelActiveMatch);
       document.getElementById('btnOpenAR').addEventListener('click', openARCamera);
