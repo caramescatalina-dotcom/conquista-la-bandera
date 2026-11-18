@@ -818,7 +818,6 @@
       const params = new URLSearchParams(window.location.search);
       const IS_DEV = host.includes('dev') || host === 'localhost' || host === '127.0.0.1' || params.get('env') === 'dev';
 
-      // Construye la URL de redirección limpia conservando /conquista-la-bandera/ y ?env=dev si aplica
       function getAuthRedirectUrl() {
         const basePath = window.location.pathname.endsWith('/')
           ? window.location.pathname
@@ -1095,7 +1094,7 @@
         } else {
           const remWait = (60 - mins) * 60 - secs;
           const m = String(Math.floor(remWait / 60)).padStart(2, '0');
-          const s = String(remWait % 60).padStart(2, '0');
+          const s = String(Math.floor(remWait % 60)).padStart(2, '0');
           el.textContent = `Próx. ${m}:${s}`;
           btn.disabled = true;
           btn.textContent = "Espera";
@@ -1642,8 +1641,9 @@
         } catch (_) {}
       }
 
-      // MATCHMAKING AUTOMÁTICO EN VIVO SINCRONIZADO (LOBBY + BROADCAST + DB)
+      // MATCHMAKING AUTOMÁTICO EN VIVO + POLLING DE RESPALDO EN DB
       let matchmakingChannel = null;
+      let duelPollInterval = null;
 
       async function startAutoMatchmaking() {
         if (!state.hasRealGps || !state.userPos) {
@@ -1709,7 +1709,7 @@
                 let attempts = 0;
                 hostRetryTimer = setInterval(async () => {
                   attempts++;
-                  if (!matchmakingChannel || attempts >= 5 || state.duelStarted) {
+                  if (!matchmakingChannel || attempts >= 8 || state.duelStarted) {
                     cleanupLobby();
                     return;
                   }
@@ -1796,6 +1796,7 @@
       function unlockDuelAndStartCountdown() {
         if (state.duelStarted) return;
         if (state.duelTimeoutInterval) clearInterval(state.duelTimeoutInterval);
+        if (duelPollInterval) { clearInterval(duelPollInterval); duelPollInterval = null; }
 
         document.getElementById('duelWaitingBanner').classList.add('hidden');
         document.getElementById('mapWaitingOverlay').classList.add('hidden');
@@ -1899,6 +1900,7 @@
       function setupDuelChannel(matchId, duelCode) {
         if (state.matchChannel) sb.removeChannel(state.matchChannel);
         if (state.duelTimeoutInterval) clearInterval(state.duelTimeoutInterval);
+        if (duelPollInterval) clearInterval(duelPollInterval);
 
         if (!state.duelStarted) {
           document.getElementById('duelWaitingBanner').classList.remove('hidden');
@@ -1928,11 +1930,39 @@
 
         const triggerSyncedStart = () => {
           if (state.duelStarted) return;
+          if (duelPollInterval) {
+            clearInterval(duelPollInterval);
+            duelPollInterval = null;
+          }
           if (state.matchChannel) {
             state.matchChannel.send({ type: 'broadcast', event: 'duel_start', payload: { matchId } });
           }
           unlockDuelAndStartCountdown();
         };
+
+        if (!state.duelStarted && sb && matchId) {
+          duelPollInterval = setInterval(async () => {
+            if (state.duelStarted || !state.activeMatch) {
+              clearInterval(duelPollInterval);
+              return;
+            }
+            try {
+              const { data: mRow } = await sb
+                .from('matches')
+                .select('status, rival_id')
+                .eq('id', matchId)
+                .maybeSingle();
+
+              if (mRow && (mRow.status === 'active' || mRow.rival_id)) {
+                triggerSyncedStart();
+              } else if (mRow && mRow.status === 'cancelled') {
+                clearInterval(duelPollInterval);
+                notify("La sala fue cancelada.", "info");
+                resetMatchUI();
+              }
+            } catch (_) {}
+          }, 2000);
+        }
 
         state.matchChannel = sb.channel(`duel-${matchId}`, {
           config: {
@@ -1955,10 +1985,10 @@
             }
           })
           .on('broadcast', { event: 'duel_start' }, () => {
-            unlockDuelAndStartCountdown();
+            triggerSyncedStart();
           })
           .on('broadcast', { event: 'rival_progress' }, ({ payload }) => {
-            if (!state.duelStarted) unlockDuelAndStartCountdown();
+            if (!state.duelStarted) triggerSyncedStart();
             const pct = Math.max(0, Math.min(100, Number(payload.percent) || 0));
             document.getElementById('rivalProgressPct').textContent = `${pct}%`;
             document.getElementById('rivalProgressBar').style.width = `${Math.max(2, pct)}%`;
@@ -1971,7 +2001,7 @@
             'postgres_changes',
             { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${matchId}` },
             (payload) => {
-              if (payload.new && payload.new.status === 'active') {
+              if (payload.new && (payload.new.status === 'active' || payload.new.rival_id)) {
                 triggerSyncedStart();
               }
             }
@@ -2458,6 +2488,7 @@
         state.isSimulated = false;
         state.duelExpiresAt = null;
         if (state.duelTimeoutInterval) clearInterval(state.duelTimeoutInterval);
+        if (duelPollInterval) { clearInterval(duelPollInterval); duelPollInterval = null; }
         localStorage.removeItem(CONFIG.ACTIVE_MATCH_STORAGE_KEY);
         releaseScreenWakeLock();
 
