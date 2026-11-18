@@ -403,32 +403,6 @@
           <button type="button" data-mode="live_duel" class="mode-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press">Duelo 1v1</button>
         </div>
 
-      <div id="setupPanel" class="surface-card p-4 rounded-2xl space-y-3.5">
-        <!-- Selector de Categoría -->
-        <div class="grid grid-cols-3 gap-2" id="categoryGroup">
-          <button type="button" data-cat="walk_run" class="cat-btn bg-[#FF7900] text-white font-bold py-2.5 px-2 rounded-xl text-xs btn-press shadow-sm">A pie / Run</button>
-          <button type="button" data-cat="bike" class="cat-btn btn-choice-inactive font-semibold py-2.5 px-2 rounded-xl text-xs btn-press">Bicicleta</button>
-          <button type="button" data-cat="mixed" class="cat-btn btn-choice-inactive font-semibold py-2.5 px-2 rounded-xl text-xs btn-press">Mixto</button>
-        </div>
-
-        <!-- Selector de Distancia -->
-        <div class="grid grid-cols-4 gap-2" id="distanceGroup">
-          <button type="button" data-dist="1km" class="dist-btn bg-[#FF7900] text-white font-bold py-2.5 rounded-xl text-xs btn-press shadow-sm">1 km</button>
-          <button type="button" data-dist="3km" class="dist-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press">3 km</button>
-          <button type="button" data-dist="5km" class="dist-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press">5 km</button>
-          <button type="button" data-dist="10km" class="dist-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press">10 km</button>
-        </div>
-        <p id="circuitHint" class="hidden text-[11px] text-green-brand font-medium px-1">
-          💡 Modo libre: Elegí el camino que quieras para llegar a la bandera. ¡Lo importante es llegar primero!
-        </p>
-
-        <!-- Selector de Modo de Juego -->
-        <div class="grid grid-cols-2 gap-2" id="modeGroup">
-          <button type="button" data-mode="async_record" class="mode-btn bg-[#FF7900]/15 border border-[#FF7900] text-[#FF7900] font-bold py-2.5 rounded-xl text-xs btn-press">Contrarreloj</button>
-          <button type="button" data-mode="live_duel" class="mode-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press">Duelo 1v1</button>
-        </div>
-
-        <!-- CAJA DE DUELO 1V1 (Se muestra solo al elegir Duelo 1v1) -->
         <div id="duelJoinBox" class="hidden surface-inset p-4 rounded-2xl space-y-3">
           <button id="btnAutoMatchmaking" type="button" class="w-full btn-brand-green font-bold py-3.5 rounded-xl text-xs btn-press flex items-center justify-center gap-2 shadow-sm">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
@@ -445,28 +419,6 @@
             <input id="duelCodeInput" type="text" maxlength="4" placeholder="CÓDIGO" class="theme-input uppercase flex-1 px-3.5 py-2.5 rounded-xl text-xs font-mono tracking-wider text-center" />
             <button id="btnJoinDuel" type="button" class="btn-brand-orange font-bold px-4 py-2.5 rounded-xl text-xs btn-press shrink-0">Unirme</button>
           </div>
-        </div>
-
-        <!-- Botón Principal Único -->
-        <button id="btnGenerateFlag" type="button" class="w-full btn-brand-orange font-bold py-3.5 rounded-xl text-sm btn-press">
-          Generar bandera libre
-        </button>
-      </div>
-
-          <div class="flex gap-2">
-            <input id="duelCodeInput" type="text" maxlength="4" placeholder="CÓDIGO" class="theme-input uppercase flex-1 px-3 py-2 rounded-xl text-xs font-mono tracking-wider text-center" />
-            <button id="btnJoinDuel" type="button" class="btn-brand-orange font-bold px-4 py-2 rounded-xl text-xs btn-press shrink-0">Unirme</button>
-          </div>
-        </div>
-
-        <!-- BOTÓN PRINCIPAL DE ACCIÓN (Generar bandera libre / iniciar duelo privado) -->
-        <button id="btnGenerateFlag" type="button" class="w-full btn-brand-orange font-bold py-3.5 rounded-xl text-sm btn-press shadow-md">
-          Generar bandera libre
-        </button>
-
-          <button id="btnGenerateFlag" type="button" class="w-full surface-card-elevated hover:border-[#FF7900] text-main font-semibold py-3 rounded-xl text-xs btn-press border border-theme">
-            Crear sala privada nueva
-          </button>
         </div>
 
         <button id="btnGenerateFlag" type="button" class="w-full btn-brand-orange font-bold py-3.5 rounded-xl text-sm btn-press">
@@ -935,7 +887,6 @@
         };
       }
 
-      // WAKE LOCK API (MANTENER PANTALLA ENCENDIDA EN PARTIDA)
       async function requestScreenWakeLock() {
         try {
           if ('wakeLock' in navigator && !state.wakeLock) {
@@ -961,7 +912,6 @@
         }
       });
 
-      // PERSISTENCIA DE PARTIDA ACTIVA EN LOCALSTORAGE (RESILIENCIA OFFLINE)
       function saveActiveMatchState() {
         if (!state.activeMatch) {
           localStorage.removeItem(CONFIG.ACTIVE_MATCH_STORAGE_KEY);
@@ -1006,7 +956,6 @@
         }
       }
 
-      // MOTOR DE AUDIO SINTETIZADO
       const AudioEngine = (() => {
         let ctx = null;
         function tone(freq, dur = 0.12, delay = 0) {
@@ -1033,7 +982,6 @@
         };
       })();
 
-      // DESAFÍO HORA PICO X3 SINCRONIZADO
       let activeDbEventEndMs = null;
       async function syncGlobalEvents() {
         if (!sb) return;
@@ -1322,7 +1270,6 @@
         hideSplashScreen();
       }
 
-      // PERFIL Y RACHA SINCRONIZADA EN BASE DE DATOS
       async function loadUserProfile() {
         if (!sb || !state.user) return;
         try {
@@ -1372,7 +1319,6 @@
         } catch (_) {}
       }
 
-      // BRÚJULA Y GPS
       function onDeviceHeadingChange(e) {
         let heading = null;
         if (typeof e.webkitCompassHeading === 'number' && !isNaN(e.webkitCompassHeading)) heading = e.webkitCompassHeading;
@@ -1559,7 +1505,6 @@
         }
       }
 
-      // CONTROL TERRITORIAL REAL BASADO EN CONQUISTAS DE CLUBES EN LA ZONA
       async function renderRealTerritoryZones(lat, lng) {
         if (!state.map || !sb) return;
         if (state.territoryLayer) state.map.removeLayer(state.territoryLayer);
@@ -1616,7 +1561,6 @@
         } catch (_) {}
       }
 
-      // GENERACIÓN DE PARTIDA (MODO LIBRE)
       async function generateMatch(isJoining = false, isPublicQueue = false) {
         if (!state.hasRealGps || !state.userPos) {
           showGpsPermissionCard('prompt');
@@ -1732,7 +1676,6 @@
           document.getElementById('duelWaitingBanner').classList.remove('hidden');
           document.getElementById('displayDuelCode').textContent = duelCode;
           
-          // TIMEOUT DE SALA (5 MINUTOS)
           state.duelExpiresAt = Date.now() + 5 * 60 * 1000;
           state.duelTimeoutInterval = setInterval(() => {
             const rem = state.duelExpiresAt - Date.now();
@@ -1804,7 +1747,6 @@
           statusText.className = "text-xs font-medium text-main";
         }
 
-        // PROGRESO BASADO EN PROXIMIDAD LINEAL
         const pct = d <= CONFIG.CAPTURE_RADIUS_METERS ? 100 : Math.max(0, Math.min(99, Math.round(((state.initialDistance - d) / state.initialDistance) * 100)));
 
         document.getElementById('myProgressPct').textContent = `${pct}%`;
@@ -1815,9 +1757,6 @@
         }
       }
 
-      // =======================================================================
-      // MOTOR DE BANDERA 3D ANCLADA AL SUELO (THREE.JS + SENSORES DE MOVIMIENTO)
-      // =======================================================================
       const AR3D = {
         scene: null,
         camera: null,
@@ -2077,7 +2016,6 @@
         }
       }
 
-      // VALIDACIÓN DE VELOCIDAD REALISTA (LÍMITES LÓGICOS)
       async function confirmCapture() {
         if (!state.capturedPhotoDataUrl) return notify("Primero tenés que sacar la foto.", "error");
         const btn = document.getElementById('btnConfirmCapture');
@@ -2094,7 +2032,6 @@
           let avgSpeed = Number(((distMeters / 1000) / elapsedHours).toFixed(1));
           if (!isFinite(avgSpeed) || avgSpeed > 90) avgSpeed = 8.5;
 
-          // LÍMITES REALISTAS POR CATEGORÍA
           if (!state.isSimulated) {
             if (state.category === 'walk_run' && avgSpeed > 19) {
               throw new Error(`Velocidad detectada (${avgSpeed} km/h) excede el límite humano a pie / run.`);
@@ -2192,7 +2129,6 @@
         ctx.font = '600 14px "Plus Jakarta Sans", sans-serif';
         ctx.fillText(new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase(), 48, 104);
 
-        // DIBUJO FIEL DEL RECORRIDO REAL REALIZADO
         const pts = (stats.path && stats.path.length > 1) ? stats.path : [[0, 0], [0.4, 0.5], [0.8, 0.3], [1, 1]];
         let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
         pts.forEach(p => {
@@ -2254,7 +2190,6 @@
         document.getElementById('setupPanel').classList.remove('hidden');
       }
 
-      // CLUBES Y MURO DE FOTOS REALES
       async function createClub() {
         const name = document.getElementById('newClubName').value.trim();
         if (name.length < 3) return notify("El nombre debe tener al menos 3 caracteres.", "error");
@@ -2384,7 +2319,6 @@
         }
       }
 
-      // EVENT LISTENERS
       document.getElementById('tabBtnLogin').addEventListener('click', () => switchAuthTab('login'));
       document.getElementById('tabBtnSignup').addEventListener('click', () => switchAuthTab('signup'));
       document.getElementById('loginFormView').addEventListener('submit', handleLogin);
