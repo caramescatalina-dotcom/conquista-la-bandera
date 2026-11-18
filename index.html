@@ -818,6 +818,15 @@
       const params = new URLSearchParams(window.location.search);
       const IS_DEV = host.includes('dev') || host === 'localhost' || host === '127.0.0.1' || params.get('env') === 'dev';
 
+      // Construye la URL de redirección limpia conservando /conquista-la-bandera/ y ?env=dev si aplica
+      function getAuthRedirectUrl() {
+        const basePath = window.location.pathname.endsWith('/')
+          ? window.location.pathname
+          : window.location.pathname.replace(/\/[^/]*$/, '/');
+        const query = params.get('env') === 'dev' ? '?env=dev' : '';
+        return `${window.location.origin}${basePath}${query}`;
+      }
+
       const ENV_CONFIG = IS_DEV
         ? {
             ENV_NAME: 'DEV',
@@ -1179,7 +1188,7 @@
         btn.disabled = true; btn.textContent = "Enviando...";
 
         try {
-          const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+          const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: getAuthRedirectUrl() });
           if (error) throw error;
           hideAllAuthViews();
           document.getElementById('otpTargetEmail').textContent = email;
@@ -1207,6 +1216,9 @@
           const { data, error } = await sb.auth.updateUser({ password: p1 });
           if (error) throw error;
           notify("Contraseña actualizada correctamente.", "success");
+          if (window.location.hash.includes('type=recovery')) {
+            history.replaceState(null, '', getAuthRedirectUrl());
+          }
           if (data && data.user) bootApp(data.user);
         } catch (err) {
           setAuthError(err.message || "No se pudo actualizar la contraseña.");
@@ -1238,7 +1250,13 @@
           const storageKey = `clb_pending_signup_${CONFIG.ENV_NAME}`;
           localStorage.setItem(storageKey, JSON.stringify({ username, email, password }));
 
-          const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true, emailRedirectTo: window.location.origin } });
+          const { error } = await sb.auth.signInWithOtp({
+            email,
+            options: {
+              shouldCreateUser: true,
+              emailRedirectTo: getAuthRedirectUrl()
+            }
+          });
           if (error) throw error;
 
           document.getElementById('authTabs').classList.add('hidden');
@@ -1254,10 +1272,13 @@
       }
 
       if (sb) {
+        const isRecoveryHash = window.location.hash.includes('type=recovery');
+
         sb.auth.onAuthStateChange(async (event, session) => {
-          if (event === 'PASSWORD_RECOVERY') {
+          if (event === 'PASSWORD_RECOVERY' || (isRecoveryHash && session)) {
             document.getElementById('authScreen').classList.remove('hidden');
             document.getElementById('appContainer').classList.add('hidden');
+            document.getElementById('bottomNav').classList.add('hidden');
             document.getElementById('authTabs').classList.add('hidden');
             hideAllAuthViews();
             document.getElementById('resetPasswordView').classList.remove('hidden');
@@ -1274,6 +1295,9 @@
                 await sb.from('profiles').upsert({ id: session.user.id, username: pending.username, email: pending.email });
                 localStorage.removeItem(storageKey);
               } catch (_) {}
+            }
+            if (window.location.hash.includes('access_token')) {
+              history.replaceState(null, '', getAuthRedirectUrl());
             }
             bootApp(session.user);
           } else if (event === 'SIGNED_OUT' || !session) {
@@ -2566,7 +2590,7 @@
       document.getElementById('btnShareDuelCode').addEventListener('click', async () => {
         const code = document.getElementById('displayDuelCode').textContent.trim();
         if (!code || code === '----') return;
-        const shareText = `¡Te desafío a un Duelo 1v1 en Conquista la Bandera! Entrá con el código de sala: ${code} en ${window.location.origin}`;
+        const shareText = `¡Te desafío a un Duelo 1v1 en Conquista la Bandera! Entrá con el código de sala: ${code} en ${getAuthRedirectUrl()}`;
         if (navigator.share) {
           try {
             await navigator.share({ title: 'Duelo 1v1 - Conquista la Bandera', text: shareText });
