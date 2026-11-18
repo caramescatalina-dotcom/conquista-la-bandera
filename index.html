@@ -891,6 +891,8 @@
         mode: 'async_record',
         activeMatch: null,
         duelStarted: false,
+        duelStarting: false,
+        countdownInterval: null,
         isFlashEvent: false,
         initialDistance: 1000,
         recordedPath: [],
@@ -921,8 +923,20 @@
           .replace(/'/g, '&#39;');
       }
 
+      let lastToastMsg = '';
+      let lastToastTime = 0;
+
       function notify(message, type = 'info') {
+        const now = Date.now();
+        if (message === lastToastMsg && (now - lastToastTime) < 3500) return;
+        lastToastMsg = message;
+        lastToastTime = now;
+
         const container = document.getElementById('toastContainer');
+        while (container.children.length >= 2) {
+          container.firstChild.remove();
+        }
+
         const el = document.createElement('div');
         const styles = { info: 'toast-info', success: 'toast-success', error: 'toast-error' };
         el.className = `px-3.5 py-2.5 rounded-xl border text-xs font-semibold shadow-2xl backdrop-blur-xl transition-opacity duration-300 ${styles[type] || styles.info}`;
@@ -931,7 +945,7 @@
         setTimeout(() => {
           el.style.opacity = '0';
           setTimeout(() => el.remove(), 300);
-        }, 3800);
+        }, 3200);
       }
 
       async function getAuthHeaders() {
@@ -1087,7 +1101,7 @@
         if (mins < 45) {
           const remTotal = (44 - mins) * 60 + (60 - secs);
           const m = String(Math.floor(remTotal / 60)).padStart(2, '0');
-          const s = String(remTotal % 60).padStart(2, '0');
+          const s = String(Math.floor(remTotal % 60)).padStart(2, '0');
           el.textContent = `${m}:${s}`;
           btn.disabled = false;
           btn.textContent = "Aceptar";
@@ -1709,7 +1723,7 @@
                 let attempts = 0;
                 hostRetryTimer = setInterval(async () => {
                   attempts++;
-                  if (!matchmakingChannel || attempts >= 8 || state.duelStarted) {
+                  if (!matchmakingChannel || attempts >= 8 || state.duelStarted || state.duelStarting) {
                     cleanupLobby();
                     return;
                   }
@@ -1771,6 +1785,7 @@
           state.isSimulated = false;
           state.activeMatch = data;
           state.duelStarted = !isDuel;
+          state.duelStarting = false;
           state.matchStartTime = Date.now();
           state.recordedPath = [[state.userPos.lng, state.userPos.lat]];
           state.initialDistance = Math.max(100, state.map.distance([state.userPos.lat, state.userPos.lng], [data.flag.lat, data.flag.lng]));
@@ -1794,8 +1809,11 @@
       }
 
       function unlockDuelAndStartCountdown() {
-        if (state.duelStarted) return;
+        if (state.duelStarted || state.duelStarting) return;
+        state.duelStarting = true;
+
         if (state.duelTimeoutInterval) clearInterval(state.duelTimeoutInterval);
+        if (state.countdownInterval) clearInterval(state.countdownInterval);
         if (duelPollInterval) { clearInterval(duelPollInterval); duelPollInterval = null; }
 
         document.getElementById('duelWaitingBanner').classList.add('hidden');
@@ -1812,7 +1830,7 @@
         AudioEngine.countdown();
         if (navigator.vibrate) navigator.vibrate(120);
 
-        const timer = setInterval(() => {
+        state.countdownInterval = setInterval(() => {
           count--;
           if (count > 0) {
             numEl.textContent = String(count);
@@ -1829,9 +1847,11 @@
             AudioEngine.startGo();
             if (navigator.vibrate) navigator.vibrate([200, 80, 250]);
           } else {
-            clearInterval(timer);
+            clearInterval(state.countdownInterval);
+            state.countdownInterval = null;
             modal.classList.add('hidden');
 
+            state.duelStarting = false;
             state.duelStarted = true;
             state.matchStartTime = Date.now();
             if (state.userPos) {
@@ -1902,7 +1922,7 @@
         if (state.duelTimeoutInterval) clearInterval(state.duelTimeoutInterval);
         if (duelPollInterval) clearInterval(duelPollInterval);
 
-        if (!state.duelStarted) {
+        if (!state.duelStarted && !state.duelStarting) {
           document.getElementById('duelWaitingBanner').classList.remove('hidden');
           document.getElementById('mapWaitingOverlay').classList.remove('hidden');
           document.getElementById('activeRaceControls').classList.add('hidden');
@@ -1929,7 +1949,7 @@
         }
 
         const triggerSyncedStart = () => {
-          if (state.duelStarted) return;
+          if (state.duelStarted || state.duelStarting) return;
           if (duelPollInterval) {
             clearInterval(duelPollInterval);
             duelPollInterval = null;
@@ -1940,9 +1960,9 @@
           unlockDuelAndStartCountdown();
         };
 
-        if (!state.duelStarted && sb && matchId) {
+        if (!state.duelStarted && !state.duelStarting && sb && matchId) {
           duelPollInterval = setInterval(async () => {
-            if (state.duelStarted || !state.activeMatch) {
+            if (state.duelStarted || state.duelStarting || !state.activeMatch) {
               clearInterval(duelPollInterval);
               return;
             }
@@ -1988,7 +2008,7 @@
             triggerSyncedStart();
           })
           .on('broadcast', { event: 'rival_progress' }, ({ payload }) => {
-            if (!state.duelStarted) triggerSyncedStart();
+            if (!state.duelStarted && !state.duelStarting) triggerSyncedStart();
             const pct = Math.max(0, Math.min(100, Number(payload.percent) || 0));
             document.getElementById('rivalProgressPct').textContent = `${pct}%`;
             document.getElementById('rivalProgressBar').style.width = `${Math.max(2, pct)}%`;
@@ -2484,10 +2504,12 @@
       function resetMatchUI() {
         state.activeMatch = null;
         state.duelStarted = false;
+        state.duelStarting = false;
         state.isFlashEvent = false;
         state.isSimulated = false;
         state.duelExpiresAt = null;
         if (state.duelTimeoutInterval) clearInterval(state.duelTimeoutInterval);
+        if (state.countdownInterval) clearInterval(state.countdownInterval);
         if (duelPollInterval) { clearInterval(duelPollInterval); duelPollInterval = null; }
         localStorage.removeItem(CONFIG.ACTIVE_MATCH_STORAGE_KEY);
         releaseScreenWakeLock();
@@ -2749,7 +2771,7 @@
       if (simBtnEl && IS_DEV) {
         simBtnEl.addEventListener('click', () => {
           if (!state.activeMatch) return;
-          if (!state.duelStarted) {
+          if (!state.duelStarted && !state.duelStarting) {
             unlockDuelAndStartCountdown();
             return;
           }
