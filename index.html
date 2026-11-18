@@ -403,14 +403,34 @@
           <button type="button" data-mode="live_duel" class="mode-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press">Duelo 1v1</button>
         </div>
 
-      <div class="grid grid-cols-2 gap-2" id="modeGroup">
+      <div id="setupPanel" class="surface-card p-4 rounded-2xl space-y-3.5">
+        <!-- Selector de Categoría -->
+        <div class="grid grid-cols-3 gap-2" id="categoryGroup">
+          <button type="button" data-cat="walk_run" class="cat-btn bg-[#FF7900] text-white font-bold py-2.5 px-2 rounded-xl text-xs btn-press shadow-sm">A pie / Run</button>
+          <button type="button" data-cat="bike" class="cat-btn btn-choice-inactive font-semibold py-2.5 px-2 rounded-xl text-xs btn-press">Bicicleta</button>
+          <button type="button" data-cat="mixed" class="cat-btn btn-choice-inactive font-semibold py-2.5 px-2 rounded-xl text-xs btn-press">Mixto</button>
+        </div>
+
+        <!-- Selector de Distancia -->
+        <div class="grid grid-cols-4 gap-2" id="distanceGroup">
+          <button type="button" data-dist="1km" class="dist-btn bg-[#FF7900] text-white font-bold py-2.5 rounded-xl text-xs btn-press shadow-sm">1 km</button>
+          <button type="button" data-dist="3km" class="dist-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press">3 km</button>
+          <button type="button" data-dist="5km" class="dist-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press">5 km</button>
+          <button type="button" data-dist="10km" class="dist-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press">10 km</button>
+        </div>
+        <p id="circuitHint" class="hidden text-[11px] text-green-brand font-medium px-1">
+          💡 Modo libre: Elegí el camino que quieras para llegar a la bandera. ¡Lo importante es llegar primero!
+        </p>
+
+        <!-- Selector de Modo de Juego -->
+        <div class="grid grid-cols-2 gap-2" id="modeGroup">
           <button type="button" data-mode="async_record" class="mode-btn bg-[#FF7900]/15 border border-[#FF7900] text-[#FF7900] font-bold py-2.5 rounded-xl text-xs btn-press">Contrarreloj</button>
           <button type="button" data-mode="live_duel" class="mode-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press">Duelo 1v1</button>
         </div>
 
-        <!-- CAJA DE DUELO 1V1 (Oculta por defecto hasta elegir Duelo 1v1) -->
+        <!-- CAJA DE DUELO 1V1 (Se muestra solo al elegir Duelo 1v1) -->
         <div id="duelJoinBox" class="hidden surface-inset p-4 rounded-2xl space-y-3">
-          <button id="btnAutoMatchmaking" type="button" class="w-full btn-brand-green font-bold py-3 rounded-xl text-xs btn-press flex items-center justify-center gap-2 shadow-sm">
+          <button id="btnAutoMatchmaking" type="button" class="w-full btn-brand-green font-bold py-3.5 rounded-xl text-xs btn-press flex items-center justify-center gap-2 shadow-sm">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
             Buscar rival automático en vivo
           </button>
@@ -420,6 +440,18 @@
             <span class="text-[10px] text-muted uppercase font-semibold">o con código privado</span>
             <hr class="border-theme flex-1" />
           </div>
+
+          <div class="flex gap-2">
+            <input id="duelCodeInput" type="text" maxlength="4" placeholder="CÓDIGO" class="theme-input uppercase flex-1 px-3.5 py-2.5 rounded-xl text-xs font-mono tracking-wider text-center" />
+            <button id="btnJoinDuel" type="button" class="btn-brand-orange font-bold px-4 py-2.5 rounded-xl text-xs btn-press shrink-0">Unirme</button>
+          </div>
+        </div>
+
+        <!-- Botón Principal Único -->
+        <button id="btnGenerateFlag" type="button" class="w-full btn-brand-orange font-bold py-3.5 rounded-xl text-sm btn-press">
+          Generar bandera libre
+        </button>
+      </div>
 
           <div class="flex gap-2">
             <input id="duelCodeInput" type="text" maxlength="4" placeholder="CÓDIGO" class="theme-input uppercase flex-1 px-3 py-2 rounded-xl text-xs font-mono tracking-wider text-center" />
