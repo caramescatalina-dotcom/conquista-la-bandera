@@ -1642,7 +1642,7 @@
         } catch (_) {}
       }
 
-      // MATCHMAKING AUTOMÁTICO EN VIVO MEDIANTE LOBBY REALTIME PRESENCE
+      // MATCHMAKING AUTOMÁTICO EN VIVO SINCRONIZADO (LOBBY + BROADCAST + DB)
       let matchmakingChannel = null;
 
       async function startAutoMatchmaking() {
@@ -1670,8 +1670,13 @@
 
         const lobbyName = `lobby-${CONFIG.ENV_NAME.toLowerCase()}-${state.category}`;
         let matched = false;
+        let hostRetryTimer = null;
 
         function cleanupLobby() {
+          if (hostRetryTimer) {
+            clearInterval(hostRetryTimer);
+            hostRetryTimer = null;
+          }
           if (matchmakingChannel) {
             sb.removeChannel(matchmakingChannel);
             matchmakingChannel = null;
@@ -1695,19 +1700,27 @@
 
             if (amIHost) {
               await generateMatch(false, false, async (createdMatch) => {
-                if (createdMatch && createdMatch.duelCode && matchmakingChannel) {
-                  await matchmakingChannel.send({
-                    type: 'broadcast',
-                    event: 'match_found',
-                    payload: { targetUserId: rivalId, duelCode: createdMatch.duelCode }
-                  });
+                if (!createdMatch || !createdMatch.duelCode || !matchmakingChannel) {
+                  cleanupLobby();
+                  return;
                 }
-                cleanupLobby();
+                const payload = { targetUserId: rivalId, duelCode: createdMatch.duelCode };
+                await matchmakingChannel.send({ type: 'broadcast', event: 'match_found', payload });
+                let attempts = 0;
+                hostRetryTimer = setInterval(async () => {
+                  attempts++;
+                  if (!matchmakingChannel || attempts >= 5 || state.duelStarted) {
+                    cleanupLobby();
+                    return;
+                  }
+                  await matchmakingChannel.send({ type: 'broadcast', event: 'match_found', payload });
+                }, 1000);
               });
             }
           })
           .on('broadcast', { event: 'match_found' }, async ({ payload }) => {
             if (payload.targetUserId !== state.user.id || !payload.duelCode) return;
+            if (state.activeMatch) return;
             matched = true;
             cleanupLobby();
             notify(`¡Rival encontrado! Conectando a sala ${payload.duelCode}...`, "success");
@@ -1913,6 +1926,14 @@
           document.getElementById('activeRaceControls').classList.remove('hidden');
         }
 
+        const triggerSyncedStart = () => {
+          if (state.duelStarted) return;
+          if (state.matchChannel) {
+            state.matchChannel.send({ type: 'broadcast', event: 'duel_start', payload: { matchId } });
+          }
+          unlockDuelAndStartCountdown();
+        };
+
         state.matchChannel = sb.channel(`duel-${matchId}`, {
           config: {
             broadcast: { self: false },
@@ -1928,12 +1949,13 @@
 
             if (onlineUsers.length >= 2) {
               if (dot) dot.className = "w-1.5 h-1.5 rounded-full bg-[#75C894]";
-              if (!state.duelStarted) {
-                unlockDuelAndStartCountdown();
-              }
+              triggerSyncedStart();
             } else {
               if (dot) dot.className = "w-1.5 h-1.5 rounded-full bg-rose-500";
             }
+          })
+          .on('broadcast', { event: 'duel_start' }, () => {
+            unlockDuelAndStartCountdown();
           })
           .on('broadcast', { event: 'rival_progress' }, ({ payload }) => {
             if (!state.duelStarted) unlockDuelAndStartCountdown();
@@ -1945,12 +1967,25 @@
             notify(`${escapeHTML(payload.winnerName)} capturó su bandera primero.`, "info");
             resetMatchUI();
           })
+          .on(
+            'postgres_changes',
+            { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${matchId}` },
+            (payload) => {
+              if (payload.new && payload.new.status === 'active') {
+                triggerSyncedStart();
+              }
+            }
+          )
           .subscribe(async (st) => {
             if (st === 'SUBSCRIBED') {
               await state.matchChannel.track({
                 user_id: state.user.id,
                 online_at: new Date().toISOString()
               });
+              const currentUsers = Object.keys(state.matchChannel.presenceState());
+              if (currentUsers.length >= 2) {
+                triggerSyncedStart();
+              }
             }
           });
         refreshMapLayout();
