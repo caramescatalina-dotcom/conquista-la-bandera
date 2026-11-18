@@ -403,25 +403,34 @@
           <button type="button" data-mode="live_duel" class="mode-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press">Duelo 1v1</button>
         </div>
 
-      <!-- CAJA DE DUELO SIMPLIFICADA Y LIMPIA -->
+      <div class="grid grid-cols-2 gap-2" id="modeGroup">
+          <button type="button" data-mode="async_record" class="mode-btn bg-[#FF7900]/15 border border-[#FF7900] text-[#FF7900] font-bold py-2.5 rounded-xl text-xs btn-press">Contrarreloj</button>
+          <button type="button" data-mode="live_duel" class="mode-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press">Duelo 1v1</button>
+        </div>
+
+        <!-- CAJA DE DUELO 1V1 (Oculta por defecto hasta elegir Duelo 1v1) -->
         <div id="duelJoinBox" class="hidden surface-inset p-4 rounded-2xl space-y-3">
-          <!-- Acción principal: Matchmaking -->
-          <button id="btnAutoMatchmaking" type="button" class="w-full btn-brand-green font-bold py-3.5 rounded-xl text-xs btn-press flex items-center justify-center gap-2 shadow-sm">
+          <button id="btnAutoMatchmaking" type="button" class="w-full btn-brand-green font-bold py-3 rounded-xl text-xs btn-press flex items-center justify-center gap-2 shadow-sm">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
             Buscar rival automático en vivo
           </button>
 
           <div class="flex items-center gap-2 py-0.5">
             <hr class="border-theme flex-1" />
-            <span class="text-[10px] text-muted uppercase font-semibold">o sala privada</span>
+            <span class="text-[10px] text-muted uppercase font-semibold">o con código privado</span>
             <hr class="border-theme flex-1" />
           </div>
 
-          <!-- Fila unificada para ingresar código o crear -->
           <div class="flex gap-2">
-            <input id="duelCodeInput" type="text" maxlength="4" placeholder="CÓDIGO (EJ: K9P2)" class="theme-input uppercase flex-1 px-3.5 py-2.5 rounded-xl text-xs font-mono tracking-wider text-center" />
-            <button id="btnJoinDuel" type="button" class="btn-brand-orange font-bold px-4 py-2.5 rounded-xl text-xs btn-press shrink-0">Unirme</button>
+            <input id="duelCodeInput" type="text" maxlength="4" placeholder="CÓDIGO" class="theme-input uppercase flex-1 px-3 py-2 rounded-xl text-xs font-mono tracking-wider text-center" />
+            <button id="btnJoinDuel" type="button" class="btn-brand-orange font-bold px-4 py-2 rounded-xl text-xs btn-press shrink-0">Unirme</button>
           </div>
+        </div>
+
+        <!-- BOTÓN PRINCIPAL DE ACCIÓN (Generar bandera libre / iniciar duelo privado) -->
+        <button id="btnGenerateFlag" type="button" class="w-full btn-brand-orange font-bold py-3.5 rounded-xl text-sm btn-press shadow-md">
+          Generar bandera libre
+        </button>
 
           <button id="btnGenerateFlag" type="button" class="w-full surface-card-elevated hover:border-[#FF7900] text-main font-semibold py-3 rounded-xl text-xs btn-press border border-theme">
             Crear sala privada nueva
