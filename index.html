@@ -156,7 +156,7 @@
       </svg>
     </div>
     <h1 class="font-display font-bold text-xl text-main tracking-wide text-center">CONQUISTA <span class="text-[#FF7900]">LA BANDERA</span></h1>
-    <p class="text-xs text-green-brand mt-2 font-semibold">Sincronizando sistema táctico...</p>
+    <p class="text-xs text-green-brand mt-2 font-semibold">Sincronizando sistema táctico libre...</p>
   </div>
 
   <!-- TOASTS -->
@@ -347,7 +347,7 @@
         <div class="space-y-1">
           <h3 id="gpsPermTitle" class="font-display font-bold text-sm text-main">Permitir acceso a tu ubicación</h3>
           <p id="gpsPermDesc" class="text-xs text-muted leading-relaxed">
-            Para generar banderas reales en tus calles o parques y orientar tu brújula en el mapa, necesitamos confirmar el permiso de GPS.
+            Para generar banderas libres en tus calles o parques y orientar tu brújula en el mapa, necesitamos confirmar el permiso de GPS.
           </p>
         </div>
       </div>
@@ -395,7 +395,7 @@
           <button type="button" data-dist="10km" class="dist-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press">10 km</button>
         </div>
         <p id="circuitHint" class="hidden text-[11px] text-green-brand font-medium px-1">
-          • Ruta circular con posta intermedia para volver cerca de tu punto de inicio.
+          💡 Modo libre: Elegí el camino que quieras para llegar a la bandera. ¡Lo importante es llegar primero!
         </p>
 
         <div class="grid grid-cols-2 gap-2" id="modeGroup">
@@ -420,7 +420,7 @@
         </div>
 
         <button id="btnGenerateFlag" type="button" class="w-full btn-brand-orange font-bold py-3.5 rounded-xl text-sm btn-press">
-          Generar bandera en ruta
+          Generar bandera libre
         </button>
       </div>
 
@@ -429,7 +429,7 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <span id="wakeLockIndicator" class="text-[10px] font-semibold badge-green-brand px-2.5 py-1 rounded-lg">Pantalla activa</span>
-            <span id="checkpointBadge" class="hidden text-[10px] font-bold bg-[#FF7900]/15 text-[#FF7900] border border-[#FF7900]/30 px-2.5 py-1 rounded-lg">Posta 1/2</span>
+            <span class="text-[10px] font-bold bg-[#FF7900]/15 text-[#FF7900] border border-[#FF7900]/30 px-2.5 py-1 rounded-lg">Recorrido libre</span>
           </div>
           <button id="btnCancelMatch" type="button" class="text-[11px] font-semibold text-muted hover:text-rose-500 px-2.5 py-1 rounded-lg surface-inset transition btn-press">
             Cancelar ruta
@@ -439,7 +439,7 @@
         <div id="duelWaitingBanner" class="hidden bg-[#FF7900]/15 border border-[#FF7900]/35 p-3.5 rounded-xl flex justify-between items-center">
           <div>
             <p class="text-xs font-bold text-[#FF7900]">Esperando a tu rival</p>
-            <p class="text-[11px] text-muted mt-0.5">Compartí este código de sala:</p>
+            <p id="duelTimeoutText" class="text-[11px] text-muted mt-0.5">Expira en 5:00</p>
           </div>
           <span id="displayDuelCode" class="font-mono font-bold text-base text-[#FF7900] tracking-widest theme-input px-3.5 py-1.5 rounded-lg">----</span>
         </div>
@@ -447,7 +447,7 @@
         <div class="space-y-3 surface-inset p-3.5 rounded-xl">
           <div>
             <div class="flex justify-between text-[11px] font-semibold mb-1.5">
-              <span class="text-main">Tu recorrido</span>
+              <span class="text-main">Tu recorrido real</span>
               <span id="myProgressPct" class="text-green-brand font-mono font-bold">0%</span>
             </div>
             <div class="w-full progress-track h-2.5 rounded-full overflow-hidden">
@@ -473,7 +473,7 @@
               <div class="w-2.5 h-2.5 rounded-full bg-[#75C894]"></div>
             </div>
             <div>
-              <p class="text-[11px] text-muted font-medium" id="hudDistanceLabel">Distancia total: -- m</p>
+              <p class="text-[11px] text-muted font-medium" id="hudDistanceLabel">Distancia estimada: -- m</p>
               <p class="text-xs font-semibold text-main" id="sonarStatusText">Rastreando ubicación</p>
             </div>
           </div>
@@ -824,7 +824,6 @@
         map: null,
         userMarker: null,
         flagMarker: null,
-        checkpointMarker: null,
         routeLine: null,
         territoryLayer: null,
         userPos: null,
@@ -838,13 +837,13 @@
         distance: '1km',
         mode: 'async_record',
         activeMatch: null,
-        checkpointPoint: null,
-        checkpointReached: false,
         isFlashEvent: false,
         initialDistance: 1000,
         recordedPath: [],
         matchStartTime: null,
         matchChannel: null,
+        duelTimeoutInterval: null,
+        duelExpiresAt: null,
         wakeLock: null,
         soundEnabled: true,
         lastVibrateTime: 0,
@@ -912,7 +911,7 @@
         }
       });
 
-      // PERSISTENCIA DE PARTIDA ACTIVA EN LOCALSTORAGE
+      // PERSISTENCIA DE PARTIDA ACTIVA EN LOCALSTORAGE (RESILIENCIA OFFLINE)
       function saveActiveMatchState() {
         if (!state.activeMatch) {
           localStorage.removeItem(CONFIG.ACTIVE_MATCH_STORAGE_KEY);
@@ -928,8 +927,7 @@
             initialDistance: state.initialDistance,
             recordedPath: state.recordedPath,
             matchStartTime: state.matchStartTime,
-            checkpointPoint: state.checkpointPoint,
-            checkpointReached: state.checkpointReached
+            duelExpiresAt: state.duelExpiresAt
           }));
         } catch (_) {}
       }
@@ -949,8 +947,7 @@
           state.initialDistance = saved.initialDistance || 1000;
           state.recordedPath = Array.isArray(saved.recordedPath) ? saved.recordedPath : [];
           state.matchStartTime = saved.matchStartTime || Date.now();
-          state.checkpointPoint = saved.checkpointPoint || null;
-          state.checkpointReached = !!saved.checkpointReached;
+          state.duelExpiresAt = saved.duelExpiresAt || null;
 
           renderMatchOnMapAndHud();
           notify("Se restauró tu ruta en curso.", "info");
@@ -982,7 +979,6 @@
         return {
           tap: () => tone(540, 0.08),
           ping: () => tone(880, 0.07),
-          checkpoint: () => { tone(587.33, 0.1, 0); tone(880, 0.18, 0.1); },
           success: () => { tone(523.25, 0.12, 0); tone(659.25, 0.12, 0.1); tone(783.99, 0.25, 0.2); }
         };
       })();
@@ -1570,7 +1566,7 @@
         } catch (_) {}
       }
 
-      // GENERACIÓN DE PARTIDA
+      // GENERACIÓN DE PARTIDA (MODO LIBRE)
       async function generateMatch(isJoining = false, isPublicQueue = false) {
         if (!state.hasRealGps || !state.userPos) {
           showGpsPermissionCard('prompt');
@@ -1579,7 +1575,7 @@
 
         const btn = document.getElementById('btnGenerateFlag');
         btn.disabled = true;
-        btn.textContent = isPublicQueue ? "Buscando rival..." : "Calculando ruta...";
+        btn.textContent = isPublicQueue ? "Buscando rival..." : "Generando bandera...";
         AudioEngine.tap();
 
         let duelCode = isJoining ? document.getElementById('duelCodeInput').value.trim().toUpperCase() : null;
@@ -1612,26 +1608,13 @@
             body: JSON.stringify({ lat: state.userPos.lat, lng: state.userPos.lng, distance: state.distance, category: state.category, mode: state.mode, duelCode })
           });
           const data = await res.json();
-          if (!res.ok || data.error) throw new Error(data.error || "No se pudo generar la ruta.");
+          if (!res.ok || data.error) throw new Error(data.error || "No se pudo generar la bandera.");
 
           state.isSimulated = false;
           state.activeMatch = data;
           state.matchStartTime = Date.now();
           state.recordedPath = [[state.userPos.lng, state.userPos.lat]];
           state.initialDistance = Math.max(100, state.map.distance([state.userPos.lat, state.userPos.lng], [data.flag.lat, data.flag.lng]));
-
-          const coords = data.route?.coordinates || [];
-          if (data.checkpoint && data.checkpoint.lat && data.checkpoint.lng) {
-            state.checkpointPoint = { lat: data.checkpoint.lat, lng: data.checkpoint.lng };
-            state.checkpointReached = false;
-          } else if ((state.distance === '5km' || state.distance === '10km') && coords.length >= 6) {
-            const midPt = coords[Math.floor(coords.length / 2)];
-            state.checkpointPoint = { lat: midPt[1], lng: midPt[0] };
-            state.checkpointReached = false;
-          } else {
-            state.checkpointPoint = null;
-            state.checkpointReached = true;
-          }
 
           if (sb && data.matchId) {
             sb.from('matches').update({ flag_lat: data.flag.lat, flag_lng: data.flag.lng, is_public_matchmaking: isPublicQueue }).eq('id', data.matchId).then(() => {});
@@ -1643,7 +1626,7 @@
           notify(err.message, "error");
         } finally {
           btn.disabled = false;
-          btn.textContent = state.mode === 'live_duel' ? "Crear sala privada de duelo" : "Generar bandera en ruta";
+          btn.textContent = state.mode === 'live_duel' ? "Crear sala privada de duelo" : "Generar bandera libre";
         }
       }
 
@@ -1652,7 +1635,6 @@
         if (!data || !state.map) return;
 
         if (state.flagMarker) state.map.removeLayer(state.flagMarker);
-        if (state.checkpointMarker) state.map.removeLayer(state.checkpointMarker);
         if (state.routeLine) state.map.removeLayer(state.routeLine);
 
         const pinColor = state.isFlashEvent ? '#FF7900' : '#75C894';
@@ -1663,30 +1645,11 @@
         });
 
         state.flagMarker = L.marker([data.flag.lat, data.flag.lng], { icon: flagIcon }).addTo(state.map);
-
-        if (state.checkpointPoint && !state.checkpointReached) {
-          const cpIcon = L.divIcon({
-            className: '',
-            html: `<div style="width:22px;height:22px;border-radius:50%;background:#FF7900;border:3px solid #FFF;color:#FFF;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.4);">1</div>`,
-            iconSize: [22, 22], iconAnchor: [11, 11]
-          });
-          state.checkpointMarker = L.marker([state.checkpointPoint.lat, state.checkpointPoint.lng], { icon: cpIcon })
-            .bindPopup("<b>Posta intermedia obligatoria</b><br>Pasá por acá antes de ir a la bandera final.")
-            .addTo(state.map);
-          document.getElementById('checkpointBadge').classList.remove('hidden');
-          document.getElementById('checkpointBadge').textContent = "Posta 1/2 pendiente";
-        } else {
-          document.getElementById('checkpointBadge').classList.add('hidden');
-        }
-
-        const coords = data.route?.coordinates || [[state.userPos.lng, state.userPos.lat], [data.flag.lng, data.flag.lat]];
-        const latLngs = coords.map(c => [c[1], c[0]]);
-        state.routeLine = L.polyline(latLngs, { color: pinColor, weight: 4.5, dashArray: '8, 8' }).addTo(state.map);
-        state.map.fitBounds(state.routeLine.getBounds(), { padding: [32, 32] });
+        state.map.setView([data.flag.lat, data.flag.lng], 15);
 
         document.getElementById('setupPanel').classList.add('hidden');
         document.getElementById('activeHud').classList.remove('hidden');
-        document.getElementById('hudDistanceLabel').textContent = `Distancia total: ${data.realDistanceMeters || Math.round(state.initialDistance)} m`;
+        document.getElementById('hudDistanceLabel').textContent = `Distancia en línea recta: ${Math.round(state.initialDistance)} m`;
 
         requestScreenWakeLock();
 
@@ -1713,9 +1676,27 @@
 
       function setupDuelChannel(matchId, status, duelCode) {
         if (state.matchChannel) sb.removeChannel(state.matchChannel);
+        if (state.duelTimeoutInterval) clearInterval(state.duelTimeoutInterval);
+
         if (status === 'pending' && duelCode) {
           document.getElementById('duelWaitingBanner').classList.remove('hidden');
           document.getElementById('displayDuelCode').textContent = duelCode;
+          
+          // TIMEOUT DE SALA (5 MINUTOS)
+          state.duelExpiresAt = Date.now() + 5 * 60 * 1000;
+          state.duelTimeoutInterval = setInterval(() => {
+            const rem = state.duelExpiresAt - Date.now();
+            if (rem <= 0) {
+              clearInterval(state.duelTimeoutInterval);
+              notify("La sala de duelo expiró por falta de rivales.", "error");
+              cancelActiveMatch();
+              return;
+            }
+            const m = String(Math.floor(rem / 60000)).padStart(2, '0');
+            const s = String(Math.floor((rem % 60000) / 1000)).padStart(2, '0');
+            const tEl = document.getElementById('duelTimeoutText');
+            if (tEl) tEl.textContent = `Expira en ${m}:${s}`;
+          }, 1000);
         } else {
           document.getElementById('duelWaitingBanner').classList.add('hidden');
         }
@@ -1724,6 +1705,7 @@
         state.matchChannel
           .on('broadcast', { event: 'rival_progress' }, ({ payload }) => {
             document.getElementById('duelWaitingBanner').classList.add('hidden');
+            if (state.duelTimeoutInterval) clearInterval(state.duelTimeoutInterval);
             const pct = Math.max(0, Math.min(100, Number(payload.percent) || 0));
             document.getElementById('rivalProgressPct').textContent = `${pct}%`;
             document.getElementById('rivalProgressBar').style.width = `${Math.max(2, pct)}%`;
@@ -1741,24 +1723,6 @@
 
       function updateProgress() {
         if (!state.activeMatch || !state.map || !state.userPos) return;
-
-        if (state.checkpointPoint && !state.checkpointReached) {
-          const distToCp = state.map.distance([state.userPos.lat, state.userPos.lng], [state.checkpointPoint.lat, state.checkpointPoint.lng]);
-          document.getElementById('hudRemaining').textContent = `${Math.round(distToCp)} m`;
-          document.getElementById('sonarStatusText').textContent = "Dirigite a la Posta 1/2";
-
-          if (distToCp <= CONFIG.CAPTURE_RADIUS_METERS) {
-            state.checkpointReached = true;
-            if (state.checkpointMarker) state.map.removeLayer(state.checkpointMarker);
-            document.getElementById('checkpointBadge').textContent = "Posta 1/2 completada";
-            document.getElementById('checkpointBadge').className = "text-[10px] font-bold badge-green-brand px-2.5 py-1 rounded-lg";
-            AudioEngine.checkpoint();
-            if (navigator.vibrate) navigator.vibrate([100, 60, 150]);
-            notify("¡Posta intermedia completada! Ahora vamos por la bandera final.", "success");
-            saveActiveMatchState();
-          }
-          return;
-        }
 
         const d = state.map.distance([state.userPos.lat, state.userPos.lng], [state.activeMatch.flag.lat, state.activeMatch.flag.lng]);
         document.getElementById('hudRemaining').textContent = `${Math.round(d)} m`;
@@ -1786,18 +1750,12 @@
           }
         } else {
           ring.style.setProperty('--pulse-speed', '2.1s');
-          statusText.textContent = "Rastreando ubicación";
+          statusText.textContent = "Elegí tu camino libre";
           statusText.className = "text-xs font-medium text-main";
         }
 
-        const totalTarget = state.activeMatch.realDistanceMeters || state.initialDistance || 1000;
-        let walkedMeters = 0;
-        for (let i = 1; i < state.recordedPath.length; i++) {
-          walkedMeters += state.map.distance([state.recordedPath[i - 1][1], state.recordedPath[i - 1][0]], [state.recordedPath[i][1], state.recordedPath[i][0]]);
-        }
-        const pctByWalk = Math.round((walkedMeters / totalTarget) * 100);
-        const pctByProximity = Math.round(((state.initialDistance - d) / state.initialDistance) * 100);
-        const pct = d <= CONFIG.CAPTURE_RADIUS_METERS ? 100 : Math.max(0, Math.min(99, Math.max(pctByWalk, pctByProximity)));
+        // PROGRESO BASADO EN PROXIMIDAD LINEAL
+        const pct = d <= CONFIG.CAPTURE_RADIUS_METERS ? 100 : Math.max(0, Math.min(99, Math.round(((state.initialDistance - d) / state.initialDistance) * 100)));
 
         document.getElementById('myProgressPct').textContent = `${pct}%`;
         document.getElementById('myProgressBar').style.width = `${Math.max(2, pct)}%`;
@@ -1862,7 +1820,6 @@
 
         AR3D.flagGroup = new THREE.Group();
 
-        // 1. Sombra proyectada en el piso
         const shadowGeo = new THREE.CircleGeometry(1.15, 32);
         const shadowMat = new THREE.MeshBasicMaterial({ color: 0x0a120e, transparent: true, opacity: 0.45 });
         const shadowMesh = new THREE.Mesh(shadowGeo, shadowMat);
@@ -1870,7 +1827,6 @@
         shadowMesh.position.y = 0.01;
         AR3D.flagGroup.add(shadowMesh);
 
-        // 2. Base / Anclaje metálico al suelo + anillo naranja institucional
         const baseGeo = new THREE.CylinderGeometry(0.45, 0.55, 0.12, 24);
         const baseMat = new THREE.MeshStandardMaterial({ color: 0x244B37, roughness: 0.4, metalness: 0.35 });
         const baseMesh = new THREE.Mesh(baseGeo, baseMat);
@@ -1884,28 +1840,24 @@
         ringMesh.position.y = 0.02;
         AR3D.flagGroup.add(ringMesh);
 
-        // 3. Mástil vertical
         const poleGeo = new THREE.CylinderGeometry(0.045, 0.055, 3.2, 16);
         const poleMat = new THREE.MeshStandardMaterial({ color: 0xF2F1E9, roughness: 0.25, metalness: 0.8 });
         const poleMesh = new THREE.Mesh(poleGeo, poleMat);
         poleMesh.position.y = 1.6;
         AR3D.flagGroup.add(poleMesh);
 
-        // Esfera superior naranja
         const finialGeo = new THREE.SphereGeometry(0.11, 16, 16);
         const finialMat = new THREE.MeshStandardMaterial({ color: 0xFF7900, roughness: 0.3 });
         const finialMesh = new THREE.Mesh(finialGeo, finialMat);
         finialMesh.position.y = 3.25;
         AR3D.flagGroup.add(finialMesh);
 
-        // 4. Tela de la bandera con subdivisión para onda de viento
         const flagW = 1.75;
         const flagH = 1.05;
         AR3D.clothGeo = new THREE.PlaneGeometry(flagW, flagH, 20, 12);
         AR3D.clothGeo.translate(flagW / 2 + 0.04, 0, 0);
         AR3D.clothBasePos = Float32Array.from(AR3D.clothGeo.attributes.position.array);
 
-        // Textura bicolor institucional (Verde + franja Naranja)
         const texCanvas = document.createElement('canvas');
         texCanvas.width = 512; texCanvas.height = 300;
         const tCtx = texCanvas.getContext('2d');
@@ -1921,12 +1873,7 @@
         tCtx.closePath(); tCtx.fill();
 
         const flagTex = new THREE.CanvasTexture(texCanvas);
-        const clothMat = new THREE.MeshStandardMaterial({
-          map: flagTex,
-          side: THREE.DoubleSide,
-          roughness: 0.55
-        });
-
+        const clothMat = new THREE.MeshStandardMaterial({ map: flagTex, side: THREE.DoubleSide, roughness: 0.55 });
         const clothMesh = new THREE.Mesh(AR3D.clothGeo, clothMat);
         clothMesh.position.y = 2.62;
         AR3D.flagGroup.add(clothMesh);
@@ -1938,7 +1885,6 @@
           AR3D.animId = requestAnimationFrame(animate);
           const t = clock.getElapsedTime();
 
-          // Ondulación de viento en tiempo real
           const pos = AR3D.clothGeo.attributes.position;
           for (let i = 0; i < pos.count; i++) {
             const x = AR3D.clothBasePos[i * 3];
@@ -1950,21 +1896,15 @@
           pos.needsUpdate = true;
           AR3D.clothGeo.computeVertexNormals();
 
-          // Suavizar acercamiento/alejamiento según distancia GPS
           AR3D.currentDist += (AR3D.targetDist - AR3D.currentDist) * 0.08;
 
-          // Perspectiva dinámica según inclinación del teléfono (suelo vs horizonte) y giro
           const clampedPitch = Math.max(15, Math.min(88, AR3D.pitch));
           const radPitch = (clampedPitch * Math.PI) / 180;
           const camHeight = Math.max(0.8, Math.cos(radPitch) * AR3D.currentDist * 0.85 + 1.35);
           const camBack = Math.max(2.2, Math.sin(radPitch) * AR3D.currentDist);
 
           const yawRad = (AR3D.yawDiff * Math.PI) / 180;
-          AR3D.camera.position.set(
-            Math.sin(yawRad) * camBack,
-            camHeight,
-            Math.cos(yawRad) * camBack
-          );
+          AR3D.camera.position.set(Math.sin(yawRad) * camBack, camHeight, Math.cos(yawRad) * camBack);
           AR3D.camera.lookAt(0, 1.1, 0);
 
           AR3D.flagGroup.rotation.y = Math.sin(t * 0.4) * 0.15;
@@ -2002,9 +1942,6 @@
 
       async function openARCamera() {
         if (!state.activeMatch || !state.userPos) return;
-        if (state.checkpointPoint && !state.checkpointReached) {
-          return notify("Primero tenés que pasar por la Posta 1/2 en el mapa.", "info");
-        }
         const dist = state.map.distance([state.userPos.lat, state.userPos.lng], [state.activeMatch.flag.lat, state.activeMatch.flag.lng]);
         if (dist > CONFIG.CAPTURE_RADIUS_METERS) {
           return notify(`Estás a ${Math.round(dist)} m. Acercate a menos de ${CONFIG.CAPTURE_RADIUS_METERS} m para conquistar.`, "info");
@@ -2039,16 +1976,13 @@
         canvas.width = targetW;
         canvas.height = Math.round(targetW * ratio);
 
-        // 1. Dibujar cuadro real de la cámara
         if (video.readyState >= 2) ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         else { ctx.fillStyle = '#171D1A'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
 
-        // 2. Superponer bandera 3D desde la perspectiva exacta en la que estaba
         if (canvas3d) {
           ctx.drawImage(canvas3d, 0, 0, canvas.width, canvas.height);
         }
 
-        // 3. Sello institucional inferior
         ctx.fillStyle = 'rgba(23, 29, 26, 0.85)';
         ctx.fillRect(0, canvas.height - 56, canvas.width, 56);
         ctx.fillStyle = '#75C894';
@@ -2093,6 +2027,7 @@
         }
       }
 
+      // VALIDACIÓN DE VELOCIDAD REALISTA (LÍMITES LÓGICOS)
       async function confirmCapture() {
         if (!state.capturedPhotoDataUrl) return notify("Primero tenés que sacar la foto.", "error");
         const btn = document.getElementById('btnConfirmCapture');
@@ -2100,13 +2035,23 @@
         btn.textContent = "Registrando...";
 
         try {
-          const distMeters = state.activeMatch.realDistanceMeters || Math.round(state.initialDistance);
+          let walkedMeters = 0;
+          for (let i = 1; i < state.recordedPath.length; i++) {
+            walkedMeters += state.map.distance([state.recordedPath[i - 1][1], state.recordedPath[i - 1][0]], [state.recordedPath[i][1], state.recordedPath[i][0]]);
+          }
+          const distMeters = Math.max(100, Math.round(walkedMeters));
           const elapsedHours = Math.max(0.01, (Date.now() - (state.matchStartTime || Date.now())) / 3600000);
           let avgSpeed = Number(((distMeters / 1000) / elapsedHours).toFixed(1));
           if (!isFinite(avgSpeed) || avgSpeed > 90) avgSpeed = 8.5;
 
-          if (!state.isSimulated && state.category === 'walk_run' && avgSpeed > 24) {
-            throw new Error(`Velocidad detectada (${avgSpeed} km/h) incompatible con A pie / Run.`);
+          // LÍMITES REALISTAS POR CATEGORÍA
+          if (!state.isSimulated) {
+            if (state.category === 'walk_run' && avgSpeed > 19) {
+              throw new Error(`Velocidad detectada (${avgSpeed} km/h) excede el límite humano a pie / run.`);
+            }
+            if (state.category === 'bike' && avgSpeed > 55) {
+              throw new Error(`Velocidad detectada (${avgSpeed} km/h) excede el límite seguro en bicicleta.`);
+            }
           }
 
           let points = state.isFlashEvent ? 300 : 100;
@@ -2197,6 +2142,7 @@
         ctx.font = '600 14px "Plus Jakarta Sans", sans-serif';
         ctx.fillText(new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase(), 48, 104);
 
+        // DIBUJO FIEL DEL RECORRIDO REAL REALIZADO
         const pts = (stats.path && stats.path.length > 1) ? stats.path : [[0, 0], [0.4, 0.5], [0.8, 0.3], [1, 1]];
         let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
         pts.forEach(p => {
@@ -2244,16 +2190,15 @@
 
       function resetMatchUI() {
         state.activeMatch = null;
-        state.checkpointPoint = null;
-        state.checkpointReached = false;
         state.isFlashEvent = false;
         state.isSimulated = false;
+        state.duelExpiresAt = null;
+        if (state.duelTimeoutInterval) clearInterval(state.duelTimeoutInterval);
         localStorage.removeItem(CONFIG.ACTIVE_MATCH_STORAGE_KEY);
         releaseScreenWakeLock();
 
         if (state.matchChannel) sb.removeChannel(state.matchChannel);
         if (state.flagMarker) state.map.removeLayer(state.flagMarker);
-        if (state.checkpointMarker) state.map.removeLayer(state.checkpointMarker);
         if (state.routeLine) state.map.removeLayer(state.routeLine);
         document.getElementById('activeHud').classList.add('hidden');
         document.getElementById('setupPanel').classList.remove('hidden');
@@ -2445,8 +2390,7 @@
             b.className = 'dist-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press';
           });
           btn.className = 'dist-btn bg-[#FF7900] text-white font-bold py-2.5 rounded-xl text-xs btn-press shadow-sm';
-          const isCircuit = state.distance === '5km' || state.distance === '10km';
-          document.getElementById('circuitHint').classList.toggle('hidden', !isCircuit);
+          document.getElementById('circuitHint').classList.remove('hidden');
         });
       });
 
@@ -2459,7 +2403,7 @@
           btn.className = 'mode-btn bg-[#FF7900]/15 border border-[#FF7900] text-[#FF7900] font-bold py-2.5 rounded-xl text-xs btn-press';
           const isDuel = state.mode === 'live_duel';
           document.getElementById('duelJoinBox').classList.toggle('hidden', !isDuel);
-          document.getElementById('btnGenerateFlag').textContent = isDuel ? "Crear sala privada de duelo" : "Generar bandera en ruta";
+          document.getElementById('btnGenerateFlag').textContent = isDuel ? "Crear sala privada de duelo" : "Generar bandera libre";
         });
       });
 
@@ -2478,15 +2422,8 @@
         simBtnEl.addEventListener('click', () => {
           if (!state.activeMatch) return;
           state.isSimulated = true;
-          if (state.checkpointPoint && !state.checkpointReached) {
-            state.userPos = { lat: state.checkpointPoint.lat, lng: state.checkpointPoint.lng };
-            if (state.userMarker) state.userMarker.setLatLng([state.userPos.lat, state.userPos.lng]);
-            updateProgress();
-            return;
-          }
           state.userPos = { lat: state.activeMatch.flag.lat, lng: state.activeMatch.flag.lng };
           if (state.userMarker) state.userMarker.setLatLng([state.userPos.lat, state.userPos.lng]);
-          state.recordedPath = state.activeMatch.route?.coordinates || [[state.userPos.lng, state.userPos.lat]];
           updateProgress();
           openARCamera();
         });
