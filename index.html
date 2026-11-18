@@ -130,6 +130,13 @@
     }
     .sonar-ring { animation: pulseRing var(--pulse-speed, 2s) cubic-bezier(0.16, 1, 0.3, 1) infinite; }
 
+    @keyframes countdownPop {
+      0% { transform: scale(0.5); opacity: 0; }
+      50% { transform: scale(1.15); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .countdown-animate { animation: countdownPop 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
     .gps-player-wrapper { position: relative; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; }
     .gps-heading-cone { position: absolute; width: 56px; height: 56px; transform-origin: center center; transition: transform 0.1s linear; pointer-events: none; }
     .gps-beacon { width: 16px; height: 16px; background: var(--orange-main); border: 3px solid #FFFFFF; border-radius: 50%; box-shadow: 0 0 16px var(--orange-main); position: relative; z-index: 2; }
@@ -161,6 +168,18 @@
 
   <!-- TOASTS -->
   <div id="toastContainer" class="fixed top-16 inset-x-4 z-[60] max-w-md mx-auto pointer-events-none flex flex-col gap-2.5"></div>
+
+  <!-- MODAL CUENTA REGRESIVA 3-2-1-YA PARA DUELO 1V1 -->
+  <div id="duelCountdownModal" class="hidden fixed inset-0 z-[70] bg-[#171D1A]/90 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center">
+    <span class="text-xs font-bold uppercase tracking-widest text-[#75C894] badge-green-brand px-4 py-1.5 rounded-full mb-4">
+      Rival conectado • Ambos online
+    </span>
+    <p class="text-sm text-[#AAB5AC] mb-2">La carrera comienza en...</p>
+    <div id="duelCountdownNumber" class="font-display font-extrabold text-8xl text-[#FF7900] drop-shadow-[0_0_25px_rgba(255,121,0,0.4)]">
+      3
+    </div>
+    <p class="text-xs text-[#F2F1E9]/80 mt-6 max-w-xs">¡Preparate! El cronómetro arrancará para los dos al mismo tiempo.</p>
+  </div>
 
   <!-- HEADER -->
   <header class="app-header px-4 py-3 flex justify-between items-center sticky top-0 z-30 backdrop-blur-xl">
@@ -431,73 +450,111 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <span id="wakeLockIndicator" class="text-[10px] font-semibold badge-green-brand px-2.5 py-1 rounded-lg">Pantalla activa</span>
-            <span class="text-[10px] font-bold bg-[#FF7900]/15 text-[#FF7900] border border-[#FF7900]/30 px-2.5 py-1 rounded-lg">Recorrido libre</span>
+            <span id="matchStatusBadge" class="text-[10px] font-bold bg-[#FF7900]/15 text-[#FF7900] border border-[#FF7900]/30 px-2.5 py-1 rounded-lg">Recorrido libre</span>
           </div>
           <button id="btnCancelMatch" type="button" class="text-[11px] font-semibold text-muted hover:text-rose-500 px-2.5 py-1 rounded-lg surface-inset transition btn-press">
             Cancelar ruta
           </button>
         </div>
 
-        <div id="duelWaitingBanner" class="hidden bg-[#FF7900]/15 border border-[#FF7900]/35 p-3.5 rounded-xl flex justify-between items-center">
-          <div>
-            <p class="text-xs font-bold text-[#FF7900]">Esperando a tu rival</p>
-            <p id="duelTimeoutText" class="text-[11px] text-muted mt-0.5">Expira en 5:00</p>
-          </div>
-          <span id="displayDuelCode" class="font-mono font-bold text-base text-[#FF7900] tracking-widest theme-input px-3.5 py-1.5 rounded-lg">----</span>
-        </div>
-
-        <div class="space-y-3 surface-inset p-3.5 rounded-xl">
-          <div>
-            <div class="flex justify-between text-[11px] font-semibold mb-1.5">
-              <span class="text-main">Tu recorrido real</span>
-              <span id="myProgressPct" class="text-green-brand font-mono font-bold">0%</span>
-            </div>
-            <div class="w-full progress-track h-2.5 rounded-full overflow-hidden">
-              <div id="myProgressBar" class="progress-fill bg-green-brand-bright h-full rounded-full" style="width: 2%"></div>
-            </div>
-          </div>
-
-          <div id="rivalProgressContainer" class="hidden">
-            <div class="flex justify-between text-[11px] font-semibold mb-1.5">
-              <span class="text-main">Rival</span>
-              <span id="rivalProgressPct" class="text-[#FF7900] font-mono font-bold">0%</span>
-            </div>
-            <div class="w-full progress-track h-2.5 rounded-full overflow-hidden">
-              <div id="rivalProgressBar" class="progress-fill bg-[#FF7900] h-full rounded-full" style="width: 2%"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex justify-between items-center surface-inset p-3.5 rounded-xl">
-          <div class="flex items-center gap-3">
-            <div class="relative w-9 h-9 flex items-center justify-center">
-              <div id="sonarRing" class="sonar-ring absolute inset-0 rounded-full border-2 border-[#75C894]" style="--pulse-speed: 2s"></div>
-              <div class="w-2.5 h-2.5 rounded-full bg-[#75C894]"></div>
-            </div>
+        <!-- SALA DE ESPERA DUELO 1V1 (BLOQUEADA HASTA QUE AMBOS ESTÉN ONLINE) -->
+        <div id="duelWaitingBanner" class="hidden bg-[#FF7900]/15 border border-[#FF7900]/45 p-4 rounded-2xl space-y-3">
+          <div class="flex justify-between items-start gap-3">
             <div>
-              <p class="text-[11px] text-muted font-medium" id="hudDistanceLabel">Distancia estimada: -- m</p>
-              <p class="text-xs font-semibold text-main" id="sonarStatusText">Rastreando ubicación</p>
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#FF7900] animate-ping"></span>
+                <p class="text-xs font-bold text-[#FF7900]">Sala de espera activa</p>
+              </div>
+              <p class="text-[11px] text-main mt-1 leading-relaxed">
+                El juego arrancará automáticamente cuando tu rival entre y ambos estén online.
+              </p>
+              <p id="duelTimeoutText" class="text-[10px] text-muted mt-1 font-mono">Expira en 05:00</p>
+            </div>
+            <div class="text-right shrink-0">
+              <span class="text-[9px] uppercase font-bold text-muted block mb-1">Código Sala</span>
+              <span id="displayDuelCode" class="font-mono font-bold text-lg text-[#FF7900] tracking-widest theme-input px-3 py-1.5 rounded-xl block">----</span>
             </div>
           </div>
-          <div class="text-right">
-            <span class="text-[10px] text-muted block font-medium uppercase tracking-wider">Restante</span>
-            <span class="font-display text-xl font-bold text-green-brand" id="hudRemaining">-- m</span>
+
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <button id="btnCopyDuelCode" type="button" class="surface-card-elevated hover:opacity-90 text-main font-semibold py-2.5 px-3 rounded-xl text-[11px] flex items-center justify-center gap-1.5 btn-press">
+              <svg class="w-3.5 h-3.5 text-[#FF7900]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copiar código
+            </button>
+            <button id="btnShareDuelCode" type="button" class="btn-brand-green font-semibold py-2.5 px-3 rounded-xl text-[11px] flex items-center justify-center gap-1.5 btn-press">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
+              Invitar rival
+            </button>
           </div>
         </div>
 
-        <div id="actionButtonsGrid" class="grid grid-cols-1 gap-2.5">
-          <button id="btnOpenAR" type="button" class="btn-brand-orange font-bold py-3.5 rounded-xl text-xs btn-press">
-            Conquistar bandera (Cámara 3D)
-          </button>
-          <button id="btnSimulate" type="button" class="hidden surface-inset hover:opacity-90 text-[#FF7900] font-semibold py-3.5 rounded-xl text-xs border border-[#FF7900]/40 btn-press">
-            Simular llegada (DEV)
-          </button>
+        <!-- CONTENIDO DE CARRERA (Se desbloquea al iniciar la partida) -->
+        <div id="activeRaceControls" class="space-y-3.5">
+          <div class="space-y-3 surface-inset p-3.5 rounded-xl">
+            <div>
+              <div class="flex justify-between text-[11px] font-semibold mb-1.5">
+                <span class="text-main">Tu recorrido real</span>
+                <span id="myProgressPct" class="text-green-brand font-mono font-bold">0%</span>
+              </div>
+              <div class="w-full progress-track h-2.5 rounded-full overflow-hidden">
+                <div id="myProgressBar" class="progress-fill bg-green-brand-bright h-full rounded-full" style="width: 2%"></div>
+              </div>
+            </div>
+
+            <div id="rivalProgressContainer" class="hidden">
+              <div class="flex justify-between text-[11px] font-semibold mb-1.5">
+                <span class="text-main flex items-center gap-1.5">
+                  Rival
+                  <span id="rivalOnlineDot" class="w-2 h-2 rounded-full bg-[#75C894]" title="Rival online"></span>
+                </span>
+                <span id="rivalProgressPct" class="text-[#FF7900] font-mono font-bold">0%</span>
+              </div>
+              <div class="w-full progress-track h-2.5 rounded-full overflow-hidden">
+                <div id="rivalProgressBar" class="progress-fill bg-[#FF7900] h-full rounded-full" style="width: 2%"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center surface-inset p-3.5 rounded-xl">
+            <div class="flex items-center gap-3">
+              <div class="relative w-9 h-9 flex items-center justify-center">
+                <div id="sonarRing" class="sonar-ring absolute inset-0 rounded-full border-2 border-[#75C894]" style="--pulse-speed: 2s"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-[#75C894]"></div>
+              </div>
+              <div>
+                <p class="text-[11px] text-muted font-medium" id="hudDistanceLabel">Distancia estimada: -- m</p>
+                <p class="text-xs font-semibold text-main" id="sonarStatusText">Rastreando ubicación</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] text-muted block font-medium uppercase tracking-wider">Restante</span>
+              <span class="font-display text-xl font-bold text-green-brand" id="hudRemaining">-- m</span>
+            </div>
+          </div>
+
+          <div id="actionButtonsGrid" class="grid grid-cols-1 gap-2.5">
+            <button id="btnOpenAR" type="button" class="btn-brand-orange font-bold py-3.5 rounded-xl text-xs btn-press">
+              Conquistar bandera (Cámara 3D)
+            </button>
+            <button id="btnSimulate" type="button" class="hidden surface-inset hover:opacity-90 text-[#FF7900] font-semibold py-3.5 rounded-xl text-xs border border-[#FF7900]/40 btn-press">
+              Simular llegada (DEV)
+            </button>
+          </div>
         </div>
       </div>
 
       <!-- MAPA -->
       <div class="relative">
         <div id="map"></div>
+        <!-- Overlay sobre el mapa mientras se espera al rival -->
+        <div id="mapWaitingOverlay" class="hidden absolute inset-0 z-20 bg-[#171D1A]/75 backdrop-blur-[3px] rounded-[20px] flex flex-col items-center justify-center p-6 text-center">
+          <div class="w-12 h-12 rounded-2xl bg-[#FF7900]/20 border border-[#FF7900]/40 flex items-center justify-center text-[#FF7900] mb-3">
+            <svg class="w-6 h-6 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <p class="font-display font-bold text-base text-[#F2F1E9]">Esperando rival en sala...</p>
+          <p class="text-xs text-[#AAB5AC] mt-1 max-w-[240px]">La bandera y el recorrido se desbloquearán apenas ambos jugadores estén conectados.</p>
+        </div>
+
         <div id="gpsStatus" class="surface-card absolute bottom-3 left-3 z-20 backdrop-blur-md px-3.5 py-2 rounded-full text-[11px] text-main flex items-center gap-2">
           <span class="w-2 h-2 rounded-full bg-[#FF7900] animate-pulse"></span>
           <span>Esperando confirmación GPS...</span>
@@ -838,6 +895,7 @@
         distance: '1km',
         mode: 'async_record',
         activeMatch: null,
+        duelStarted: false,
         isFlashEvent: false,
         initialDistance: 1000,
         recordedPath: [],
@@ -919,6 +977,7 @@
         try {
           localStorage.setItem(CONFIG.ACTIVE_MATCH_STORAGE_KEY, JSON.stringify({
             activeMatch: state.activeMatch,
+            duelStarted: state.duelStarted,
             category: state.category,
             distance: state.distance,
             mode: state.mode,
@@ -939,6 +998,7 @@
           if (!saved || !saved.activeMatch || !saved.activeMatch.flag) return;
 
           state.activeMatch = saved.activeMatch;
+          state.duelStarted = !!saved.duelStarted;
           state.category = saved.category || 'walk_run';
           state.distance = saved.distance || '1km';
           state.mode = saved.mode || 'async_record';
@@ -948,8 +1008,8 @@
           state.matchStartTime = saved.matchStartTime || Date.now();
           state.duelExpiresAt = saved.duelExpiresAt || null;
 
-          renderMatchOnMapAndHud();
-          notify("Se restauró tu ruta en curso.", "info");
+          renderMatchOnMapAndHud(state.duelStarted);
+          notify("Se restauró tu partida en curso.", "info");
         } catch (_) {
           localStorage.removeItem(CONFIG.ACTIVE_MATCH_STORAGE_KEY);
         }
@@ -977,6 +1037,8 @@
         return {
           tap: () => tone(540, 0.08),
           ping: () => tone(880, 0.07),
+          countdown: () => tone(660, 0.14),
+          startGo: () => { tone(880, 0.15, 0); tone(1174.66, 0.3, 0.12); },
           success: () => { tone(523.25, 0.12, 0); tone(659.25, 0.12, 0.1); tone(783.99, 0.25, 0.2); }
         };
       })();
@@ -1494,7 +1556,8 @@
           state.map.panTo([newLat, newLng]);
         }
 
-        if (state.activeMatch) {
+        // Solo registra camino y actualiza progreso si el duelo ya arrancó (o si es contrarreloj)
+        if (state.activeMatch && state.duelStarted) {
           const lastPt = state.recordedPath[state.recordedPath.length - 1];
           if (!lastPt || state.map.distance([lastPt[1], lastPt[0]], [newLat, newLng]) >= 3) {
             state.recordedPath.push([newLng, newLat]);
@@ -1568,7 +1631,7 @@
 
         const btn = document.getElementById('btnGenerateFlag');
         btn.disabled = true;
-        btn.textContent = isPublicQueue ? "Buscando rival..." : "Generando bandera...";
+        btn.textContent = isPublicQueue ? "Buscando rival..." : "Generando sala...";
         AudioEngine.tap();
 
         let duelCode = isJoining ? document.getElementById('duelCodeInput').value.trim().toUpperCase() : null;
@@ -1590,7 +1653,7 @@
             if (openRooms && openRooms.length > 0) {
               duelCode = openRooms[0].duel_code;
               isJoining = true;
-              notify(`¡Rival encontrado! Uniéndote a sala ${duelCode}...`, "success");
+              notify(`¡Rival encontrado! Conectando a sala ${duelCode}...`, "success");
             }
           }
 
@@ -1603,8 +1666,12 @@
           const data = await res.json();
           if (!res.ok || data.error) throw new Error(data.error || "No se pudo generar la bandera.");
 
+          const isDuel = data.mode === 'live_duel' || state.mode === 'live_duel';
+
           state.isSimulated = false;
           state.activeMatch = data;
+          // Si es contrarreloj arranca ya; si es Duelo 1v1 queda esperando que ambos estén online
+          state.duelStarted = !isDuel;
           state.matchStartTime = Date.now();
           state.recordedPath = [[state.userPos.lng, state.userPos.lat]];
           state.initialDistance = Math.max(100, state.map.distance([state.userPos.lat, state.userPos.lng], [data.flag.lat, data.flag.lng]));
@@ -1621,6 +1688,58 @@
           btn.disabled = false;
           btn.textContent = state.mode === 'live_duel' ? "Crear sala privada de duelo" : "Generar bandera libre";
         }
+      }
+
+      function unlockDuelAndStartCountdown() {
+        if (state.duelStarted) return;
+        if (state.duelTimeoutInterval) clearInterval(state.duelTimeoutInterval);
+
+        document.getElementById('duelWaitingBanner').classList.add('hidden');
+        document.getElementById('mapWaitingOverlay').classList.add('hidden');
+        document.getElementById('activeRaceControls').classList.remove('hidden');
+
+        const modal = document.getElementById('duelCountdownModal');
+        const numEl = document.getElementById('duelCountdownNumber');
+        modal.classList.remove('hidden');
+
+        let count = 3;
+        numEl.textContent = String(count);
+        AudioEngine.countdown();
+        if (navigator.vibrate) navigator.vibrate(120);
+
+        const timer = setInterval(() => {
+          count--;
+          if (count > 0) {
+            numEl.textContent = String(count);
+            numEl.classList.remove('countdown-animate');
+            void numEl.offsetWidth;
+            numEl.classList.add('countdown-animate');
+            AudioEngine.countdown();
+            if (navigator.vibrate) navigator.vibrate(120);
+          } else if (count === 0) {
+            numEl.textContent = "¡YA!";
+            numEl.classList.remove('countdown-animate');
+            void numEl.offsetWidth;
+            numEl.classList.add('countdown-animate');
+            AudioEngine.startGo();
+            if (navigator.vibrate) navigator.vibrate([200, 80, 250]);
+          } else {
+            clearInterval(timer);
+            modal.classList.add('hidden');
+
+            // Inicia oficialmente la carrera sincronizada para ambos
+            state.duelStarted = true;
+            state.matchStartTime = Date.now();
+            if (state.userPos) {
+              state.recordedPath = [[state.userPos.lng, state.userPos.lat]];
+              state.initialDistance = Math.max(100, state.map.distance([state.userPos.lat, state.userPos.lng], [state.activeMatch.flag.lat, state.activeMatch.flag.lng]));
+            }
+            document.getElementById('matchStatusBadge').textContent = "Duelo 1v1 en vivo";
+            saveActiveMatchState();
+            updateProgress();
+            notify("¡Duelo iniciado! Corré hacia la bandera.", "success");
+          }
+        }, 1000);
       }
 
       function renderMatchOnMapAndHud(isJoining = false) {
@@ -1649,12 +1768,17 @@
         const isDuel = data.mode === 'live_duel' || state.mode === 'live_duel';
         if (isDuel) {
           document.getElementById('rivalProgressContainer').classList.remove('hidden');
-          setupDuelChannel(data.matchId, data.status || (isJoining ? 'active' : 'pending'), data.duelCode);
+          document.getElementById('matchStatusBadge').textContent = state.duelStarted ? "Duelo 1v1 en vivo" : "Esperando rival";
+          setupDuelChannel(data.matchId, data.duelCode);
         } else {
+          state.duelStarted = true;
+          document.getElementById('matchStatusBadge').textContent = "Recorrido libre";
           document.getElementById('rivalProgressContainer').classList.add('hidden');
           document.getElementById('duelWaitingBanner').classList.add('hidden');
+          document.getElementById('mapWaitingOverlay').classList.add('hidden');
+          document.getElementById('activeRaceControls').classList.remove('hidden');
+          updateProgress();
         }
-        updateProgress();
       }
 
       async function cancelActiveMatch() {
@@ -1663,18 +1787,21 @@
         if (sb && matchId) {
           try { await sb.from('matches').update({ status: 'cancelled' }).eq('id', matchId); } catch (_) {}
         }
-        notify("Ruta cancelada.", "info");
+        notify("Partida cancelada.", "info");
         resetMatchUI();
       }
 
-      function setupDuelChannel(matchId, status, duelCode) {
+      function setupDuelChannel(matchId, duelCode) {
         if (state.matchChannel) sb.removeChannel(state.matchChannel);
         if (state.duelTimeoutInterval) clearInterval(state.duelTimeoutInterval);
 
-        if (status === 'pending' && duelCode) {
+        // Si el duelo todavía no arrancó, bloqueamos controles hasta detectar presencia de ambos online
+        if (!state.duelStarted) {
           document.getElementById('duelWaitingBanner').classList.remove('hidden');
-          document.getElementById('displayDuelCode').textContent = duelCode;
-          
+          document.getElementById('mapWaitingOverlay').classList.remove('hidden');
+          document.getElementById('activeRaceControls').classList.add('hidden');
+          document.getElementById('displayDuelCode').textContent = duelCode || '----';
+
           state.duelExpiresAt = Date.now() + 5 * 60 * 1000;
           state.duelTimeoutInterval = setInterval(() => {
             const rem = state.duelExpiresAt - Date.now();
@@ -1691,13 +1818,35 @@
           }, 1000);
         } else {
           document.getElementById('duelWaitingBanner').classList.add('hidden');
+          document.getElementById('mapWaitingOverlay').classList.add('hidden');
+          document.getElementById('activeRaceControls').classList.remove('hidden');
         }
 
-        state.matchChannel = sb.channel(`duel-${matchId}`, { config: { broadcast: { self: false } } });
+        // Canal Realtime con Presence para verificar que los 2 jugadores estén online
+        state.matchChannel = sb.channel(`duel-${matchId}`, {
+          config: {
+            broadcast: { self: false },
+            presence: { key: state.user.id }
+          }
+        });
+
         state.matchChannel
+          .on('presence', { event: 'sync' }, () => {
+            const presenceState = state.matchChannel.presenceState();
+            const onlineUsers = Object.keys(presenceState);
+            const dot = document.getElementById('rivalOnlineDot');
+
+            if (onlineUsers.length >= 2) {
+              if (dot) dot.className = "w-2 h-2 rounded-full bg-[#75C894]";
+              if (!state.duelStarted) {
+                unlockDuelAndStartCountdown();
+              }
+            } else {
+              if (dot) dot.className = "w-2 h-2 rounded-full bg-rose-500";
+            }
+          })
           .on('broadcast', { event: 'rival_progress' }, ({ payload }) => {
-            document.getElementById('duelWaitingBanner').classList.add('hidden');
-            if (state.duelTimeoutInterval) clearInterval(state.duelTimeoutInterval);
+            if (!state.duelStarted) unlockDuelAndStartCountdown();
             const pct = Math.max(0, Math.min(100, Number(payload.percent) || 0));
             document.getElementById('rivalProgressPct').textContent = `${pct}%`;
             document.getElementById('rivalProgressBar').style.width = `${Math.max(2, pct)}%`;
@@ -1706,15 +1855,18 @@
             notify(`${escapeHTML(payload.winnerName)} capturó su bandera primero.`, "info");
             resetMatchUI();
           })
-          .subscribe((st) => {
-            if (st === 'SUBSCRIBED' && status === 'active') {
-              state.matchChannel.send({ type: 'broadcast', event: 'rival_progress', payload: { percent: 0 } });
+          .subscribe(async (st) => {
+            if (st === 'SUBSCRIBED') {
+              await state.matchChannel.track({
+                user_id: state.user.id,
+                online_at: new Date().toISOString()
+              });
             }
           });
       }
 
       function updateProgress() {
-        if (!state.activeMatch || !state.map || !state.userPos) return;
+        if (!state.activeMatch || !state.map || !state.userPos || !state.duelStarted) return;
 
         const d = state.map.distance([state.userPos.lat, state.userPos.lng], [state.activeMatch.flag.lat, state.activeMatch.flag.lng]);
         document.getElementById('hudRemaining').textContent = `${Math.round(d)} m`;
@@ -1929,7 +2081,7 @@
       }
 
       async function openARCamera() {
-        if (!state.activeMatch || !state.userPos) return;
+        if (!state.activeMatch || !state.userPos || !state.duelStarted) return;
         const dist = state.map.distance([state.userPos.lat, state.userPos.lng], [state.activeMatch.flag.lat, state.activeMatch.flag.lng]);
         if (dist > CONFIG.CAPTURE_RADIUS_METERS) {
           return notify(`Estás a ${Math.round(dist)} m. Acercate a menos de ${CONFIG.CAPTURE_RADIUS_METERS} m para conquistar.`, "info");
@@ -2175,6 +2327,7 @@
 
       function resetMatchUI() {
         state.activeMatch = null;
+        state.duelStarted = false;
         state.isFlashEvent = false;
         state.isSimulated = false;
         state.duelExpiresAt = null;
@@ -2186,6 +2339,8 @@
         if (state.flagMarker) state.map.removeLayer(state.flagMarker);
         if (state.routeLine) state.map.removeLayer(state.routeLine);
         document.getElementById('activeHud').classList.add('hidden');
+        document.getElementById('mapWaitingOverlay').classList.add('hidden');
+        document.getElementById('duelCountdownModal').classList.add('hidden');
         document.getElementById('setupPanel').classList.remove('hidden');
       }
 
@@ -2400,10 +2555,43 @@
       document.getElementById('btnRetakePhoto').addEventListener('click', resetCameraPreviewState);
       document.getElementById('btnConfirmCapture').addEventListener('click', confirmCapture);
 
+      // Botones rápidos de sala de espera 1v1
+      document.getElementById('btnCopyDuelCode').addEventListener('click', async () => {
+        const code = document.getElementById('displayDuelCode').textContent.trim();
+        if (!code || code === '----') return;
+        try {
+          await navigator.clipboard.writeText(code);
+          AudioEngine.tap();
+          notify(`Código ${code} copiado al portapapeles.`, "success");
+        } catch (_) {
+          notify(`Tu código de sala es: ${code}`, "info");
+        }
+      });
+
+      document.getElementById('btnShareDuelCode').addEventListener('click', async () => {
+        const code = document.getElementById('displayDuelCode').textContent.trim();
+        if (!code || code === '----') return;
+        const shareText = `¡Te desafío a un Duelo 1v1 en Conquista la Bandera! Entrá con el código de sala: ${code} en ${window.location.origin}`;
+        if (navigator.share) {
+          try {
+            await navigator.share({ title: 'Duelo 1v1 - Conquista la Bandera', text: shareText });
+            return;
+          } catch (_) {}
+        }
+        try {
+          await navigator.clipboard.writeText(shareText);
+          notify("Invitación copiada para pegar en WhatsApp.", "success");
+        } catch (_) {}
+      });
+
       const simBtnEl = document.getElementById('btnSimulate');
       if (simBtnEl && IS_DEV) {
         simBtnEl.addEventListener('click', () => {
           if (!state.activeMatch) return;
+          if (!state.duelStarted) {
+            unlockDuelAndStartCountdown();
+            return;
+          }
           state.isSimulated = true;
           state.userPos = { lat: state.activeMatch.flag.lat, lng: state.activeMatch.flag.lng };
           if (state.userMarker) state.userMarker.setLatLng([state.userPos.lat, state.userPos.lng]);
