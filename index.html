@@ -26,13 +26,13 @@
       --green-soft: #A4C9A9;
 
       --bg-base: #171D1A;
-      --bg-header: rgba(23, 29, 26, 0.92);
+      --bg-header: rgba(23, 29, 26, 0.94);
       --bg-surface: #222B26;
       --bg-surface-elevated: #2C3730;
       --text-primary: #F2F1E9;
       --text-secondary: #AAB5AC;
       --border-subtle: #354139;
-      --shadow-card: 0 6px 24px rgba(0, 0, 0, 0.35);
+      --shadow-card: 0 4px 18px rgba(0, 0, 0, 0.35);
       --map-filter: invert(100%) hue-rotate(180deg) brightness(92%) contrast(92%) sepia(12%);
       --progress-track: #2C3730;
       --toast-info-bg: #222B26;
@@ -47,13 +47,13 @@
 
     html.theme-light {
       --bg-base: #F4F2EB;
-      --bg-header: rgba(244, 242, 235, 0.92);
+      --bg-header: rgba(244, 242, 235, 0.94);
       --bg-surface: #FFFFFF;
       --bg-surface-elevated: #E9E8DF;
       --text-primary: #202820;
       --text-secondary: #777D75;
       --border-subtle: #DFE1D8;
-      --shadow-card: 0 6px 24px rgba(32, 40, 32, 0.08);
+      --shadow-card: 0 4px 18px rgba(32, 40, 32, 0.08);
       --map-filter: saturate(92%) contrast(98%) brightness(100%);
       --progress-track: #E9E8DF;
       --toast-info-bg: #FFFFFF;
@@ -66,16 +66,27 @@
       --green-tint-border: rgba(71, 123, 87, 0.42);
     }
 
-    * { -webkit-tap-highlight-color: transparent; }
+    * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+    html, body {
+      height: 100dvh;
+      max-height: 100dvh;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+    }
     body {
       background-color: var(--bg-base);
       color: var(--text-primary);
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-      overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
       transition: background-color 0.2s ease, color 0.2s ease;
+      display: flex;
+      flex-direction: column;
     }
     .font-display { font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.03em; }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
     .app-header { background-color: var(--bg-header); border-bottom: 1px solid var(--border-subtle); }
     .app-nav { background-color: var(--bg-header); border-top: 1px solid var(--border-subtle); }
@@ -98,15 +109,15 @@
     .btn-brand-green { background-color: var(--green-dark); color: #F2F1E9; border: 1px solid rgba(117, 200, 148, 0.35); }
     .btn-brand-green:hover { background-color: var(--green-mid); }
 
-    .btn-brand-orange { background-color: var(--orange-main); color: #FFFFFF; box-shadow: 0 6px 18px rgba(255, 121, 0, 0.25); }
+    .btn-brand-orange { background-color: var(--orange-main); color: #FFFFFF; box-shadow: 0 4px 14px rgba(255, 121, 0, 0.25); }
     .btn-brand-orange:hover { background-color: var(--orange-hover); }
     .btn-choice-inactive { background-color: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); color: var(--text-secondary); }
     .btn-choice-inactive:hover { color: var(--text-primary); border-color: var(--green-tint-border); }
 
     #map {
-      height: 46vh;
+      height: 100%;
       width: 100%;
-      border-radius: 20px;
+      border-radius: 18px;
       z-index: 10;
       border: 1.5px solid var(--green-tint-border);
       box-shadow: var(--shadow-card);
@@ -118,9 +129,9 @@
     .btn-press:active { transform: scale(0.97); }
     .btn-press:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-    .tab-section { animation: fadeInTab 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .tab-section { animation: fadeInTab 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     @keyframes fadeInTab {
-      from { opacity: 0; transform: translateY(6px); }
+      from { opacity: 0; transform: translateY(4px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
@@ -137,10 +148,10 @@
     }
     .countdown-animate { animation: countdownPop 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-    .gps-player-wrapper { position: relative; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; }
-    .gps-heading-cone { position: absolute; width: 56px; height: 56px; transform-origin: center center; transition: transform 0.1s linear; pointer-events: none; }
-    .gps-beacon { width: 16px; height: 16px; background: var(--orange-main); border: 3px solid #FFFFFF; border-radius: 50%; box-shadow: 0 0 16px var(--orange-main); position: relative; z-index: 2; }
-    .gps-beacon::after { content: ''; position: absolute; inset: -7px; border-radius: 50%; border: 1.5px solid var(--orange-main); animation: pulseRing 2s infinite; }
+    .gps-player-wrapper { position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
+    .gps-heading-cone { position: absolute; width: 52px; height: 52px; transform-origin: center center; transition: transform 0.1s linear; pointer-events: none; }
+    .gps-beacon { width: 15px; height: 15px; background: var(--orange-main); border: 2.5px solid #FFFFFF; border-radius: 50%; box-shadow: 0 0 14px var(--orange-main); position: relative; z-index: 2; }
+    .gps-beacon::after { content: ''; position: absolute; inset: -6px; border-radius: 50%; border: 1.5px solid var(--orange-main); animation: pulseRing 2s infinite; }
     .progress-fill { transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
 
     .toast-info { background-color: var(--toast-info-bg); border-color: var(--border-subtle); color: var(--text-primary); }
@@ -149,13 +160,13 @@
     .toast-error { background-color: var(--toast-error-bg); border-color: rgba(244, 63, 94, 0.45); color: #F43F5E; }
   </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between pb-24">
+<body>
 
   <!-- SPLASH SCREEN -->
   <div id="splashScreen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center p-6 transition-opacity duration-500" style="background-color: var(--bg-base);">
-    <div class="w-24 h-24 rounded-3xl card-green-accent flex items-center justify-center relative mb-6">
+    <div class="w-20 h-20 rounded-3xl card-green-accent flex items-center justify-center relative mb-5">
       <div class="absolute inset-0 rounded-3xl border border-[#75C894]/40 sonar-ring" style="--pulse-speed: 2s"></div>
-      <svg class="w-14 h-14 relative z-10" viewBox="0 0 64 64" fill="none">
+      <svg class="w-12 h-12 relative z-10" viewBox="0 0 64 64" fill="none">
         <path d="M22 48L20 32L30 24L42 28L46 20" stroke="#FF7900" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
         <circle cx="36" cy="14" r="5" fill="#FF7900"/>
         <path d="M20 28L14 36M32 38L28 52" stroke="#FF7900" stroke-width="4" stroke-linecap="round"/>
@@ -167,7 +178,7 @@
   </div>
 
   <!-- TOASTS -->
-  <div id="toastContainer" class="fixed top-16 inset-x-4 z-[60] max-w-md mx-auto pointer-events-none flex flex-col gap-2.5"></div>
+  <div id="toastContainer" class="fixed top-14 inset-x-4 z-[60] max-w-md mx-auto pointer-events-none flex flex-col gap-2"></div>
 
   <!-- MODAL CUENTA REGRESIVA 3-2-1-YA PARA DUELO 1V1 -->
   <div id="duelCountdownModal" class="hidden fixed inset-0 z-[70] bg-[#171D1A]/90 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center">
@@ -181,111 +192,111 @@
     <p class="text-xs text-[#F2F1E9]/80 mt-6 max-w-xs">¡Preparate! El cronómetro arrancará para los dos al mismo tiempo.</p>
   </div>
 
-  <!-- HEADER -->
-  <header class="app-header px-4 py-3 flex justify-between items-center sticky top-0 z-30 backdrop-blur-xl">
-    <div class="flex items-center gap-2.5 min-w-0">
-      <div class="w-9 h-9 rounded-xl badge-green-brand flex items-center justify-center shrink-0 shadow-sm">
+  <!-- HEADER COMPACTO -->
+  <header class="app-header px-3.5 py-2 flex justify-between items-center shrink-0 z-30 backdrop-blur-xl">
+    <div class="flex items-center gap-2 min-w-0">
+      <div class="w-8 h-8 rounded-xl badge-green-brand flex items-center justify-center shrink-0 shadow-sm">
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 21V4m0 0l11 3-3 5 3 5-11-3" />
         </svg>
       </div>
       <div class="min-w-0">
         <div class="flex items-center gap-1.5">
-          <h1 class="font-display font-bold text-sm sm:text-base leading-none text-main tracking-wide truncate">CONQUISTA <span class="text-[#FF7900]">LA BANDERA</span></h1>
+          <h1 class="font-display font-bold text-xs sm:text-sm leading-none text-main tracking-wide truncate">CONQUISTA <span class="text-[#FF7900]">LA BANDERA</span></h1>
           <span id="devEnvBadge" class="hidden text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded bg-[#FF7900]/15 text-[#FF7900] border border-[#FF7900]/30 shrink-0">DEV</span>
         </div>
-        <div class="flex items-center gap-1.5 mt-1">
-          <span id="userLeagueBadge" class="text-[10px] font-bold uppercase tracking-widest text-green-brand">División Inicial</span>
-          <span id="streakBadge" class="hidden items-center gap-1 text-[10px] font-semibold text-[#FF7900]">
+        <div class="flex items-center gap-1.5 mt-0.5">
+          <span id="userLeagueBadge" class="text-[9px] font-bold uppercase tracking-widest text-green-brand">División Inicial</span>
+          <span id="streakBadge" class="hidden items-center gap-1 text-[9px] font-semibold text-[#FF7900]">
             <span>•</span>
-            <span id="streakCount">1</span> días
+            <span id="streakCount">1</span>d
           </span>
         </div>
       </div>
     </div>
 
-    <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-      <div class="surface-card-elevated p-0.5 rounded-xl flex items-center text-[10px] font-bold" role="group" aria-label="Selector de tema">
-        <button type="button" data-theme-val="light" title="Modo claro" class="theme-opt-btn px-2 py-1.5 rounded-lg text-muted hover:text-main transition">
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
+    <div class="flex items-center gap-1.5 shrink-0">
+      <div class="surface-card-elevated p-0.5 rounded-lg flex items-center text-[10px] font-bold" role="group" aria-label="Selector de tema">
+        <button type="button" data-theme-val="light" title="Modo claro" class="theme-opt-btn px-1.5 py-1 rounded-md text-muted hover:text-main transition">
+          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
         </button>
-        <button type="button" data-theme-val="dark" title="Modo oscuro" class="theme-opt-btn px-2 py-1.5 rounded-lg text-muted hover:text-main transition">
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <button type="button" data-theme-val="dark" title="Modo oscuro" class="theme-opt-btn px-1.5 py-1 rounded-md text-muted hover:text-main transition">
+          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         </button>
-        <button type="button" data-theme-val="auto" title="Automático" class="theme-opt-btn px-2 py-1 rounded-lg text-muted hover:text-main transition">Auto</button>
+        <button type="button" data-theme-val="auto" title="Automático" class="theme-opt-btn px-1.5 py-1 rounded-md text-muted hover:text-main transition">Auto</button>
       </div>
 
-      <button id="btnSoundToggle" type="button" aria-label="Alternar audio" class="p-2 rounded-xl surface-card-elevated text-main btn-press">
-        <svg id="iconSoundOn" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 010 7.07"/></svg>
-        <svg id="iconSoundOff" class="w-4 h-4 hidden text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/></svg>
+      <button id="btnSoundToggle" type="button" aria-label="Alternar audio" class="p-1.5 rounded-lg surface-card-elevated text-main btn-press">
+        <svg id="iconSoundOn" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 010 7.07"/></svg>
+        <svg id="iconSoundOff" class="w-3.5 h-3.5 hidden text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/></svg>
       </button>
 
-      <div id="userBadge" class="hidden items-center gap-2 surface-card-elevated px-2.5 py-1.5 rounded-xl text-xs">
-        <span id="headerUsername" class="font-semibold text-main max-w-[80px] truncate">@jugador</span>
-        <button id="btnLogout" type="button" class="text-muted hover:text-rose-500 text-[11px] font-semibold transition">Salir</button>
+      <div id="userBadge" class="hidden items-center gap-1.5 surface-card-elevated px-2 py-1 rounded-lg text-[11px]">
+        <span id="headerUsername" class="font-semibold text-main max-w-[70px] truncate">@jugador</span>
+        <button id="btnLogout" type="button" class="text-muted hover:text-rose-500 text-[10px] font-semibold transition">Salir</button>
       </div>
     </div>
   </header>
 
   <!-- PANTALLA DE ACCESO -->
-  <main id="authScreen" class="p-4 max-w-md mx-auto w-full my-auto">
-    <div class="surface-card p-6 sm:p-7 rounded-3xl space-y-6">
-      <div id="authTabs" class="grid grid-cols-2 gap-1 surface-inset p-1.5 rounded-2xl">
-        <button id="tabBtnLogin" type="button" class="bg-[#FF7900] text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer shadow-sm">Iniciar sesión</button>
-        <button id="tabBtnSignup" type="button" class="text-muted hover:text-main font-semibold py-2.5 rounded-xl text-xs transition cursor-pointer">Crear cuenta</button>
+  <main id="authScreen" class="flex-1 overflow-y-auto no-scrollbar p-4 max-w-md mx-auto w-full flex flex-col justify-center">
+    <div class="surface-card p-5 sm:p-6 rounded-3xl space-y-5">
+      <div id="authTabs" class="grid grid-cols-2 gap-1 surface-inset p-1 rounded-2xl">
+        <button id="tabBtnLogin" type="button" class="bg-[#FF7900] text-white font-bold py-2 rounded-xl text-xs transition cursor-pointer shadow-sm">Iniciar sesión</button>
+        <button id="tabBtnSignup" type="button" class="text-muted hover:text-main font-semibold py-2 rounded-xl text-xs transition cursor-pointer">Crear cuenta</button>
       </div>
 
       <!-- LOGIN -->
-      <form id="loginFormView" class="space-y-4">
+      <form id="loginFormView" class="space-y-3.5">
         <div>
-          <h2 class="font-display text-xl font-bold text-main tracking-tight">Bienvenido de nuevo</h2>
-          <p class="text-xs text-muted mt-1">Ingresá con tu usuario o correo electrónico.</p>
+          <h2 class="font-display text-lg font-bold text-main tracking-tight">Bienvenido de nuevo</h2>
+          <p class="text-xs text-muted mt-0.5">Ingresá con tu usuario o correo electrónico.</p>
         </div>
         <div>
           <label for="loginIdentifier" class="text-xs font-semibold text-main">Usuario o correo electrónico</label>
-          <input id="loginIdentifier" type="text" autocomplete="username" placeholder="tu_usuario o nombre@gmail.com" class="theme-input w-full mt-1.5 px-4 py-3 rounded-xl text-sm transition" />
+          <input id="loginIdentifier" type="text" autocomplete="username" placeholder="tu_usuario o nombre@gmail.com" class="theme-input w-full mt-1 px-3.5 py-2.5 rounded-xl text-sm transition" />
         </div>
         <div>
           <div class="flex items-center justify-between">
             <label for="loginPassword" class="text-xs font-semibold text-main">Contraseña</label>
             <button id="btnForgotPassword" type="button" class="text-[11px] text-[#FF7900] hover:text-[#E96800] font-semibold transition">¿Olvidaste tu contraseña?</button>
           </div>
-          <div class="relative mt-1.5">
-            <input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••••" class="theme-input w-full pl-4 pr-11 py-3 rounded-xl text-sm transition" />
-            <button type="button" data-toggle-target="loginPassword" aria-label="Mostrar u ocultar clave" class="toggle-pass-btn absolute inset-y-0 right-0 px-3.5 flex items-center text-muted hover:text-[#FF7900] transition">
+          <div class="relative mt-1">
+            <input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••••" class="theme-input w-full pl-3.5 pr-10 py-2.5 rounded-xl text-sm transition" />
+            <button type="button" data-toggle-target="loginPassword" aria-label="Mostrar u ocultar clave" class="toggle-pass-btn absolute inset-y-0 right-0 px-3 flex items-center text-muted hover:text-[#FF7900] transition">
               <svg class="icon-eye-open w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               <svg class="icon-eye-closed w-4 h-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
             </button>
           </div>
         </div>
-        <button id="btnLogin" type="submit" class="w-full btn-brand-orange font-bold py-3.5 rounded-xl text-sm btn-press">Continuar</button>
+        <button id="btnLogin" type="submit" class="w-full btn-brand-orange font-bold py-3 rounded-xl text-sm btn-press">Continuar</button>
       </form>
 
       <!-- RECUPERAR CONTRASEÑA -->
-      <form id="forgotFormView" class="hidden space-y-4">
+      <form id="forgotFormView" class="hidden space-y-3.5">
         <div>
-          <h2 class="font-display text-xl font-bold text-main tracking-tight">Recuperar contraseña</h2>
-          <p class="text-xs text-muted mt-1">Te enviaremos un enlace seguro para crear una clave nueva.</p>
+          <h2 class="font-display text-lg font-bold text-main tracking-tight">Recuperar contraseña</h2>
+          <p class="text-xs text-muted mt-0.5">Te enviaremos un enlace seguro para crear una clave nueva.</p>
         </div>
         <div>
           <label for="forgotEmail" class="text-xs font-semibold text-main">Correo electrónico de tu cuenta</label>
-          <input id="forgotEmail" type="email" autocomplete="email" placeholder="nombre@gmail.com" class="theme-input w-full mt-1.5 px-4 py-3 rounded-xl text-sm transition" />
+          <input id="forgotEmail" type="email" autocomplete="email" placeholder="nombre@gmail.com" class="theme-input w-full mt-1 px-3.5 py-2.5 rounded-xl text-sm transition" />
         </div>
-        <button id="btnSendReset" type="submit" class="w-full btn-brand-orange font-bold py-3.5 rounded-xl text-sm btn-press">Enviar enlace de recuperación</button>
+        <button id="btnSendReset" type="submit" class="w-full btn-brand-orange font-bold py-3 rounded-xl text-sm btn-press">Enviar enlace de recuperación</button>
         <button id="btnBackToLogin" type="button" class="w-full text-xs font-semibold text-muted hover:text-main transition pt-1">← Volver al inicio de sesión</button>
       </form>
 
       <!-- NUEVA CONTRASEÑA -->
-      <form id="resetPasswordView" class="hidden space-y-4">
+      <form id="resetPasswordView" class="hidden space-y-3.5">
         <div>
-          <h2 class="font-display text-xl font-bold text-main tracking-tight">Nueva contraseña</h2>
-          <p class="text-xs text-muted mt-1">Elegí una clave segura para volver a ingresar.</p>
+          <h2 class="font-display text-lg font-bold text-main tracking-tight">Nueva contraseña</h2>
+          <p class="text-xs text-muted mt-0.5">Elegí una clave segura para volver a ingresar.</p>
         </div>
         <div>
           <label for="newPasswordInput" class="text-xs font-semibold text-main">Nueva clave</label>
-          <div class="relative mt-1.5">
-            <input id="newPasswordInput" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres, 1 mayúscula y 1 número" class="theme-input w-full pl-4 pr-11 py-3 rounded-xl text-sm transition" />
-            <button type="button" data-toggle-target="newPasswordInput" aria-label="Mostrar u ocultar clave" class="toggle-pass-btn absolute inset-y-0 right-0 px-3.5 flex items-center text-muted hover:text-[#FF7900] transition">
+          <div class="relative mt-1">
+            <input id="newPasswordInput" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres, 1 mayúscula y 1 número" class="theme-input w-full pl-3.5 pr-10 py-2.5 rounded-xl text-sm transition" />
+            <button type="button" data-toggle-target="newPasswordInput" aria-label="Mostrar u ocultar clave" class="toggle-pass-btn absolute inset-y-0 right-0 px-3 flex items-center text-muted hover:text-[#FF7900] transition">
               <svg class="icon-eye-open w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               <svg class="icon-eye-closed w-4 h-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
             </button>
@@ -293,53 +304,51 @@
         </div>
         <div>
           <label for="confirmNewPasswordInput" class="text-xs font-semibold text-main">Confirmar nueva clave</label>
-          <div class="relative mt-1.5">
-            <input id="confirmNewPasswordInput" type="password" autocomplete="new-password" placeholder="Repetí tu clave" class="theme-input w-full pl-4 pr-11 py-3 rounded-xl text-sm transition" />
-            <button type="button" data-toggle-target="confirmNewPasswordInput" aria-label="Mostrar u ocultar clave" class="toggle-pass-btn absolute inset-y-0 right-0 px-3.5 flex items-center text-muted hover:text-[#FF7900] transition">
+          <div class="relative mt-1">
+            <input id="confirmNewPasswordInput" type="password" autocomplete="new-password" placeholder="Repetí tu clave" class="theme-input w-full pl-3.5 pr-10 py-2.5 rounded-xl text-sm transition" />
+            <button type="button" data-toggle-target="confirmNewPasswordInput" aria-label="Mostrar u ocultar clave" class="toggle-pass-btn absolute inset-y-0 right-0 px-3 flex items-center text-muted hover:text-[#FF7900] transition">
               <svg class="icon-eye-open w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               <svg class="icon-eye-closed w-4 h-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
             </button>
           </div>
         </div>
-        <button id="btnUpdatePassword" type="submit" class="w-full btn-brand-orange font-bold py-3.5 rounded-xl text-sm btn-press">Guardar nueva clave</button>
+        <button id="btnUpdatePassword" type="submit" class="w-full btn-brand-orange font-bold py-3 rounded-xl text-sm btn-press">Guardar nueva clave</button>
       </form>
 
       <!-- REGISTRO -->
-      <form id="signupFormView" class="hidden space-y-4">
+      <form id="signupFormView" class="hidden space-y-3.5">
         <div>
-          <h2 class="font-display text-xl font-bold text-main tracking-tight">Crear cuenta</h2>
-          <p class="text-xs text-muted mt-1">Te enviaremos un enlace de confirmación a tu correo.</p>
+          <h2 class="font-display text-lg font-bold text-main tracking-tight">Crear cuenta</h2>
+          <p class="text-xs text-muted mt-0.5">Te enviaremos un enlace de confirmación a tu correo.</p>
         </div>
         <div>
           <label for="regUsername" class="text-xs font-semibold text-main">Nombre de usuario</label>
-          <input id="regUsername" type="text" autocomplete="off" placeholder="ej. chachi.run" class="theme-input w-full mt-1.5 px-4 py-3 rounded-xl text-sm transition" />
-          <p class="text-[11px] text-muted mt-1.5">Solo letras minúsculas, números, puntos o guiones bajos.</p>
+          <input id="regUsername" type="text" autocomplete="off" placeholder="ej. chachi.run" class="theme-input w-full mt-1 px-3.5 py-2.5 rounded-xl text-sm transition" />
         </div>
         <div>
           <label for="regEmail" class="text-xs font-semibold text-main">Correo electrónico</label>
-          <input id="regEmail" type="email" autocomplete="email" placeholder="nombre@gmail.com" class="theme-input w-full mt-1.5 px-4 py-3 rounded-xl text-sm transition" />
+          <input id="regEmail" type="email" autocomplete="email" placeholder="nombre@gmail.com" class="theme-input w-full mt-1 px-3.5 py-2.5 rounded-xl text-sm transition" />
         </div>
         <div>
           <label for="regPassword" class="text-xs font-semibold text-main">Contraseña</label>
-          <div class="relative mt-1.5">
-            <input id="regPassword" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres" class="theme-input w-full pl-4 pr-11 py-3 rounded-xl text-sm transition" />
-            <button type="button" data-toggle-target="regPassword" aria-label="Mostrar u ocultar clave" class="toggle-pass-btn absolute inset-y-0 right-0 px-3.5 flex items-center text-muted hover:text-[#FF7900] transition">
+          <div class="relative mt-1">
+            <input id="regPassword" type="password" autocomplete="new-password" placeholder="Mín. 6 caract., 1 mayús. y 1 número" class="theme-input w-full pl-3.5 pr-10 py-2.5 rounded-xl text-sm transition" />
+            <button type="button" data-toggle-target="regPassword" aria-label="Mostrar u ocultar clave" class="toggle-pass-btn absolute inset-y-0 right-0 px-3 flex items-center text-muted hover:text-[#FF7900] transition">
               <svg class="icon-eye-open w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               <svg class="icon-eye-closed w-4 h-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
             </button>
           </div>
-          <p class="text-[11px] text-muted mt-1.5">Debe incluir al menos una mayúscula y un número.</p>
         </div>
-        <button id="btnSignup" type="submit" class="w-full btn-brand-orange font-bold py-3.5 rounded-xl text-sm btn-press">Registrarme</button>
+        <button id="btnSignup" type="submit" class="w-full btn-brand-orange font-bold py-3 rounded-xl text-sm btn-press">Registrarme</button>
       </form>
 
       <!-- VERIFICACIÓN OTP -->
-      <div id="otpVerifyView" class="hidden space-y-4 py-2">
-        <div class="w-12 h-12 rounded-2xl badge-green-brand flex items-center justify-center">
-          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      <div id="otpVerifyView" class="hidden space-y-3.5 py-2">
+        <div class="w-11 h-11 rounded-2xl badge-green-brand flex items-center justify-center">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
         </div>
         <div>
-          <h2 class="font-display text-lg font-bold text-main">Revisá tu bandeja de entrada</h2>
+          <h2 class="font-display text-base font-bold text-main">Revisá tu bandeja de entrada</h2>
           <p class="text-xs text-muted mt-1 leading-relaxed">
             Enviamos un correo a <span id="otpTargetEmail" class="text-main font-semibold"></span>. Abrilo y tocá el enlace para continuar.
           </p>
@@ -347,269 +356,251 @@
         <button id="btnCancelOtp" type="button" class="text-xs font-semibold text-muted hover:text-main transition">← Volver</button>
       </div>
 
-      <p id="authError" class="text-xs text-rose-500 hidden bg-rose-500/10 border border-rose-500/25 px-3.5 py-3 rounded-xl font-medium"></p>
+      <p id="authError" class="text-xs text-rose-500 hidden bg-rose-500/10 border border-rose-500/25 px-3 py-2.5 rounded-xl font-medium"></p>
     </div>
   </main>
 
-  <!-- INTERFAZ PRINCIPAL -->
-  <div id="appContainer" class="hidden max-w-lg mx-auto w-full p-4 space-y-4">
+  <!-- INTERFAZ PRINCIPAL SIN SCROLL (100DVH) -->
+  <div id="appContainer" class="hidden flex-1 min-h-0 flex flex-col max-w-lg mx-auto w-full px-3 pt-2.5 pb-2 gap-2.5 overflow-hidden">
     
     <!-- PERMISO GPS Y BRÚJULA -->
-    <div id="gpsPermissionBanner" class="hidden card-green-accent p-4 rounded-2xl space-y-3.5">
-      <div class="flex items-start gap-3.5">
-        <div class="w-10 h-10 rounded-xl badge-green-brand flex items-center justify-center shrink-0 mt-0.5">
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+    <div id="gpsPermissionBanner" class="hidden shrink-0 card-green-accent p-3 rounded-2xl space-y-2">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl badge-green-brand flex items-center justify-center shrink-0">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/>
             <circle cx="12" cy="11" r="2.5"/>
           </svg>
         </div>
-        <div class="space-y-1">
-          <h3 id="gpsPermTitle" class="font-display font-bold text-sm text-main">Permitir acceso a tu ubicación</h3>
-          <p id="gpsPermDesc" class="text-xs text-muted leading-relaxed">
-            Para generar banderas libres en tus calles o parques y orientar tu brújula en el mapa, necesitamos confirmar el permiso de GPS.
-          </p>
+        <div class="min-w-0 flex-1">
+          <h3 id="gpsPermTitle" class="font-display font-bold text-xs text-main truncate">Permitir acceso a tu ubicación</h3>
+          <p id="gpsPermDesc" class="text-[11px] text-muted truncate">Activá el GPS para ubicar banderas cerca tuyo.</p>
         </div>
+        <button id="btnConfirmGpsPermission" type="button" class="btn-brand-orange font-bold py-2 px-3 rounded-xl text-[11px] btn-press shrink-0">
+          <span id="btnConfirmGpsText">Activar GPS</span>
+        </button>
       </div>
-
-      <div id="gpsDeniedHelp" class="hidden surface-inset border-rose-500/30 p-3.5 rounded-xl text-[11px] text-main space-y-1.5"></div>
-
-      <button id="btnConfirmGpsPermission" type="button" class="w-full btn-brand-orange font-bold py-3.5 rounded-xl text-xs btn-press flex items-center justify-center gap-2">
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>
-        <span id="btnConfirmGpsText">Confirmar y activar ubicación</span>
-      </button>
+      <div id="gpsDeniedHelp" class="hidden surface-inset border-rose-500/30 p-2.5 rounded-xl text-[10px] text-main"></div>
     </div>
 
-    <!-- DESAFÍO TEMPORAL X3 SINCRONIZADO -->
-    <div id="flashBanner" class="surface-card border-[#FF7900]/40 p-3.5 rounded-2xl flex items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-[#FF7900]/15 border border-[#FF7900]/30 flex items-center justify-center text-[#FF7900] shrink-0">
+    <!-- DESAFÍO TEMPORAL X3 COMPACTO -->
+    <div id="flashBanner" class="shrink-0 surface-card border-[#FF7900]/40 px-3 py-2 rounded-2xl flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-8 h-8 rounded-xl bg-[#FF7900]/15 border border-[#FF7900]/30 flex items-center justify-center text-[#FF7900] shrink-0">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
         </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <span id="flashBannerTitle" class="text-[10px] font-bold uppercase tracking-wider text-[#FF7900]">Hora Pico x3 Puntos</span>
-            <span id="flashTimer" class="text-[11px] font-mono text-muted">--:--</span>
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5">
+            <span id="flashBannerTitle" class="text-[10px] font-bold uppercase tracking-wider text-[#FF7900] truncate">Hora Pico x3</span>
+            <span id="flashTimer" class="text-[10px] font-mono text-muted shrink-0">--:--</span>
           </div>
-          <p class="text-xs text-main font-medium mt-0.5">Bandera relámpago de 1 km activa</p>
+          <p class="text-[11px] text-main font-medium truncate">Bandera relámpago de 1 km activa</p>
         </div>
       </div>
-      <button id="btnFlashEvent" type="button" class="btn-brand-orange font-bold text-xs px-3.5 py-2 rounded-xl shrink-0 btn-press">
+      <button id="btnFlashEvent" type="button" class="btn-brand-orange font-bold text-[11px] px-3 py-1.5 rounded-xl shrink-0 btn-press">
         Aceptar
       </button>
     </div>
 
-    <!-- PESTAÑA 1: MAPA -->
-    <section id="tabPlay" class="tab-section space-y-4">
-      <div id="setupPanel" class="surface-card p-4 rounded-2xl space-y-3.5">
-        <div class="grid grid-cols-3 gap-2" id="categoryGroup">
-          <button type="button" data-cat="walk_run" class="cat-btn bg-[#FF7900] text-white font-bold py-2.5 px-2 rounded-xl text-xs btn-press shadow-sm">A pie / Run</button>
-          <button type="button" data-cat="bike" class="cat-btn btn-choice-inactive font-semibold py-2.5 px-2 rounded-xl text-xs btn-press">Bicicleta</button>
-          <button type="button" data-cat="mixed" class="cat-btn btn-choice-inactive font-semibold py-2.5 px-2 rounded-xl text-xs btn-press">Mixto</button>
+    <!-- PESTAÑA 1: MAPA Y CONTROLES EN UN SOLO PANTALLAZO -->
+    <section id="tabPlay" class="tab-section flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden">
+      <div id="setupPanel" class="shrink-0 surface-card p-3 rounded-2xl space-y-2">
+        <div class="grid grid-cols-3 gap-1.5" id="categoryGroup">
+          <button type="button" data-cat="walk_run" class="cat-btn bg-[#FF7900] text-white font-bold py-2 px-1.5 rounded-xl text-[11px] btn-press shadow-sm">A pie / Run</button>
+          <button type="button" data-cat="bike" class="cat-btn btn-choice-inactive font-semibold py-2 px-1.5 rounded-xl text-[11px] btn-press">Bicicleta</button>
+          <button type="button" data-cat="mixed" class="cat-btn btn-choice-inactive font-semibold py-2 px-1.5 rounded-xl text-[11px] btn-press">Mixto</button>
         </div>
 
-        <div class="grid grid-cols-4 gap-2" id="distanceGroup">
-          <button type="button" data-dist="1km" class="dist-btn bg-[#FF7900] text-white font-bold py-2.5 rounded-xl text-xs btn-press shadow-sm">1 km</button>
-          <button type="button" data-dist="3km" class="dist-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press">3 km</button>
-          <button type="button" data-dist="5km" class="dist-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press">5 km</button>
-          <button type="button" data-dist="10km" class="dist-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press">10 km</button>
-        </div>
-        <p id="circuitHint" class="hidden text-[11px] text-green-brand font-medium px-1">
-          💡 Modo libre: Elegí el camino que quieras para llegar a la bandera. ¡Lo importante es llegar primero!
-        </p>
-
-        <div class="grid grid-cols-2 gap-2" id="modeGroup">
-          <button type="button" data-mode="async_record" class="mode-btn bg-[#FF7900]/15 border border-[#FF7900] text-[#FF7900] font-bold py-2.5 rounded-xl text-xs btn-press">Contrarreloj</button>
-          <button type="button" data-mode="live_duel" class="mode-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press">Duelo 1v1</button>
+        <div class="grid grid-cols-4 gap-1.5" id="distanceGroup">
+          <button type="button" data-dist="1km" class="dist-btn bg-[#FF7900] text-white font-bold py-2 rounded-xl text-[11px] btn-press shadow-sm">1 km</button>
+          <button type="button" data-dist="3km" class="dist-btn btn-choice-inactive font-semibold py-2 rounded-xl text-[11px] btn-press">3 km</button>
+          <button type="button" data-dist="5km" class="dist-btn btn-choice-inactive font-semibold py-2 rounded-xl text-[11px] btn-press">5 km</button>
+          <button type="button" data-dist="10km" class="dist-btn btn-choice-inactive font-semibold py-2 rounded-xl text-[11px] btn-press">10 km</button>
         </div>
 
-        <div id="duelJoinBox" class="hidden surface-inset p-4 rounded-2xl space-y-3">
-          <button id="btnAutoMatchmaking" type="button" class="w-full btn-brand-green font-bold py-3.5 rounded-xl text-xs btn-press flex items-center justify-center gap-2 shadow-sm">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <div class="grid grid-cols-2 gap-1.5" id="modeGroup">
+          <button type="button" data-mode="async_record" class="mode-btn bg-[#FF7900]/15 border border-[#FF7900] text-[#FF7900] font-bold py-2 rounded-xl text-[11px] btn-press">Contrarreloj</button>
+          <button type="button" data-mode="live_duel" class="mode-btn btn-choice-inactive font-semibold py-2 rounded-xl text-[11px] btn-press">Duelo 1v1</button>
+        </div>
+
+        <div id="duelJoinBox" class="hidden surface-inset p-2.5 rounded-xl space-y-2">
+          <button id="btnAutoMatchmaking" type="button" class="w-full btn-brand-green font-bold py-2.5 rounded-xl text-[11px] btn-press flex items-center justify-center gap-1.5 shadow-sm">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
             Buscar rival automático en vivo
           </button>
 
-          <div class="flex items-center gap-2 py-0.5">
-            <hr class="border-theme flex-1" />
-            <span class="text-[10px] text-muted uppercase font-semibold">o con código privado</span>
-            <hr class="border-theme flex-1" />
-          </div>
-
-          <div class="flex gap-2">
-            <input id="duelCodeInput" type="text" maxlength="4" placeholder="CÓDIGO" class="theme-input uppercase flex-1 px-3.5 py-2.5 rounded-xl text-xs font-mono tracking-wider text-center" />
-            <button id="btnJoinDuel" type="button" class="btn-brand-orange font-bold px-4 py-2.5 rounded-xl text-xs btn-press shrink-0">Unirme</button>
+          <div class="flex gap-1.5">
+            <input id="duelCodeInput" type="text" maxlength="4" placeholder="CÓDIGO SALA" class="theme-input uppercase flex-1 px-3 py-2 rounded-xl text-[11px] font-mono tracking-wider text-center" />
+            <button id="btnJoinDuel" type="button" class="btn-brand-orange font-bold px-3.5 py-2 rounded-xl text-[11px] btn-press shrink-0">Unirme</button>
           </div>
         </div>
 
-        <button id="btnGenerateFlag" type="button" class="w-full btn-brand-orange font-bold py-3.5 rounded-xl text-sm btn-press">
+        <button id="btnGenerateFlag" type="button" class="w-full btn-brand-orange font-bold py-2.5 rounded-xl text-xs btn-press">
           Generar bandera libre
         </button>
       </div>
 
-      <!-- HUD PARTIDA ACTIVA -->
-      <div id="activeHud" class="hidden card-green-accent p-4 rounded-2xl space-y-3.5">
+      <!-- HUD PARTIDA ACTIVA COMPACTO -->
+      <div id="activeHud" class="hidden shrink-0 card-green-accent p-3 rounded-2xl space-y-2.5">
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span id="wakeLockIndicator" class="text-[10px] font-semibold badge-green-brand px-2.5 py-1 rounded-lg">Pantalla activa</span>
-            <span id="matchStatusBadge" class="text-[10px] font-bold bg-[#FF7900]/15 text-[#FF7900] border border-[#FF7900]/30 px-2.5 py-1 rounded-lg">Recorrido libre</span>
+          <div class="flex items-center gap-1.5">
+            <span id="wakeLockIndicator" class="text-[10px] font-semibold badge-green-brand px-2 py-0.5 rounded-md">Pantalla activa</span>
+            <span id="matchStatusBadge" class="text-[10px] font-bold bg-[#FF7900]/15 text-[#FF7900] border border-[#FF7900]/30 px-2 py-0.5 rounded-md">Recorrido libre</span>
           </div>
-          <button id="btnCancelMatch" type="button" class="text-[11px] font-semibold text-muted hover:text-rose-500 px-2.5 py-1 rounded-lg surface-inset transition btn-press">
-            Cancelar ruta
+          <button id="btnCancelMatch" type="button" class="text-[10px] font-semibold text-muted hover:text-rose-500 px-2 py-0.5 rounded-md surface-inset transition btn-press">
+            Cancelar
           </button>
         </div>
 
-        <!-- SALA DE ESPERA DUELO 1V1 (BLOQUEADA HASTA QUE AMBOS ESTÉN ONLINE) -->
-        <div id="duelWaitingBanner" class="hidden bg-[#FF7900]/15 border border-[#FF7900]/45 p-4 rounded-2xl space-y-3">
-          <div class="flex justify-between items-start gap-3">
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-[#FF7900] animate-ping"></span>
-                <p class="text-xs font-bold text-[#FF7900]">Sala de espera activa</p>
+        <!-- SALA DE ESPERA DUELO 1V1 -->
+        <div id="duelWaitingBanner" class="hidden bg-[#FF7900]/15 border border-[#FF7900]/45 p-3 rounded-xl space-y-2">
+          <div class="flex justify-between items-center gap-2">
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-[#FF7900] animate-ping shrink-0"></span>
+                <p class="text-[11px] font-bold text-[#FF7900] truncate">Esperando rival online</p>
               </div>
-              <p class="text-[11px] text-main mt-1 leading-relaxed">
-                El juego arrancará automáticamente cuando tu rival entre y ambos estén online.
-              </p>
-              <p id="duelTimeoutText" class="text-[10px] text-muted mt-1 font-mono">Expira en 05:00</p>
+              <p id="duelTimeoutText" class="text-[10px] text-muted mt-0.5 font-mono">Expira en 05:00</p>
             </div>
             <div class="text-right shrink-0">
-              <span class="text-[9px] uppercase font-bold text-muted block mb-1">Código Sala</span>
-              <span id="displayDuelCode" class="font-mono font-bold text-lg text-[#FF7900] tracking-widest theme-input px-3 py-1.5 rounded-xl block">----</span>
+              <span class="text-[9px] uppercase font-bold text-muted block">Código</span>
+              <span id="displayDuelCode" class="font-mono font-bold text-base text-[#FF7900] tracking-widest theme-input px-2.5 py-0.5 rounded-lg block">----</span>
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-2 pt-1">
-            <button id="btnCopyDuelCode" type="button" class="surface-card-elevated hover:opacity-90 text-main font-semibold py-2.5 px-3 rounded-xl text-[11px] flex items-center justify-center gap-1.5 btn-press">
+          <div class="grid grid-cols-2 gap-1.5">
+            <button id="btnCopyDuelCode" type="button" class="surface-card-elevated hover:opacity-90 text-main font-semibold py-2 px-2.5 rounded-lg text-[11px] flex items-center justify-center gap-1.5 btn-press">
               <svg class="w-3.5 h-3.5 text-[#FF7900]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              Copiar código
+              Copiar
             </button>
-            <button id="btnShareDuelCode" type="button" class="btn-brand-green font-semibold py-2.5 px-3 rounded-xl text-[11px] flex items-center justify-center gap-1.5 btn-press">
+            <button id="btnShareDuelCode" type="button" class="btn-brand-green font-semibold py-2 px-2.5 rounded-lg text-[11px] flex items-center justify-center gap-1.5 btn-press">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
-              Invitar rival
+              Invitar
             </button>
           </div>
         </div>
 
-        <!-- CONTENIDO DE CARRERA (Se desbloquea al iniciar la partida) -->
-        <div id="activeRaceControls" class="space-y-3.5">
-          <div class="space-y-3 surface-inset p-3.5 rounded-xl">
+        <!-- CONTENIDO DE CARRERA -->
+        <div id="activeRaceControls" class="space-y-2">
+          <div class="space-y-2 surface-inset p-2.5 rounded-xl">
             <div>
-              <div class="flex justify-between text-[11px] font-semibold mb-1.5">
+              <div class="flex justify-between text-[10px] font-semibold mb-1">
                 <span class="text-main">Tu recorrido real</span>
                 <span id="myProgressPct" class="text-green-brand font-mono font-bold">0%</span>
               </div>
-              <div class="w-full progress-track h-2.5 rounded-full overflow-hidden">
+              <div class="w-full progress-track h-2 rounded-full overflow-hidden">
                 <div id="myProgressBar" class="progress-fill bg-green-brand-bright h-full rounded-full" style="width: 2%"></div>
               </div>
             </div>
 
             <div id="rivalProgressContainer" class="hidden">
-              <div class="flex justify-between text-[11px] font-semibold mb-1.5">
-                <span class="text-main flex items-center gap-1.5">
+              <div class="flex justify-between text-[10px] font-semibold mb-1">
+                <span class="text-main flex items-center gap-1">
                   Rival
-                  <span id="rivalOnlineDot" class="w-2 h-2 rounded-full bg-[#75C894]" title="Rival online"></span>
+                  <span id="rivalOnlineDot" class="w-1.5 h-1.5 rounded-full bg-[#75C894]" title="Rival online"></span>
                 </span>
                 <span id="rivalProgressPct" class="text-[#FF7900] font-mono font-bold">0%</span>
               </div>
-              <div class="w-full progress-track h-2.5 rounded-full overflow-hidden">
+              <div class="w-full progress-track h-2 rounded-full overflow-hidden">
                 <div id="rivalProgressBar" class="progress-fill bg-[#FF7900] h-full rounded-full" style="width: 2%"></div>
               </div>
             </div>
           </div>
 
-          <div class="flex justify-between items-center surface-inset p-3.5 rounded-xl">
-            <div class="flex items-center gap-3">
-              <div class="relative w-9 h-9 flex items-center justify-center">
+          <div class="flex justify-between items-center surface-inset px-3 py-2 rounded-xl">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div class="relative w-7 h-7 flex items-center justify-center shrink-0">
                 <div id="sonarRing" class="sonar-ring absolute inset-0 rounded-full border-2 border-[#75C894]" style="--pulse-speed: 2s"></div>
-                <div class="w-2.5 h-2.5 rounded-full bg-[#75C894]"></div>
+                <div class="w-2 h-2 rounded-full bg-[#75C894]"></div>
               </div>
-              <div>
-                <p class="text-[11px] text-muted font-medium" id="hudDistanceLabel">Distancia estimada: -- m</p>
-                <p class="text-xs font-semibold text-main" id="sonarStatusText">Rastreando ubicación</p>
+              <div class="min-w-0">
+                <p class="text-[10px] text-muted font-medium truncate" id="hudDistanceLabel">Objetivo a -- m</p>
+                <p class="text-[11px] font-semibold text-main truncate" id="sonarStatusText">Rastreando ubicación</p>
               </div>
             </div>
-            <div class="text-right">
-              <span class="text-[10px] text-muted block font-medium uppercase tracking-wider">Restante</span>
-              <span class="font-display text-xl font-bold text-green-brand" id="hudRemaining">-- m</span>
+            <div class="text-right shrink-0 ml-2">
+              <span class="text-[9px] text-muted block font-medium uppercase">Restante</span>
+              <span class="font-display text-base font-bold text-green-brand" id="hudRemaining">-- m</span>
             </div>
           </div>
 
-          <div id="actionButtonsGrid" class="grid grid-cols-1 gap-2.5">
-            <button id="btnOpenAR" type="button" class="btn-brand-orange font-bold py-3.5 rounded-xl text-xs btn-press">
+          <div id="actionButtonsGrid" class="grid grid-cols-1 gap-2">
+            <button id="btnOpenAR" type="button" class="btn-brand-orange font-bold py-2.5 rounded-xl text-xs btn-press">
               Conquistar bandera (Cámara 3D)
             </button>
-            <button id="btnSimulate" type="button" class="hidden surface-inset hover:opacity-90 text-[#FF7900] font-semibold py-3.5 rounded-xl text-xs border border-[#FF7900]/40 btn-press">
-              Simular llegada (DEV)
+            <button id="btnSimulate" type="button" class="hidden surface-inset hover:opacity-90 text-[#FF7900] font-semibold py-2.5 rounded-xl text-xs border border-[#FF7900]/40 btn-press">
+              Simular (DEV)
             </button>
           </div>
         </div>
       </div>
 
-      <!-- MAPA -->
-      <div class="relative">
+      <!-- MAPA QUE OCUPA TODO EL ESPACIO RESTANTE DE LA PANTALLA -->
+      <div class="relative flex-1 min-h-0">
         <div id="map"></div>
-        <!-- Overlay sobre el mapa mientras se espera al rival -->
-        <div id="mapWaitingOverlay" class="hidden absolute inset-0 z-20 bg-[#171D1A]/75 backdrop-blur-[3px] rounded-[20px] flex flex-col items-center justify-center p-6 text-center">
-          <div class="w-12 h-12 rounded-2xl bg-[#FF7900]/20 border border-[#FF7900]/40 flex items-center justify-center text-[#FF7900] mb-3">
-            <svg class="w-6 h-6 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        
+        <div id="mapWaitingOverlay" class="hidden absolute inset-0 z-20 bg-[#171D1A]/75 backdrop-blur-[3px] rounded-[18px] flex flex-col items-center justify-center p-4 text-center">
+          <div class="w-10 h-10 rounded-xl bg-[#FF7900]/20 border border-[#FF7900]/40 flex items-center justify-center text-[#FF7900] mb-2">
+            <svg class="w-5 h-5 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           </div>
-          <p class="font-display font-bold text-base text-[#F2F1E9]">Esperando rival en sala...</p>
-          <p class="text-xs text-[#AAB5AC] mt-1 max-w-[240px]">La bandera y el recorrido se desbloquearán apenas ambos jugadores estén conectados.</p>
+          <p class="font-display font-bold text-sm text-[#F2F1E9]">Esperando rival en sala...</p>
+          <p class="text-[11px] text-[#AAB5AC] mt-1 max-w-[220px]">Se desbloqueará apenas ambos estén conectados.</p>
         </div>
 
-        <div id="gpsStatus" class="surface-card absolute bottom-3 left-3 z-20 backdrop-blur-md px-3.5 py-2 rounded-full text-[11px] text-main flex items-center gap-2">
+        <div id="gpsStatus" class="surface-card absolute bottom-2.5 left-2.5 z-20 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] text-main flex items-center gap-1.5">
           <span class="w-2 h-2 rounded-full bg-[#FF7900] animate-pulse"></span>
-          <span>Esperando confirmación GPS...</span>
+          <span>Esperando GPS...</span>
         </div>
-        <button id="btnRecenterMap" type="button" aria-label="Centrar en mi ubicación" class="surface-card absolute bottom-3 right-3 z-20 backdrop-blur-md p-3 rounded-full text-green-brand hover:text-[#FF7900] btn-press">
+        <button id="btnRecenterMap" type="button" aria-label="Centrar en mi ubicación" class="surface-card absolute bottom-2.5 right-2.5 z-20 backdrop-blur-md p-2.5 rounded-full text-green-brand hover:text-[#FF7900] btn-press">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>
         </button>
       </div>
     </section>
 
     <!-- PESTAÑA 2: CLUBES Y MURO DE FOTOS -->
-    <section id="tabClubs" class="tab-section hidden space-y-4">
-      <div class="surface-card p-5 rounded-2xl space-y-4">
+    <section id="tabClubs" class="tab-section hidden flex-1 min-h-0 overflow-y-auto no-scrollbar space-y-3 pb-2">
+      <div class="surface-card p-4 rounded-2xl space-y-3">
         <div class="flex items-center justify-between">
-          <h2 class="font-display font-bold text-lg text-main">Club y Territorio</h2>
-          <span class="text-[11px] font-semibold badge-green-brand px-3 py-1.5 rounded-xl">Máx. 10 miembros</span>
+          <h2 class="font-display font-bold text-base text-main">Club y Territorio</h2>
+          <span class="text-[10px] font-semibold badge-green-brand px-2.5 py-1 rounded-lg">Máx. 10 miembros</span>
         </div>
 
-        <div id="noClubView" class="space-y-4">
-          <div class="space-y-2">
+        <div id="noClubView" class="space-y-3">
+          <div class="space-y-1.5">
             <p class="text-xs text-muted font-medium">Unirse mediante código de invitación:</p>
             <div class="flex gap-2">
-              <input id="joinCodeInput" type="text" maxlength="8" placeholder="EJ: A8F21C" class="theme-input uppercase flex-1 px-4 py-3 rounded-xl text-sm font-mono tracking-wider" />
+              <input id="joinCodeInput" type="text" maxlength="8" placeholder="EJ: A8F21C" class="theme-input uppercase flex-1 px-3.5 py-2.5 rounded-xl text-sm font-mono tracking-wider" />
               <button id="btnJoinClub" type="button" class="btn-brand-orange font-bold px-4 rounded-xl text-xs btn-press">Unirse</button>
             </div>
           </div>
           <hr class="border-theme" />
-          <div class="space-y-2">
+          <div class="space-y-1.5">
             <p class="text-xs text-muted font-medium">O creá un club nuevo para dominar tu zona:</p>
-            <input id="newClubName" type="text" maxlength="30" placeholder="Nombre del club" class="theme-input w-full px-4 py-3 rounded-xl text-sm" />
-            <button id="btnCreateClub" type="button" class="w-full btn-brand-green font-semibold py-3.5 rounded-xl text-xs btn-press">Crear club</button>
+            <input id="newClubName" type="text" maxlength="30" placeholder="Nombre del club" class="theme-input w-full px-3.5 py-2.5 rounded-xl text-sm" />
+            <button id="btnCreateClub" type="button" class="w-full btn-brand-green font-semibold py-3 rounded-xl text-xs btn-press">Crear club</button>
           </div>
         </div>
 
-        <div id="myClubView" class="hidden space-y-4">
-          <div class="flex justify-between items-center surface-inset p-4 rounded-xl border border-[#75C894]/30">
+        <div id="myClubView" class="hidden space-y-3">
+          <div class="flex justify-between items-center surface-inset p-3.5 rounded-xl border border-[#75C894]/30">
             <div>
-              <h3 id="clubNameDisplay" class="font-display font-bold text-base text-main">--</h3>
+              <h3 id="clubNameDisplay" class="font-display font-bold text-sm text-main">--</h3>
               <p class="text-xs text-muted mt-0.5">Puntos del club: <span id="clubPointsDisplay" class="text-green-brand font-bold">0</span></p>
             </div>
             <div class="text-right">
-              <span class="text-[10px] text-muted block uppercase font-semibold">Código</span>
+              <span class="text-[9px] text-muted block uppercase font-semibold">Código</span>
               <span id="clubCodeDisplay" class="font-mono font-bold text-[#FF7900] text-sm tracking-wider">------</span>
             </div>
           </div>
-          <div id="clubMembersList" class="space-y-2"></div>
+          <div id="clubMembersList" class="space-y-1.5"></div>
 
-          <!-- MURO DE CAPTURAS REALES DEL CLUB -->
-          <div class="pt-3 border-t border-theme space-y-2.5">
+          <div class="pt-2.5 border-t border-theme space-y-2">
             <div class="flex items-center justify-between">
-              <h4 class="font-display font-bold text-sm text-main">Muro de Conquistas</h4>
-              <span class="text-[11px] text-green-brand font-semibold">Fotos recientes</span>
+              <h4 class="font-display font-bold text-xs text-main">Muro de Conquistas</h4>
+              <span class="text-[10px] text-green-brand font-semibold">Fotos recientes</span>
             </div>
-            <div id="clubPhotoFeed" class="grid grid-cols-2 gap-2.5">
-              <p class="text-xs text-muted col-span-2 text-center py-3">Aún no hay fotos de conquistas en el club.</p>
+            <div id="clubPhotoFeed" class="grid grid-cols-2 gap-2">
+              <p class="text-xs text-muted col-span-2 text-center py-2">Aún no hay fotos de conquistas en el club.</p>
             </div>
           </div>
         </div>
@@ -617,80 +608,76 @@
     </section>
 
     <!-- PESTAÑA 3: RANKING -->
-    <section id="tabRankings" class="tab-section hidden space-y-4">
-      <div class="surface-card p-5 rounded-2xl space-y-4">
-        <h2 class="font-display font-bold text-lg text-main">Clasificación</h2>
-        <div class="grid grid-cols-3 gap-2" id="rankingFilterGroup">
-          <button type="button" data-rank="walk_run" class="rank-btn bg-[#FF7900] text-white py-2.5 rounded-xl text-xs font-bold btn-press shadow-sm">A pie / Run</button>
-          <button type="button" data-rank="bike" class="rank-btn btn-choice-inactive py-2.5 rounded-xl text-xs font-semibold btn-press">Bicicleta</button>
-          <button type="button" data-rank="mixed" class="rank-btn btn-choice-inactive py-2.5 rounded-xl text-xs font-semibold btn-press">Mixto</button>
+    <section id="tabRankings" class="tab-section hidden flex-1 min-h-0 overflow-y-auto no-scrollbar space-y-3 pb-2">
+      <div class="surface-card p-4 rounded-2xl space-y-3">
+        <h2 class="font-display font-bold text-base text-main">Clasificación</h2>
+        <div class="grid grid-cols-3 gap-1.5" id="rankingFilterGroup">
+          <button type="button" data-rank="walk_run" class="rank-btn bg-[#FF7900] text-white py-2 rounded-xl text-xs font-bold btn-press shadow-sm">A pie / Run</button>
+          <button type="button" data-rank="bike" class="rank-btn btn-choice-inactive py-2 rounded-xl text-xs font-semibold btn-press">Bicicleta</button>
+          <button type="button" data-rank="mixed" class="rank-btn btn-choice-inactive py-2 rounded-xl text-xs font-semibold btn-press">Mixto</button>
         </div>
-        <div id="rankingList" class="space-y-2 text-sm"></div>
+        <div id="rankingList" class="space-y-1.5 text-sm"></div>
       </div>
     </section>
 
     <!-- PESTAÑA 4: PERFIL E HISTORIAL -->
-    <section id="tabProfile" class="tab-section hidden space-y-4">
-      <div class="surface-card p-5 rounded-2xl space-y-4">
+    <section id="tabProfile" class="tab-section hidden flex-1 min-h-0 overflow-y-auto no-scrollbar space-y-3 pb-2">
+      <div class="surface-card p-4 rounded-2xl space-y-3">
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-3.5">
-            <div class="w-12 h-12 rounded-2xl bg-[#FF7900]/15 border border-[#FF7900]/30 flex items-center justify-center text-[#FF7900] font-display font-bold text-lg" id="profileAvatarInitials">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-[#FF7900]/15 border border-[#FF7900]/30 flex items-center justify-center text-[#FF7900] font-display font-bold text-base" id="profileAvatarInitials">
               JG
             </div>
             <div>
-              <h2 id="profileDisplayName" class="font-display font-bold text-lg text-main">Jugador</h2>
-              <p id="profileHandle" class="text-xs text-muted font-medium">@jugador</p>
+              <h2 id="profileDisplayName" class="font-display font-bold text-base text-main">Jugador</h2>
+              <p id="profileHandle" class="text-[11px] text-muted font-medium">@jugador</p>
             </div>
           </div>
-          <div class="text-right">
-            <span id="profileLevelBadge" class="inline-block badge-green-brand text-xs font-bold px-3 py-1.5 rounded-xl">Nivel 1</span>
-          </div>
+          <span id="profileLevelBadge" class="inline-block badge-green-brand text-[11px] font-bold px-2.5 py-1 rounded-lg">Nivel 1</span>
         </div>
 
-        <div class="surface-inset p-3.5 rounded-xl space-y-2">
-          <div class="flex justify-between text-[11px] font-semibold">
+        <div class="surface-inset p-2.5 rounded-xl space-y-1.5">
+          <div class="flex justify-between text-[10px] font-semibold">
             <span class="text-muted">Experiencia acumulada</span>
             <span id="profileXpText" class="text-green-brand font-mono font-bold">0 XP</span>
           </div>
-          <div class="w-full progress-track h-2.5 rounded-full overflow-hidden">
+          <div class="w-full progress-track h-2 rounded-full overflow-hidden">
             <div id="profileXpBar" class="bg-green-brand-bright h-full rounded-full" style="width: 10%"></div>
           </div>
         </div>
 
-        <div class="grid grid-cols-3 gap-2.5 text-center">
-          <div class="surface-inset p-3.5 rounded-xl">
-            <span class="font-display text-lg font-bold text-main block" id="statTotalPoints">0</span>
-            <span class="text-[10px] text-muted uppercase font-semibold tracking-wider">Puntos</span>
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <div class="surface-inset p-2.5 rounded-xl">
+            <span class="font-display text-base font-bold text-main block" id="statTotalPoints">0</span>
+            <span class="text-[9px] text-muted uppercase font-semibold tracking-wider">Puntos</span>
           </div>
-          <div class="surface-inset p-3.5 rounded-xl border border-[#75C894]/25">
-            <span class="font-display text-lg font-bold text-green-brand block" id="statTotalWins">0</span>
-            <span class="text-[10px] text-muted uppercase font-semibold tracking-wider">Conquistas</span>
+          <div class="surface-inset p-2.5 rounded-xl border border-[#75C894]/25">
+            <span class="font-display text-base font-bold text-green-brand block" id="statTotalWins">0</span>
+            <span class="text-[9px] text-muted uppercase font-semibold tracking-wider">Conquistas</span>
           </div>
-          <div class="surface-inset p-3.5 rounded-xl">
-            <span class="font-display text-lg font-bold text-[#FF7900] block" id="statStreak">1d</span>
-            <span class="text-[10px] text-muted uppercase font-semibold tracking-wider">Racha</span>
+          <div class="surface-inset p-2.5 rounded-xl">
+            <span class="font-display text-base font-bold text-[#FF7900] block" id="statStreak">1d</span>
+            <span class="text-[9px] text-muted uppercase font-semibold tracking-wider">Racha</span>
           </div>
         </div>
 
-        <form id="profileEditForm" class="space-y-3 pt-3 border-t border-theme">
-          <p class="text-xs font-semibold text-main">Datos personales</p>
-          <div>
-            <label for="editFullName" class="text-[11px] text-muted font-medium">Nombre visible</label>
-            <input id="editFullName" type="text" maxlength="40" placeholder="Tu nombre o apodo" class="theme-input w-full mt-1 px-3.5 py-2.5 rounded-xl text-xs" />
+        <form id="profileEditForm" class="space-y-2 pt-2 border-t border-theme">
+          <div class="flex gap-2">
+            <input id="editFullName" type="text" maxlength="40" placeholder="Nombre visible o apodo" class="theme-input flex-1 px-3 py-2 rounded-xl text-xs" />
+            <button type="submit" id="btnSaveProfile" class="btn-brand-green font-semibold px-3.5 py-2 rounded-xl text-xs btn-press shrink-0">
+              Guardar
+            </button>
           </div>
-          <button type="submit" id="btnSaveProfile" class="w-full btn-brand-green font-semibold py-3 rounded-xl text-xs btn-press">
-            Guardar cambios
-          </button>
         </form>
       </div>
 
-      <div class="surface-card p-5 rounded-2xl space-y-3">
+      <div class="surface-card p-4 rounded-2xl space-y-2.5">
         <div class="flex items-center justify-between">
-          <h3 class="font-display font-bold text-base text-main">Historial de Conquistas</h3>
-          <span class="text-[11px] text-green-brand font-semibold">Últimas 15</span>
+          <h3 class="font-display font-bold text-sm text-main">Historial de Conquistas</h3>
+          <span class="text-[10px] text-green-brand font-semibold">Últimas 15</span>
         </div>
-        <div id="matchHistoryList" class="space-y-2.5">
-          <p class="text-xs text-muted text-center py-4">Cargando historial...</p>
+        <div id="matchHistoryList" class="space-y-2">
+          <p class="text-xs text-muted text-center py-3">Cargando historial...</p>
         </div>
       </div>
     </section>
@@ -761,22 +748,22 @@
     </div>
   </div>
 
-  <!-- NAVEGACIÓN INFERIOR -->
-  <nav id="bottomNav" class="app-nav hidden fixed bottom-0 inset-x-0 backdrop-blur-xl z-30">
+  <!-- NAVEGACIÓN INFERIOR FIJA -->
+  <nav id="bottomNav" class="app-nav hidden shrink-0 backdrop-blur-xl z-30">
     <div class="max-w-lg mx-auto grid grid-cols-4">
-      <button type="button" data-tab="Play" class="nav-btn py-3.5 flex flex-col items-center justify-center gap-1 text-[#FF7900]">
+      <button type="button" data-tab="Play" class="nav-btn py-2.5 flex flex-col items-center justify-center gap-0.5 text-[#FF7900]">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
         <span class="text-[10px] font-semibold">Mapa</span>
       </button>
-      <button type="button" data-tab="Clubs" class="nav-btn py-3.5 flex flex-col items-center justify-center gap-1 text-muted hover:text-main">
+      <button type="button" data-tab="Clubs" class="nav-btn py-2.5 flex flex-col items-center justify-center gap-0.5 text-muted hover:text-main">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         <span class="text-[10px] font-semibold">Club</span>
       </button>
-      <button type="button" data-tab="Rankings" class="nav-btn py-3.5 flex flex-col items-center justify-center gap-1 text-muted hover:text-main">
+      <button type="button" data-tab="Rankings" class="nav-btn py-2.5 flex flex-col items-center justify-center gap-0.5 text-muted hover:text-main">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 010-5H6M18 9h1.5a2.5 2.5 0 000-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0012 0V2z"/></svg>
         <span class="text-[10px] font-semibold">Ranking</span>
       </button>
-      <button type="button" data-tab="Profile" class="nav-btn py-3.5 flex flex-col items-center justify-center gap-1 text-muted hover:text-main">
+      <button type="button" data-tab="Profile" class="nav-btn py-2.5 flex flex-col items-center justify-center gap-0.5 text-muted hover:text-main">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         <span class="text-[10px] font-semibold">Perfil</span>
       </button>
@@ -800,8 +787,8 @@
         document.querySelectorAll('.theme-opt-btn').forEach(btn => {
           const active = btn.getAttribute('data-theme-val') === pref;
           btn.className = active
-            ? 'theme-opt-btn px-2 py-1.5 rounded-lg bg-[#FF7900] text-white shadow-sm transition'
-            : 'theme-opt-btn px-2 py-1.5 rounded-lg text-muted hover:text-main transition';
+            ? 'theme-opt-btn px-1.5 py-1 rounded-md bg-[#FF7900] text-white shadow-sm transition'
+            : 'theme-opt-btn px-1.5 py-1 rounded-md text-muted hover:text-main transition';
         });
       }
 
@@ -853,7 +840,7 @@
 
       if (IS_DEV) {
         document.getElementById('devEnvBadge').classList.remove('hidden');
-        document.getElementById('actionButtonsGrid').className = 'grid grid-cols-2 gap-2.5';
+        document.getElementById('actionButtonsGrid').className = 'grid grid-cols-2 gap-2';
         document.getElementById('btnSimulate').classList.remove('hidden');
       } else {
         const simBtn = document.getElementById('btnSimulate');
@@ -910,6 +897,12 @@
         capturedPhotoDataUrl: null
       };
 
+      function refreshMapLayout() {
+        if (state.map) {
+          requestAnimationFrame(() => state.map.invalidateSize());
+        }
+      }
+
       function escapeHTML(str) {
         if (str === null || str === undefined) return '';
         return String(str)
@@ -924,7 +917,7 @@
         const container = document.getElementById('toastContainer');
         const el = document.createElement('div');
         const styles = { info: 'toast-info', success: 'toast-success', error: 'toast-error' };
-        el.className = `px-4 py-3 rounded-2xl border text-xs font-semibold shadow-2xl backdrop-blur-xl transition-opacity duration-300 ${styles[type] || styles.info}`;
+        el.className = `px-3.5 py-2.5 rounded-xl border text-xs font-semibold shadow-2xl backdrop-blur-xl transition-opacity duration-300 ${styles[type] || styles.info}`;
         el.textContent = message;
         container.appendChild(el);
         setTimeout(() => {
@@ -1094,9 +1087,9 @@
           const remWait = (60 - mins) * 60 - secs;
           const m = String(Math.floor(remWait / 60)).padStart(2, '0');
           const s = String(remWait % 60).padStart(2, '0');
-          el.textContent = `Próx. en ${m}:${s}`;
+          el.textContent = `Próx. ${m}:${s}`;
           btn.disabled = true;
-          btn.textContent = "En espera";
+          btn.textContent = "Espera";
         }
       }
       updateSyncedFlashClock();
@@ -1139,11 +1132,11 @@
         document.getElementById(isLogin ? 'loginFormView' : 'signupFormView').classList.remove('hidden');
 
         document.getElementById('tabBtnLogin').className = isLogin
-          ? 'bg-[#FF7900] text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer shadow-sm'
-          : 'text-muted hover:text-main font-semibold py-2.5 rounded-xl text-xs transition cursor-pointer';
+          ? 'bg-[#FF7900] text-white font-bold py-2 rounded-xl text-xs transition cursor-pointer shadow-sm'
+          : 'text-muted hover:text-main font-semibold py-2 rounded-xl text-xs transition cursor-pointer';
         document.getElementById('tabBtnSignup').className = !isLogin
-          ? 'bg-[#FF7900] text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer shadow-sm'
-          : 'text-muted hover:text-main font-semibold py-2.5 rounded-xl text-xs transition cursor-pointer';
+          ? 'bg-[#FF7900] text-white font-bold py-2 rounded-xl text-xs transition cursor-pointer shadow-sm'
+          : 'text-muted hover:text-main font-semibold py-2 rounded-xl text-xs transition cursor-pointer';
       }
 
       async function handleLogin(e) {
@@ -1328,6 +1321,7 @@
         await syncGlobalEvents();
         await checkAndManageGpsPermission();
         restoreActiveMatchIfAny();
+        refreshMapLayout();
         hideSplashScreen();
       }
 
@@ -1416,9 +1410,9 @@
         const ua = navigator.userAgent || '';
         const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
         if (isIOS) {
-          return `<p class="font-semibold text-rose-500">Cómo habilitarlo en tu iPhone:</p><p>1. Ajustes → Privacidad y seguridad → Localización.</p><p>2. Activá los servicios de ubicación y el navegador.</p>`;
+          return `<p class="font-semibold text-rose-500">En iPhone:</p><p>Ajustes → Privacidad → Localización → Permitir.</p>`;
         }
-        return `<p class="font-semibold text-rose-500">Cómo habilitarlo en Android:</p><p>1. Ajustes del navegador → Permisos → Ubicación.</p><p>2. Cambiá a Permitir.</p>`;
+        return `<p class="font-semibold text-rose-500">En Android:</p><p>Ajustes del navegador → Permisos → Ubicación → Permitir.</p>`;
       }
 
       function showGpsPermissionCard(mode) {
@@ -1436,22 +1430,24 @@
         } else {
           title.textContent = "Permitir acceso a tu ubicación";
           deniedHelp.classList.add('hidden');
-          btnText.textContent = "Confirmar y activar ubicación";
+          btnText.textContent = "Activar GPS";
         }
+        refreshMapLayout();
       }
 
       function hideGpsPermissionCard() {
         document.getElementById('gpsPermissionBanner').classList.add('hidden');
+        refreshMapLayout();
       }
 
       async function checkAndManageGpsPermission() {
-        if (!("geolocation" in navigator)) return updateGpsIndicator('error', 'Tu navegador no soporta GPS');
+        if (!("geolocation" in navigator)) return updateGpsIndicator('error', 'Sin soporte GPS');
         if (navigator.permissions && typeof navigator.permissions.query === 'function') {
           try {
             const permStatus = await navigator.permissions.query({ name: 'geolocation' });
             if (permStatus.state === 'granted') { hideGpsPermissionCard(); startGpsTracking(); }
             else if (permStatus.state === 'denied') { updateGpsIndicator('error', 'Ubicación bloqueada'); showGpsPermissionCard('denied'); }
-            else { updateGpsIndicator('warn', 'Confirmá el permiso de GPS'); showGpsPermissionCard('prompt'); }
+            else { updateGpsIndicator('warn', 'Confirmá GPS'); showGpsPermissionCard('prompt'); }
             permStatus.onchange = () => {
               if (permStatus.state === 'granted') { hideGpsPermissionCard(); startGpsTracking(); }
               else if (permStatus.state === 'denied') { updateGpsIndicator('error', 'Ubicación bloqueada'); showGpsPermissionCard('denied'); }
@@ -1468,8 +1464,8 @@
         const btn = document.getElementById('btnConfirmGpsPermission');
         const btnText = document.getElementById('btnConfirmGpsText');
         if (btn) btn.disabled = true;
-        if (btnText) btnText.textContent = "Conectando satélites GPS...";
-        updateGpsIndicator('searching', 'Obteniendo ubicación real...');
+        if (btnText) btnText.textContent = "Conectando...";
+        updateGpsIndicator('searching', 'Obteniendo GPS...');
 
         navigator.geolocation.getCurrentPosition(
           (pos) => { if (btn) btn.disabled = false; hideGpsPermissionCard(); handleRealPositionUpdate(pos, true); },
@@ -1498,17 +1494,17 @@
               <div class="gps-beacon"></div>
             </div>
           `,
-          iconSize: [48, 48],
-          iconAnchor: [24, 24]
+          iconSize: [44, 44],
+          iconAnchor: [22, 22]
         });
       }
 
       function initMap() {
-        if (state.map) { state.map.invalidateSize(); return; }
+        if (state.map) { refreshMapLayout(); return; }
         if (!window.L) return;
         state.map = L.map('map', { zoomControl: false }).setView([-34.6037, -58.3816], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(state.map);
-        setTimeout(() => state.map.invalidateSize(), 200);
+        setTimeout(refreshMapLayout, 150);
         bindOrientationEvents();
       }
 
@@ -1545,7 +1541,7 @@
           state.userMarker.setLatLng([newLat, newLng]);
         }
 
-        if (accuracy > 80) updateGpsIndicator('warn', `Aproximada (±${accuracy}m)`);
+        if (accuracy > 80) updateGpsIndicator('warn', `Aprox. (±${accuracy}m)`);
         else updateGpsIndicator('ok', `GPS Activo (±${accuracy}m)`);
 
         if (!state.hasRealGps || isInitial) {
@@ -1556,7 +1552,6 @@
           state.map.panTo([newLat, newLng]);
         }
 
-        // Solo registra camino y actualiza progreso si el duelo ya arrancó (o si es contrarreloj)
         if (state.activeMatch && state.duelStarted) {
           const lastPt = state.recordedPath[state.recordedPath.length - 1];
           if (!lastPt || state.map.distance([lastPt[1], lastPt[0]], [newLat, newLng]) >= 3) {
@@ -1670,7 +1665,6 @@
 
           state.isSimulated = false;
           state.activeMatch = data;
-          // Si es contrarreloj arranca ya; si es Duelo 1v1 queda esperando que ambos estén online
           state.duelStarted = !isDuel;
           state.matchStartTime = Date.now();
           state.recordedPath = [[state.userPos.lng, state.userPos.lat]];
@@ -1697,6 +1691,7 @@
         document.getElementById('duelWaitingBanner').classList.add('hidden');
         document.getElementById('mapWaitingOverlay').classList.add('hidden');
         document.getElementById('activeRaceControls').classList.remove('hidden');
+        refreshMapLayout();
 
         const modal = document.getElementById('duelCountdownModal');
         const numEl = document.getElementById('duelCountdownNumber');
@@ -1727,7 +1722,6 @@
             clearInterval(timer);
             modal.classList.add('hidden');
 
-            // Inicia oficialmente la carrera sincronizada para ambos
             state.duelStarted = true;
             state.matchStartTime = Date.now();
             if (state.userPos) {
@@ -1737,6 +1731,7 @@
             document.getElementById('matchStatusBadge').textContent = "Duelo 1v1 en vivo";
             saveActiveMatchState();
             updateProgress();
+            refreshMapLayout();
             notify("¡Duelo iniciado! Corré hacia la bandera.", "success");
           }
         }, 1000);
@@ -1752,8 +1747,8 @@
         const pinColor = state.isFlashEvent ? '#FF7900' : '#75C894';
         const flagIcon = L.divIcon({
           className: '',
-          html: `<svg width="34" height="34" viewBox="0 0 24 24" fill="${pinColor}" stroke="#244B37" stroke-width="2"><path d="M4 21V4m0 0l13 3-3 5 3 5-13-3"/></svg>`,
-          iconSize: [34, 34], iconAnchor: [7, 32]
+          html: `<svg width="32" height="32" viewBox="0 0 24 24" fill="${pinColor}" stroke="#244B37" stroke-width="2"><path d="M4 21V4m0 0l13 3-3 5 3 5-13-3"/></svg>`,
+          iconSize: [32, 32], iconAnchor: [7, 30]
         });
 
         state.flagMarker = L.marker([data.flag.lat, data.flag.lng], { icon: flagIcon }).addTo(state.map);
@@ -1761,7 +1756,7 @@
 
         document.getElementById('setupPanel').classList.add('hidden');
         document.getElementById('activeHud').classList.remove('hidden');
-        document.getElementById('hudDistanceLabel').textContent = `Distancia en línea recta: ${Math.round(state.initialDistance)} m`;
+        document.getElementById('hudDistanceLabel').textContent = `Objetivo a ${Math.round(state.initialDistance)} m`;
 
         requestScreenWakeLock();
 
@@ -1779,6 +1774,7 @@
           document.getElementById('activeRaceControls').classList.remove('hidden');
           updateProgress();
         }
+        refreshMapLayout();
       }
 
       async function cancelActiveMatch() {
@@ -1795,7 +1791,6 @@
         if (state.matchChannel) sb.removeChannel(state.matchChannel);
         if (state.duelTimeoutInterval) clearInterval(state.duelTimeoutInterval);
 
-        // Si el duelo todavía no arrancó, bloqueamos controles hasta detectar presencia de ambos online
         if (!state.duelStarted) {
           document.getElementById('duelWaitingBanner').classList.remove('hidden');
           document.getElementById('mapWaitingOverlay').classList.remove('hidden');
@@ -1822,7 +1817,6 @@
           document.getElementById('activeRaceControls').classList.remove('hidden');
         }
 
-        // Canal Realtime con Presence para verificar que los 2 jugadores estén online
         state.matchChannel = sb.channel(`duel-${matchId}`, {
           config: {
             broadcast: { self: false },
@@ -1837,12 +1831,12 @@
             const dot = document.getElementById('rivalOnlineDot');
 
             if (onlineUsers.length >= 2) {
-              if (dot) dot.className = "w-2 h-2 rounded-full bg-[#75C894]";
+              if (dot) dot.className = "w-1.5 h-1.5 rounded-full bg-[#75C894]";
               if (!state.duelStarted) {
                 unlockDuelAndStartCountdown();
               }
             } else {
-              if (dot) dot.className = "w-2 h-2 rounded-full bg-rose-500";
+              if (dot) dot.className = "w-1.5 h-1.5 rounded-full bg-rose-500";
             }
           })
           .on('broadcast', { event: 'rival_progress' }, ({ payload }) => {
@@ -1863,6 +1857,7 @@
               });
             }
           });
+        refreshMapLayout();
       }
 
       function updateProgress() {
@@ -1878,7 +1873,7 @@
           ring.style.setProperty('--pulse-speed', '0.6s');
           ring.style.borderColor = '#75C894';
           statusText.textContent = "¡En rango! Abrí la cámara";
-          statusText.className = "text-xs font-bold text-green-brand";
+          statusText.className = "text-[11px] font-bold text-green-brand";
           if (Date.now() - state.lastVibrateTime > 2000) {
             if (navigator.vibrate) navigator.vibrate([120, 50, 120, 50, 200]);
             AudioEngine.ping();
@@ -1887,7 +1882,7 @@
         } else if (d <= 100) {
           ring.style.setProperty('--pulse-speed', '1.0s');
           statusText.textContent = "¡Muy cerca del objetivo!";
-          statusText.className = "text-xs font-semibold text-green-brand";
+          statusText.className = "text-[11px] font-semibold text-green-brand";
           if (Date.now() - state.lastVibrateTime > 5000) {
             if (navigator.vibrate) navigator.vibrate(100);
             state.lastVibrateTime = Date.now();
@@ -1895,7 +1890,7 @@
         } else {
           ring.style.setProperty('--pulse-speed', '2.1s');
           statusText.textContent = "Elegí tu camino libre";
-          statusText.className = "text-xs font-medium text-main";
+          statusText.className = "text-[11px] font-medium text-main";
         }
 
         const pct = d <= CONFIG.CAPTURE_RADIUS_METERS ? 100 : Math.max(0, Math.min(99, Math.round(((state.initialDistance - d) / state.initialDistance) * 100)));
@@ -2342,6 +2337,7 @@
         document.getElementById('mapWaitingOverlay').classList.add('hidden');
         document.getElementById('duelCountdownModal').classList.add('hidden');
         document.getElementById('setupPanel').classList.remove('hidden');
+        refreshMapLayout();
       }
 
       async function createClub() {
@@ -2385,7 +2381,7 @@
           const wins = Number((m.profiles && m.profiles.total_wins) || 0);
           const badge = m.role === 'owner' ? '<span class="text-[10px] text-[#FF7900] ml-1.5 font-bold">Líder</span>' : '';
           return `
-            <div class="surface-inset flex justify-between items-center px-4 py-3 rounded-xl text-xs">
+            <div class="surface-inset flex justify-between items-center px-3.5 py-2.5 rounded-xl text-xs">
               <span class="text-main font-medium"><b class="text-muted mr-2">#${i + 1}</b>@${uname}${badge}</span>
               <span class="text-green-brand font-semibold">${wins} victorias</span>
             </div>
@@ -2411,8 +2407,8 @@
               const dist = p.distance_meters ? `${(p.distance_meters / 1000).toFixed(1)} km` : 'Ruta';
               return `
                 <div class="surface-inset rounded-xl overflow-hidden border border-[#75C894]/25">
-                  <img src="${escapeHTML(p.capture_photo_url)}" alt="Conquista" loading="lazy" class="w-full h-28 object-cover" />
-                  <div class="p-2 flex justify-between items-center text-[10px]">
+                  <img src="${escapeHTML(p.capture_photo_url)}" alt="Conquista" loading="lazy" class="w-full h-24 object-cover" />
+                  <div class="p-1.5 flex justify-between items-center text-[10px]">
                     <span class="font-bold text-main truncate">@${uname}</span>
                     <span class="text-green-brand font-mono font-bold shrink-0">${dist}</span>
                   </div>
@@ -2420,7 +2416,7 @@
               `;
             }).join('');
           } else {
-            feedContainer.innerHTML = `<p class="text-xs text-muted col-span-2 text-center py-3">Aún no hay fotos de conquistas en el club.</p>`;
+            feedContainer.innerHTML = `<p class="text-xs text-muted col-span-2 text-center py-2">Aún no hay fotos de conquistas en el club.</p>`;
           }
         }
       }
@@ -2436,8 +2432,8 @@
           const pts = Number(p[col] || 0);
           const rankColor = idx === 0 ? 'text-[#FF7900] font-bold' : idx === 1 ? 'text-main font-bold' : idx === 2 ? 'text-[#FFB36B] font-bold' : 'text-muted font-medium';
           return `
-            <div class="surface-inset flex justify-between items-center px-4 py-3.5 rounded-xl">
-              <span class="text-xs font-semibold text-main"><b class="${rankColor} font-mono mr-3">#${idx + 1}</b>@${uname}</span>
+            <div class="surface-inset flex justify-between items-center px-3.5 py-2.5 rounded-xl">
+              <span class="text-xs font-semibold text-main"><b class="${rankColor} font-mono mr-2.5">#${idx + 1}</b>@${uname}</span>
               <span class="font-mono text-xs font-bold text-green-brand">${pts} pts</span>
             </div>
           `;
@@ -2451,7 +2447,7 @@
           const { data, error } = await sb.from('matches').select('*').eq('user_id', state.user.id).eq('status', 'completed').order('created_at', { ascending: false }).limit(15);
           if (error) throw error;
           if (!data || data.length === 0) {
-            container.innerHTML = `<p class="text-xs text-muted text-center py-4">Todavía no registraste conquistas.</p>`;
+            container.innerHTML = `<p class="text-xs text-muted text-center py-3">Todavía no registraste conquistas.</p>`;
             return;
           }
           container.innerHTML = data.map(m => {
@@ -2459,17 +2455,17 @@
             const dist = m.distance_meters ? `${(m.distance_meters / 1000).toFixed(2)} km` : 'Ruta';
             const pts = m.points_earned || 100;
             return `
-              <div class="surface-inset flex items-center justify-between px-4 py-3 rounded-xl">
+              <div class="surface-inset flex items-center justify-between px-3.5 py-2.5 rounded-xl">
                 <div>
                   <p class="text-xs font-semibold text-main">Bandera conquistada • ${escapeHTML(dist)}</p>
-                  <p class="text-[11px] text-muted mt-0.5">${escapeHTML(dateStr)}</p>
+                  <p class="text-[10px] text-muted mt-0.5">${escapeHTML(dateStr)}</p>
                 </div>
                 <span class="font-mono text-xs font-bold text-green-brand">+${pts} pts</span>
               </div>
             `;
           }).join('');
         } catch (_) {
-          container.innerHTML = `<p class="text-xs text-muted text-center py-4">No se pudo cargar el historial.</p>`;
+          container.innerHTML = `<p class="text-xs text-muted text-center py-3">No se pudo cargar el historial.</p>`;
         }
       }
 
@@ -2515,9 +2511,9 @@
         btn.addEventListener('click', () => {
           state.category = btn.dataset.cat;
           document.querySelectorAll('#categoryGroup .cat-btn').forEach(b => {
-            b.className = 'cat-btn btn-choice-inactive font-semibold py-2.5 px-2 rounded-xl text-xs btn-press';
+            b.className = 'cat-btn btn-choice-inactive font-semibold py-2 px-1.5 rounded-xl text-[11px] btn-press';
           });
-          btn.className = 'cat-btn bg-[#FF7900] text-white font-bold py-2.5 px-2 rounded-xl text-xs btn-press shadow-sm';
+          btn.className = 'cat-btn bg-[#FF7900] text-white font-bold py-2 px-1.5 rounded-xl text-[11px] btn-press shadow-sm';
         });
       });
 
@@ -2525,10 +2521,9 @@
         btn.addEventListener('click', () => {
           state.distance = btn.dataset.dist;
           document.querySelectorAll('#distanceGroup .dist-btn').forEach(b => {
-            b.className = 'dist-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press';
+            b.className = 'dist-btn btn-choice-inactive font-semibold py-2 rounded-xl text-[11px] btn-press';
           });
-          btn.className = 'dist-btn bg-[#FF7900] text-white font-bold py-2.5 rounded-xl text-xs btn-press shadow-sm';
-          document.getElementById('circuitHint').classList.remove('hidden');
+          btn.className = 'dist-btn bg-[#FF7900] text-white font-bold py-2 rounded-xl text-[11px] btn-press shadow-sm';
         });
       });
 
@@ -2536,12 +2531,13 @@
         btn.addEventListener('click', () => {
           state.mode = btn.dataset.mode;
           document.querySelectorAll('#modeGroup .mode-btn').forEach(b => {
-            b.className = 'mode-btn btn-choice-inactive font-semibold py-2.5 rounded-xl text-xs btn-press';
+            b.className = 'mode-btn btn-choice-inactive font-semibold py-2 rounded-xl text-[11px] btn-press';
           });
-          btn.className = 'mode-btn bg-[#FF7900]/15 border border-[#FF7900] text-[#FF7900] font-bold py-2.5 rounded-xl text-xs btn-press';
+          btn.className = 'mode-btn bg-[#FF7900]/15 border border-[#FF7900] text-[#FF7900] font-bold py-2 rounded-xl text-[11px] btn-press';
           const isDuel = state.mode === 'live_duel';
           document.getElementById('duelJoinBox').classList.toggle('hidden', !isDuel);
           document.getElementById('btnGenerateFlag').textContent = isDuel ? "Crear sala privada de duelo" : "Generar bandera libre";
+          refreshMapLayout();
         });
       });
 
@@ -2555,7 +2551,6 @@
       document.getElementById('btnRetakePhoto').addEventListener('click', resetCameraPreviewState);
       document.getElementById('btnConfirmCapture').addEventListener('click', confirmCapture);
 
-      // Botones rápidos de sala de espera 1v1
       document.getElementById('btnCopyDuelCode').addEventListener('click', async () => {
         const code = document.getElementById('displayDuelCode').textContent.trim();
         if (!code || code === '----') return;
@@ -2635,16 +2630,16 @@
           notify(err.message || "Error al guardar perfil.", "error");
         } finally {
           btn.disabled = false;
-          btn.textContent = "Guardar cambios";
+          btn.textContent = "Guardar";
         }
       });
 
       document.querySelectorAll('#rankingFilterGroup .rank-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           document.querySelectorAll('#rankingFilterGroup .rank-btn').forEach(b => {
-            b.className = 'rank-btn btn-choice-inactive py-2.5 rounded-xl text-xs font-semibold btn-press';
+            b.className = 'rank-btn btn-choice-inactive py-2 rounded-xl text-xs font-semibold btn-press';
           });
-          btn.className = 'rank-btn bg-[#FF7900] text-white py-2.5 rounded-xl text-xs font-bold btn-press shadow-sm';
+          btn.className = 'rank-btn bg-[#FF7900] text-white py-2 rounded-xl text-xs font-bold btn-press shadow-sm';
           loadRankings(btn.dataset.rank);
         });
       });
@@ -2654,17 +2649,19 @@
           const tab = btn.dataset.tab;
           ['Play', 'Clubs', 'Rankings', 'Profile'].forEach(t => document.getElementById('tab' + t).classList.add('hidden'));
           document.querySelectorAll('#bottomNav .nav-btn').forEach(b => {
-            b.className = 'nav-btn py-3.5 flex flex-col items-center justify-center gap-1 text-muted hover:text-main';
+            b.className = 'nav-btn py-2.5 flex flex-col items-center justify-center gap-0.5 text-muted hover:text-main';
           });
           document.getElementById('tab' + tab).classList.remove('hidden');
-          btn.className = 'nav-btn py-3.5 flex flex-col items-center justify-center gap-1 text-[#FF7900]';
+          btn.className = 'nav-btn py-2.5 flex flex-col items-center justify-center gap-0.5 text-[#FF7900]';
 
-          if (tab === 'Play' && state.map) setTimeout(() => state.map.invalidateSize(), 150);
+          if (tab === 'Play') refreshMapLayout();
           if (tab === 'Clubs') loadMyClub();
           if (tab === 'Rankings') loadRankings('walk_run');
           if (tab === 'Profile') { loadUserProfile(); loadMatchHistory(); }
         });
       });
+
+      window.addEventListener('resize', refreshMapLayout);
     });
   </script>
 </body>
