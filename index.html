@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es" class="theme-dark">
+<html lang="es" class="theme-light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta id="metaThemeColor" name="theme-color" content="#171D1A" />
+  <meta id="metaThemeColor" name="theme-color" content="#F4F2EB" />
   <title>Conquista la Bandera</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -221,7 +221,7 @@
     <div class="flex items-center gap-1.5 shrink-0">
       <button id="btnCycleTheme" type="button" title="Cambiar tema" aria-label="Cambiar tema" class="h-7 px-2 rounded-lg surface-card-elevated text-main flex items-center gap-1 text-[10px] font-bold btn-press">
         <span id="themeIconSlot" class="flex items-center justify-center"></span>
-        <span id="themeLabelText" class="hidden sm:inline">Auto</span>
+        <span id="themeLabelText" class="hidden sm:inline">Claro</span>
       </button>
 
       <button id="btnSoundToggle" type="button" aria-label="Alternar audio" class="w-7 h-7 rounded-lg surface-card-elevated text-main flex items-center justify-center btn-press">
@@ -795,8 +795,7 @@
         if (cycleBtn) cycleBtn.title = `Tema: ${LABELS[pref]} (tocá para cambiar)`;
       }
 
-      let currentPref = localStorage.getItem(THEME_KEY) || 'light';
-      if (!ORDER.includes(currentPref)) currentPref = 'light';
+      let currentPref = 'light';
       applyTheme(currentPref);
 
       if (cycleBtn) {
