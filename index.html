@@ -362,7 +362,7 @@
 
   <!-- INTERFAZ PRINCIPAL SIN SCROLL (100DVH) -->
   <div id="appContainer" class="hidden flex-1 min-h-0 flex flex-col max-w-lg mx-auto w-full px-3 pt-2.5 pb-2 gap-2.5 overflow-hidden">
-    
+
     <!-- PERMISO GPS Y BRÚJULA -->
     <div id="gpsPermissionBanner" class="hidden shrink-0 card-green-accent p-3 rounded-2xl space-y-2">
       <div class="flex items-center gap-2.5">
@@ -538,7 +538,7 @@
       <!-- MAPA QUE OCUPA TODO EL ESPACIO RESTANTE DE LA PANTALLA -->
       <div class="relative flex-1 min-h-0">
         <div id="map"></div>
-        
+
         <div id="mapWaitingOverlay" class="hidden absolute inset-0 z-20 bg-[#171D1A]/75 backdrop-blur-[3px] rounded-[18px] flex flex-col items-center justify-center p-4 text-center">
           <div class="w-10 h-10 rounded-xl bg-[#FF7900]/20 border border-[#FF7900]/40 flex items-center justify-center text-[#FF7900] mb-2">
             <svg class="w-5 h-5 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -687,7 +687,7 @@
   <div id="arModal" class="hidden fixed inset-0 z-50 bg-black flex flex-col justify-between">
     <video id="arVideo" autoplay playsinline class="absolute inset-0 w-full h-full object-cover"></video>
     <canvas id="arPhotoCanvas" class="hidden absolute inset-0 w-full h-full object-cover z-10"></canvas>
-    
+
     <div class="relative z-20 p-4 bg-gradient-to-b from-black/80 to-transparent flex justify-between items-center">
       <span id="arHeaderBadge" class="bg-[#171D1A]/90 border border-[#75C894]/40 text-[#F2F1E9] font-medium text-xs px-3.5 py-2 rounded-full backdrop-blur-md">
         Cámara AR 3D • Apuntá hacia el suelo
@@ -910,6 +910,22 @@
       function refreshMapLayout() {
         if (state.map) {
           requestAnimationFrame(() => state.map.invalidateSize());
+        }
+      }
+
+      function renderRecordedRouteOnMap() {
+        if (!state.map) return;
+        if (state.routeLine) {
+          state.map.removeLayer(state.routeLine);
+          state.routeLine = null;
+        }
+        if (Array.isArray(state.recordedPath) && state.recordedPath.length >= 2) {
+          const latLngs = state.recordedPath.map(([lng, lat]) => [lat, lng]);
+          state.routeLine = L.polyline(latLngs, {
+            color: state.isFlashEvent ? '#FF7900' : '#75C894',
+            weight: 4,
+            opacity: 0.9
+          }).addTo(state.map);
         }
       }
 
@@ -1447,9 +1463,9 @@
         const ua = navigator.userAgent || '';
         const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
         if (isIOS) {
-          return `<p class="font-semibold text-rose-500">En iPhone:</p><p>Ajustes → Privacidad → Localización → Permitir.</p>`;
+          return `<p class="font-semibold text-rose-500">En iPhone:</p><p>Ajustes → Privacidad → Localización → Safari / Navegador → Permitir.</p>`;
         }
-        return `<p class="font-semibold text-rose-500">En Android:</p><p>Ajustes del navegador → Permisos → Ubicación → Permitir.</p>`;
+        return `<p class="font-semibold text-rose-500">En Android:</p><p>Tocá el ícono de ajustes/candado de la barra del navegador → Permisos → Ubicación → Permitir.</p>`;
       }
 
       function showGpsPermissionCard(mode) {
@@ -1463,7 +1479,7 @@
           title.textContent = "Permiso de ubicación bloqueado";
           deniedHelp.innerHTML = getPlatformGpsInstructions();
           deniedHelp.classList.remove('hidden');
-          btnText.textContent = "Ya lo habilité, reintentar GPS";
+          btnText.textContent = "Comprobar permiso";
         } else {
           title.textContent = "Permitir acceso a tu ubicación";
           deniedHelp.classList.add('hidden');
@@ -1546,7 +1562,7 @@
       }
 
       function handleGpsError(err) {
-        if (err.code === 1) { updateGpsIndicator('error', 'Permiso denegado'); showGpsPermissionCard('denied'); notify("Activá el permiso de ubicación.", "error"); }
+        if (err.code === 1) { updateGpsIndicator('error', 'Permiso denegado'); showGpsPermissionCard('denied'); notify("Habilitá la ubicación en los ajustes del navegador.", "error"); }
         else { updateGpsIndicator('warn', 'Buscando satélites...'); showGpsPermissionCard('prompt'); }
       }
 
@@ -1593,6 +1609,7 @@
           const lastPt = state.recordedPath[state.recordedPath.length - 1];
           if (!lastPt || state.map.distance([lastPt[1], lastPt[0]], [newLat, newLng]) >= 3) {
             state.recordedPath.push([newLng, newLat]);
+            renderRecordedRouteOnMap();
             saveActiveMatchState();
           }
           updateProgress();
@@ -1606,11 +1623,17 @@
 
         try {
           const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+          const latDelta = 0.02;
+          const lngDelta = 0.025;
           const { data: recentWins } = await sb
             .from('matches')
             .select('user_id, flag_lat, flag_lng')
             .eq('status', 'completed')
             .gte('created_at', sevenDaysAgo)
+            .gte('flag_lat', lat - latDelta)
+            .lte('flag_lat', lat + latDelta)
+            .gte('flag_lng', lng - lngDelta)
+            .lte('flag_lng', lng + lngDelta)
             .not('flag_lat', 'is', null)
             .limit(100);
 
@@ -1856,6 +1879,7 @@
             state.matchStartTime = Date.now();
             if (state.userPos) {
               state.recordedPath = [[state.userPos.lng, state.userPos.lat]];
+              renderRecordedRouteOnMap();
               state.initialDistance = Math.max(100, state.map.distance([state.userPos.lat, state.userPos.lng], [state.activeMatch.flag.lat, state.activeMatch.flag.lng]));
             }
             document.getElementById('matchStatusBadge').textContent = "Duelo 1v1 en vivo";
@@ -1872,7 +1896,7 @@
         if (!data || !state.map) return;
 
         if (state.flagMarker) state.map.removeLayer(state.flagMarker);
-        if (state.routeLine) state.map.removeLayer(state.routeLine);
+        renderRecordedRouteOnMap();
 
         const pinColor = state.isFlashEvent ? '#FF7900' : '#75C894';
         const flagIcon = L.divIcon({
@@ -1892,9 +1916,10 @@
 
         const isDuel = data.mode === 'live_duel' || state.mode === 'live_duel';
         if (isDuel) {
+          const matchStatus = data.status || (isJoining ? 'active' : 'pending');
           document.getElementById('rivalProgressContainer').classList.remove('hidden');
           document.getElementById('matchStatusBadge').textContent = state.duelStarted ? "Duelo 1v1 en vivo" : "Esperando rival";
-          setupDuelChannel(data.matchId, data.duelCode);
+          setupDuelChannel(data.matchId, matchStatus, data.duelCode);
         } else {
           state.duelStarted = true;
           document.getElementById('matchStatusBadge').textContent = "Recorrido libre";
@@ -1917,12 +1942,14 @@
         resetMatchUI();
       }
 
-      function setupDuelChannel(matchId, duelCode) {
+      function setupDuelChannel(matchId, status = 'pending', duelCode = '') {
         if (state.matchChannel) sb.removeChannel(state.matchChannel);
         if (state.duelTimeoutInterval) clearInterval(state.duelTimeoutInterval);
         if (duelPollInterval) clearInterval(duelPollInterval);
 
-        if (!state.duelStarted && !state.duelStarting) {
+        const shouldWait = !state.duelStarted && !state.duelStarting && status === 'pending';
+
+        if (shouldWait) {
           document.getElementById('duelWaitingBanner').classList.remove('hidden');
           document.getElementById('mapWaitingOverlay').classList.remove('hidden');
           document.getElementById('activeRaceControls').classList.add('hidden');
@@ -2507,6 +2534,7 @@
         state.duelStarting = false;
         state.isFlashEvent = false;
         state.isSimulated = false;
+        state.recordedPath = [];
         state.duelExpiresAt = null;
         if (state.duelTimeoutInterval) clearInterval(state.duelTimeoutInterval);
         if (state.countdownInterval) clearInterval(state.countdownInterval);
@@ -2521,6 +2549,7 @@
         if (state.matchChannel) sb.removeChannel(state.matchChannel);
         if (state.flagMarker) state.map.removeLayer(state.flagMarker);
         if (state.routeLine) state.map.removeLayer(state.routeLine);
+        state.routeLine = null;
         document.getElementById('activeHud').classList.add('hidden');
         document.getElementById('mapWaitingOverlay').classList.add('hidden');
         document.getElementById('duelCountdownModal').classList.add('hidden');
@@ -2678,7 +2707,7 @@
         if (sb) await sb.auth.signOut();
         location.reload();
       });
-      document.getElementById('btnConfirmGpsPermission').addEventListener('click', () => { AudioEngine.tap(); startGpsTracking(); });
+      document.getElementById('btnConfirmGpsPermission').addEventListener('click', () => { AudioEngine.tap(); checkAndManageGpsPermission(); });
       document.getElementById('btnSoundToggle').addEventListener('click', () => {
         state.soundEnabled = !state.soundEnabled;
         document.getElementById('iconSoundOn').classList.toggle('hidden', !state.soundEnabled);
@@ -2849,7 +2878,16 @@
         });
       });
 
-      window.addEventListener('resize', refreshMapLayout);
+      window.addEventListener('resize', () => {
+        refreshMapLayout();
+        if (AR3D.renderer && AR3D.camera) {
+          const w = window.innerWidth;
+          const h = window.innerHeight;
+          AR3D.camera.aspect = w / h;
+          AR3D.camera.updateProjectionMatrix();
+          AR3D.renderer.setSize(w, h);
+        }
+      });
     });
   </script>
 </body>
