@@ -1105,7 +1105,7 @@
         if (activeDbEventEndMs && activeDbEventEndMs > Date.now()) {
           const remSec = Math.floor((activeDbEventEndMs - Date.now()) / 1000);
           const m = String(Math.floor(remSec / 60)).padStart(2, '0');
-          const s = String(remSec % 60).padStart(2, '0');
+          const s = String(Math.floor(remSec % 60)).padStart(2, '0');
           el.textContent = `${m}:${s}`;
           btn.disabled = false;
           btn.textContent = "Aceptar";
@@ -1206,17 +1206,17 @@
                 .maybeSingle();
 
               if (selErr || !perfil) {
-                throw new Error("No se encontró ese nombre de usuario.");
+                throw new Error("No encontramos ese usuario. Probá ingresando con tu correo electrónico.");
               }
               if (!perfil.email) {
-                throw new Error("Tu perfil no tiene correo registrado para ingresar con usuario. Probá con tu correo.");
+                throw new Error("Tu perfil aún no tiene correo vinculado para entrar con usuario. Ingresá con tu correo y se vinculará automáticamente.");
               }
               emailToUse = perfil.email.trim().toLowerCase();
             }
           }
 
           const { data, error } = await sb.auth.signInWithPassword({ email: emailToUse, password });
-          if (error || !data.user) throw new Error("Usuario o clave incorrectos.");
+          if (error || !data.user) throw new Error("Usuario/correo o clave incorrectos.");
           AudioEngine.tap();
           bootApp(data.user);
         } catch (err) {
@@ -1304,7 +1304,8 @@
             email,
             options: {
               shouldCreateUser: true,
-              emailRedirectTo: getAuthRedirectUrl()
+              emailRedirectTo: getAuthRedirectUrl(),
+              data: { username }
             }
           });
           if (error) throw error;
@@ -1407,6 +1408,12 @@
           state.myClubId = mem ? mem.club_id : null;
 
           if (profile) {
+            if (!profile.email && state.user.email) {
+              const cleanEmail = state.user.email.trim().toLowerCase();
+              await sb.from('profiles').update({ email: cleanEmail }).eq('id', state.user.id);
+              profile.email = cleanEmail;
+            }
+
             const todayStr = new Date().toISOString().split('T')[0];
             const yesterdayStr = new Date(Date.now() - 86400000).toISOString().split('T')[0];
             let streak = Number(profile.streak_days || 1);
