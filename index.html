@@ -799,14 +799,11 @@
         if ((localStorage.getItem(THEME_KEY) || 'auto') === 'auto') applyTheme('auto');
       });
 
-      document.addEventListener('DOMContentLoaded', () => {
-        applyTheme(localStorage.getItem(THEME_KEY) || 'auto');
-        document.querySelectorAll('.theme-opt-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const val = btn.getAttribute('data-theme-val');
-            localStorage.setItem(THEME_KEY, val);
-            applyTheme(val);
-          });
+      document.querySelectorAll('.theme-opt-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = btn.getAttribute('data-theme-val');
+          localStorage.setItem(THEME_KEY, val);
+          applyTheme(val);
         });
       });
     })();
@@ -906,6 +903,10 @@
         videoStream: null,
         capturedPhotoDataUrl: null
       };
+
+      function getDefaultGenerateButtonText() {
+        return state.mode === 'live_duel' ? "Crear sala privada de duelo" : "Generar bandera libre";
+      }
 
       function refreshMapLayout() {
         if (state.map) {
@@ -1091,7 +1092,7 @@
           if (ev) {
             activeDbEventEndMs = new Date(ev.ends_at).getTime();
             const titleEl = document.getElementById('flashBannerTitle');
-            if (titleEl) titleEl.textContent = ev.title;
+            if (titleEl && ev.title) titleEl.textContent = ev.title;
           }
         } catch (_) {}
       }
@@ -1210,6 +1211,7 @@
       async function handleForgotPassword(e) {
         e.preventDefault();
         setAuthError(null);
+        if (!sb) return setAuthError("No se pudo conectar con Supabase.");
         const email = document.getElementById('forgotEmail').value.trim().toLowerCase();
         if (!email || !email.includes('@')) return setAuthError("Ingresá un correo electrónico válido.");
 
@@ -1232,6 +1234,7 @@
       async function handleUpdatePassword(e) {
         e.preventDefault();
         setAuthError(null);
+        if (!sb) return setAuthError("No se pudo conectar con Supabase.");
         const p1 = document.getElementById('newPasswordInput').value;
         const p2 = document.getElementById('confirmNewPasswordInput').value;
 
@@ -1562,8 +1565,14 @@
       }
 
       function handleGpsError(err) {
-        if (err.code === 1) { updateGpsIndicator('error', 'Permiso denegado'); showGpsPermissionCard('denied'); notify("Habilitá la ubicación en los ajustes del navegador.", "error"); }
-        else { updateGpsIndicator('warn', 'Buscando satélites...'); showGpsPermissionCard('prompt'); }
+        if (err && err.code === 1) {
+          updateGpsIndicator('error', 'Permiso denegado');
+          showGpsPermissionCard('denied');
+          notify("Habilitá la ubicación en los ajustes del navegador.", "error");
+        } else {
+          updateGpsIndicator('warn', 'Buscando satélites...');
+          showGpsPermissionCard('prompt');
+        }
       }
 
       function handleRealPositionUpdate(pos, isInitial) {
@@ -1582,7 +1591,7 @@
         state.userPos = { lat: newLat, lng: newLng };
         state.lastGpsTimestamp = now;
 
-        if (pos.coords.heading && !isNaN(pos.coords.heading)) {
+        if (typeof pos.coords.heading === 'number' && !isNaN(pos.coords.heading)) {
           state.deviceHeading = Math.round(pos.coords.heading);
           const cone = document.getElementById('playerHeadingCone');
           if (cone) cone.style.transform = `rotate(${state.deviceHeading}deg)`;
@@ -1682,6 +1691,20 @@
       let matchmakingChannel = null;
       let duelPollInterval = null;
 
+      function stopMatchmakingLobby() {
+        if (matchmakingChannel && sb) {
+          sb.removeChannel(matchmakingChannel);
+          matchmakingChannel = null;
+        }
+        const btn = document.getElementById('btnAutoMatchmaking');
+        if (btn) {
+          btn.innerHTML = `
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            Buscar rival automático en vivo
+          `;
+        }
+      }
+
       async function startAutoMatchmaking() {
         if (!state.hasRealGps || !state.userPos) {
           showGpsPermissionCard('prompt');
@@ -1690,15 +1713,9 @@
         if (!sb || !state.user) return;
 
         const btn = document.getElementById('btnAutoMatchmaking');
-        const defaultBtnHTML = `
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-          Buscar rival automático en vivo
-        `;
 
         if (matchmakingChannel) {
-          sb.removeChannel(matchmakingChannel);
-          matchmakingChannel = null;
-          btn.innerHTML = defaultBtnHTML;
+          stopMatchmakingLobby();
           return notify("Búsqueda de rival cancelada.", "info");
         }
 
@@ -1714,11 +1731,7 @@
             clearInterval(hostRetryTimer);
             hostRetryTimer = null;
           }
-          if (matchmakingChannel) {
-            sb.removeChannel(matchmakingChannel);
-            matchmakingChannel = null;
-          }
-          btn.innerHTML = defaultBtnHTML;
+          stopMatchmakingLobby();
         }
 
         matchmakingChannel = sb.channel(lobbyName, {
@@ -1727,7 +1740,7 @@
 
         matchmakingChannel
           .on('presence', { event: 'sync' }, async () => {
-            if (matched) return;
+            if (matched || !matchmakingChannel) return;
             const users = Object.keys(matchmakingChannel.presenceState()).sort();
             const rivalId = users.find(id => id !== state.user.id);
             if (!rivalId) return;
@@ -1756,7 +1769,7 @@
             }
           })
           .on('broadcast', { event: 'match_found' }, async ({ payload }) => {
-            if (payload.targetUserId !== state.user.id || !payload.duelCode) return;
+            if (!payload || payload.targetUserId !== state.user.id || !payload.duelCode) return;
             if (state.activeMatch) return;
             matched = true;
             cleanupLobby();
@@ -1765,7 +1778,7 @@
             await generateMatch(true, false);
           })
           .subscribe(async (status) => {
-            if (status === 'SUBSCRIBED') {
+            if (status === 'SUBSCRIBED' && matchmakingChannel) {
               await matchmakingChannel.track({
                 user_id: state.user.id,
                 distance: state.distance,
@@ -1780,6 +1793,9 @@
           showGpsPermissionCard('prompt');
           return notify("Confirmá tu ubicación GPS arriba.", "error");
         }
+        if (!state.map) {
+          initMap();
+        }
 
         const btn = document.getElementById('btnGenerateFlag');
         btn.disabled = true;
@@ -1789,7 +1805,7 @@
         const duelCode = isJoining ? document.getElementById('duelCodeInput').value.trim().toUpperCase() : null;
         if (isJoining && !duelCode) {
           btn.disabled = false;
-          btn.textContent = state.mode === 'live_duel' ? "Crear sala privada de duelo" : "Generar bandera libre";
+          btn.textContent = getDefaultGenerateButtonText();
           return notify("Ingresá un código de sala.", "error");
         }
 
@@ -1827,16 +1843,16 @@
           notify(err.message, "error");
         } finally {
           btn.disabled = false;
-          btn.textContent = state.mode === 'live_duel' ? "Crear sala privada de duelo" : "Generar bandera libre";
+          btn.textContent = getDefaultGenerateButtonText();
         }
       }
 
       function unlockDuelAndStartCountdown() {
-        if (state.duelStarted || state.duelStarting) return;
+        if (state.duelStarted || state.duelStarting || !state.activeMatch) return;
         state.duelStarting = true;
 
-        if (state.duelTimeoutInterval) clearInterval(state.duelTimeoutInterval);
-        if (state.countdownInterval) clearInterval(state.countdownInterval);
+        if (state.duelTimeoutInterval) { clearInterval(state.duelTimeoutInterval); state.duelTimeoutInterval = null; }
+        if (state.countdownInterval) { clearInterval(state.countdownInterval); state.countdownInterval = null; }
         if (duelPollInterval) { clearInterval(duelPollInterval); duelPollInterval = null; }
 
         document.getElementById('duelWaitingBanner').classList.add('hidden');
@@ -1854,6 +1870,14 @@
         if (navigator.vibrate) navigator.vibrate(120);
 
         state.countdownInterval = setInterval(() => {
+          if (!state.activeMatch) {
+            clearInterval(state.countdownInterval);
+            state.countdownInterval = null;
+            modal.classList.add('hidden');
+            state.duelStarting = false;
+            return;
+          }
+
           count--;
           if (count > 0) {
             numEl.textContent = String(count);
@@ -1877,7 +1901,7 @@
             state.duelStarting = false;
             state.duelStarted = true;
             state.matchStartTime = Date.now();
-            if (state.userPos) {
+            if (state.userPos && state.activeMatch) {
               state.recordedPath = [[state.userPos.lng, state.userPos.lat]];
               renderRecordedRouteOnMap();
               state.initialDistance = Math.max(100, state.map.distance([state.userPos.lat, state.userPos.lng], [state.activeMatch.flag.lat, state.activeMatch.flag.lng]));
@@ -1895,7 +1919,7 @@
         const data = state.activeMatch;
         if (!data || !state.map) return;
 
-        if (state.flagMarker) state.map.removeLayer(state.flagMarker);
+        if (state.flagMarker) { state.map.removeLayer(state.flagMarker); state.flagMarker = null; }
         renderRecordedRouteOnMap();
 
         const pinColor = state.isFlashEvent ? '#FF7900' : '#75C894';
@@ -1943,9 +1967,10 @@
       }
 
       function setupDuelChannel(matchId, status = 'pending', duelCode = '') {
-        if (state.matchChannel) sb.removeChannel(state.matchChannel);
-        if (state.duelTimeoutInterval) clearInterval(state.duelTimeoutInterval);
-        if (duelPollInterval) clearInterval(duelPollInterval);
+        if (state.matchChannel && sb) { sb.removeChannel(state.matchChannel); state.matchChannel = null; }
+        if (state.duelTimeoutInterval) { clearInterval(state.duelTimeoutInterval); state.duelTimeoutInterval = null; }
+        if (duelPollInterval) { clearInterval(duelPollInterval); duelPollInterval = null; }
+        if (!sb || !matchId) return;
 
         const shouldWait = !state.duelStarted && !state.duelStarting && status === 'pending';
 
@@ -1957,9 +1982,11 @@
 
           state.duelExpiresAt = Date.now() + 5 * 60 * 1000;
           state.duelTimeoutInterval = setInterval(() => {
+            if (!state.duelExpiresAt) return;
             const rem = state.duelExpiresAt - Date.now();
             if (rem <= 0) {
               clearInterval(state.duelTimeoutInterval);
+              state.duelTimeoutInterval = null;
               notify("La sala de duelo expiró por falta de rivales.", "error");
               cancelActiveMatch();
               return;
@@ -1976,7 +2003,7 @@
         }
 
         const triggerSyncedStart = () => {
-          if (state.duelStarted || state.duelStarting) return;
+          if (state.duelStarted || state.duelStarting || !state.activeMatch) return;
           if (duelPollInterval) {
             clearInterval(duelPollInterval);
             duelPollInterval = null;
@@ -1987,10 +2014,11 @@
           unlockDuelAndStartCountdown();
         };
 
-        if (!state.duelStarted && !state.duelStarting && sb && matchId) {
+        if (!state.duelStarted && !state.duelStarting) {
           duelPollInterval = setInterval(async () => {
             if (state.duelStarted || state.duelStarting || !state.activeMatch) {
               clearInterval(duelPollInterval);
+              duelPollInterval = null;
               return;
             }
             try {
@@ -2004,6 +2032,7 @@
                 triggerSyncedStart();
               } else if (mRow && mRow.status === 'cancelled') {
                 clearInterval(duelPollInterval);
+                duelPollInterval = null;
                 notify("La sala fue cancelada.", "info");
                 resetMatchUI();
               }
@@ -2020,6 +2049,7 @@
 
         state.matchChannel
           .on('presence', { event: 'sync' }, () => {
+            if (!state.matchChannel) return;
             const presenceState = state.matchChannel.presenceState();
             const onlineUsers = Object.keys(presenceState);
             const dot = document.getElementById('rivalOnlineDot');
@@ -2035,13 +2065,16 @@
             triggerSyncedStart();
           })
           .on('broadcast', { event: 'rival_progress' }, ({ payload }) => {
+            if (!state.activeMatch) return;
             if (!state.duelStarted && !state.duelStarting) triggerSyncedStart();
-            const pct = Math.max(0, Math.min(100, Number(payload.percent) || 0));
+            const pct = Math.max(0, Math.min(100, Number(payload && payload.percent) || 0));
             document.getElementById('rivalProgressPct').textContent = `${pct}%`;
             document.getElementById('rivalProgressBar').style.width = `${Math.max(2, pct)}%`;
           })
           .on('broadcast', { event: 'duel_won' }, ({ payload }) => {
-            notify(`${escapeHTML(payload.winnerName)} capturó su bandera primero.`, "info");
+            if (!state.activeMatch) return;
+            const winnerName = (payload && payload.winnerName) ? payload.winnerName : 'El rival';
+            notify(`${escapeHTML(winnerName)} capturó su bandera primero.`, "info");
             resetMatchUI();
           })
           .on(
@@ -2050,11 +2083,14 @@
             (payload) => {
               if (payload.new && (payload.new.status === 'active' || payload.new.rival_id)) {
                 triggerSyncedStart();
+              } else if (payload.new && payload.new.status === 'cancelled') {
+                notify("La sala fue cancelada.", "info");
+                resetMatchUI();
               }
             }
           )
           .subscribe(async (st) => {
-            if (st === 'SUBSCRIBED') {
+            if (st === 'SUBSCRIBED' && state.matchChannel) {
               await state.matchChannel.track({
                 user_id: state.user.id,
                 online_at: new Date().toISOString()
@@ -2144,6 +2180,10 @@
         if (AR3D.animId) {
           cancelAnimationFrame(AR3D.animId);
           AR3D.animId = null;
+        }
+        if (AR3D.renderer) {
+          AR3D.renderer.dispose();
+          AR3D.renderer = null;
         }
 
         const w = window.innerWidth;
@@ -2258,8 +2298,10 @@
 
       function onCompassMove(e) {
         if (!state.activeMatch) return;
-        const heading = e.webkitCompassHeading || (360 - (e.alpha || 0));
-        if (heading) {
+        const heading = (typeof e.webkitCompassHeading === 'number' && !isNaN(e.webkitCompassHeading))
+          ? e.webkitCompassHeading
+          : (typeof e.alpha === 'number' && !isNaN(e.alpha) ? (360 - e.alpha) : null);
+        if (heading !== null) {
           AR3D.yawDiff = ((getBearing() - heading + 540) % 360) - 180;
         }
         if (typeof e.beta === 'number' && !isNaN(e.beta)) {
@@ -2301,10 +2343,14 @@
         window.addEventListener('deviceorientation', onCompassMove);
 
         try {
-          state.videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } });
-          document.getElementById('arVideo').srcObject = state.videoStream;
+          if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
+            state.videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } });
+            document.getElementById('arVideo').srcObject = state.videoStream;
+          } else {
+            notify("Tu navegador no soporta cámara en vivo; podés capturar la escena 3D.", "info");
+          }
         } catch (_) {
-          notify("No se pudo acceder a la cámara.", "error");
+          notify("No se pudo acceder a la cámara; podés capturar la escena 3D.", "info");
         }
       }
 
@@ -2372,6 +2418,7 @@
 
       async function confirmCapture() {
         if (!state.capturedPhotoDataUrl) return notify("Primero tenés que sacar la foto.", "error");
+        if (!state.activeMatch || !state.userPos) return notify("No hay una partida activa con ubicación válida.", "error");
         const btn = document.getElementById('btnConfirmCapture');
         btn.disabled = true;
         btn.textContent = "Registrando...";
@@ -2420,18 +2467,23 @@
           } catch (_) {}
 
           const photoUrl = await uploadCapturePhotoToStorage(state.activeMatch.matchId);
+          const matchFlag = state.activeMatch.flag;
+          const matchId = state.activeMatch.matchId;
+          const isDuel = state.activeMatch.mode === 'live_duel' || state.mode === 'live_duel';
+          const pathSnapshot = [...state.recordedPath];
+          const wasFlash = state.isFlashEvent;
 
           if (sb && state.user) {
-            if (state.activeMatch.matchId) {
+            if (matchId) {
               const updatePayload = {
                 status: 'completed',
                 points_earned: points,
                 distance_meters: distMeters,
-                flag_lat: state.activeMatch.flag.lat,
-                flag_lng: state.activeMatch.flag.lng
+                flag_lat: matchFlag.lat,
+                flag_lng: matchFlag.lng
               };
               if (photoUrl) updatePayload.capture_photo_url = photoUrl;
-              await sb.from('matches').update(updatePayload).eq('id', state.activeMatch.matchId);
+              await sb.from('matches').update(updatePayload).eq('id', matchId);
             }
 
             if (!verifiedByServer) {
@@ -2444,7 +2496,7 @@
           }
 
           const handle = document.getElementById('headerUsername').textContent;
-          if (state.matchChannel && (state.activeMatch.mode === 'live_duel' || state.mode === 'live_duel')) {
+          if (state.matchChannel && isDuel) {
             await state.matchChannel.send({ type: 'broadcast', event: 'duel_won', payload: { winnerName: handle } });
           }
 
@@ -2452,7 +2504,7 @@
           AudioEngine.success();
           if (navigator.vibrate) navigator.vibrate([150, 80, 200]);
 
-          renderShareCard({ username: handle, points, distanceMeters: distMeters, avgSpeed, path: state.recordedPath, isFlash: state.isFlashEvent });
+          renderShareCard({ username: handle, points, distanceMeters: distMeters, avgSpeed, path: pathSnapshot, isFlash: wasFlash });
           resetMatchUI();
           await loadUserProfile();
           if (state.userPos) renderRealTerritoryZones(state.userPos.lat, state.userPos.lng);
@@ -2536,20 +2588,23 @@
         state.isSimulated = false;
         state.recordedPath = [];
         state.duelExpiresAt = null;
-        if (state.duelTimeoutInterval) clearInterval(state.duelTimeoutInterval);
-        if (state.countdownInterval) clearInterval(state.countdownInterval);
+        if (state.duelTimeoutInterval) { clearInterval(state.duelTimeoutInterval); state.duelTimeoutInterval = null; }
+        if (state.countdownInterval) { clearInterval(state.countdownInterval); state.countdownInterval = null; }
         if (duelPollInterval) { clearInterval(duelPollInterval); duelPollInterval = null; }
         localStorage.removeItem(CONFIG.ACTIVE_MATCH_STORAGE_KEY);
         releaseScreenWakeLock();
 
-        if (matchmakingChannel) {
-          sb.removeChannel(matchmakingChannel);
-          matchmakingChannel = null;
-        }
-        if (state.matchChannel) sb.removeChannel(state.matchChannel);
-        if (state.flagMarker) state.map.removeLayer(state.flagMarker);
-        if (state.routeLine) state.map.removeLayer(state.routeLine);
-        state.routeLine = null;
+        stopMatchmakingLobby();
+        if (state.matchChannel && sb) { sb.removeChannel(state.matchChannel); state.matchChannel = null; }
+        if (state.flagMarker && state.map) { state.map.removeLayer(state.flagMarker); state.flagMarker = null; }
+        if (state.routeLine && state.map) { state.map.removeLayer(state.routeLine); state.routeLine = null; }
+
+        document.getElementById('myProgressPct').textContent = '0%';
+        document.getElementById('myProgressBar').style.width = '2%';
+        document.getElementById('rivalProgressPct').textContent = '0%';
+        document.getElementById('rivalProgressBar').style.width = '2%';
+        document.getElementById('btnGenerateFlag').textContent = getDefaultGenerateButtonText();
+
         document.getElementById('activeHud').classList.add('hidden');
         document.getElementById('mapWaitingOverlay').classList.add('hidden');
         document.getElementById('duelCountdownModal').classList.add('hidden');
@@ -2558,6 +2613,7 @@
       }
 
       async function createClub() {
+        if (!sb || !state.user) return notify("No hay sesión activa.", "error");
         const name = document.getElementById('newClubName').value.trim();
         if (name.length < 3) return notify("El nombre debe tener al menos 3 caracteres.", "error");
         const { data: club, error } = await sb.from('clubs').insert({ name, owner_id: state.user.id }).select().single();
@@ -2568,6 +2624,7 @@
       }
 
       async function joinClub() {
+        if (!sb || !state.user) return notify("No hay sesión activa.", "error");
         const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
         if (!code) return;
         const { data: club } = await sb.from('clubs').select('id').eq('invite_code', code).maybeSingle();
@@ -2579,6 +2636,7 @@
       }
 
       async function loadMyClub() {
+        if (!sb || !state.user) return;
         const { data: mem } = await sb.from('club_members').select('club_id, clubs(*)').eq('user_id', state.user.id).maybeSingle();
         if (!mem || !mem.clubs) {
           document.getElementById('noClubView').classList.remove('hidden');
@@ -2639,6 +2697,7 @@
       }
 
       async function loadRankings(category) {
+        if (!sb) return;
         const allowed = ['walk_run', 'bike', 'mixed'];
         if (!allowed.includes(category)) return;
         const col = `points_${category}`;
@@ -2704,7 +2763,12 @@
         switchAuthTab('login');
       });
       document.getElementById('btnLogout').addEventListener('click', async () => {
-        if (sb) await sb.auth.signOut();
+        resetMatchUI();
+        if (state.gpsWatchId !== null && navigator.geolocation) {
+          navigator.geolocation.clearWatch(state.gpsWatchId);
+          state.gpsWatchId = null;
+        }
+        if (sb) await sb.auth.signOut().catch(() => {});
         location.reload();
       });
       document.getElementById('btnConfirmGpsPermission').addEventListener('click', () => { AudioEngine.tap(); checkAndManageGpsPermission(); });
@@ -2752,8 +2816,9 @@
           });
           btn.className = 'mode-btn bg-[#FF7900]/15 border border-[#FF7900] text-[#FF7900] font-bold py-2 rounded-xl text-[11px] btn-press';
           const isDuel = state.mode === 'live_duel';
+          if (!isDuel) stopMatchmakingLobby();
           document.getElementById('duelJoinBox').classList.toggle('hidden', !isDuel);
-          document.getElementById('btnGenerateFlag').textContent = isDuel ? "Crear sala privada de duelo" : "Generar bandera libre";
+          document.getElementById('btnGenerateFlag').textContent = getDefaultGenerateButtonText();
           refreshMapLayout();
         });
       });
@@ -2815,6 +2880,7 @@
       document.getElementById('btnShareCard').addEventListener('click', () => {
         const canvas = document.getElementById('victoryCanvas');
         canvas.toBlob(async (blob) => {
+          if (!blob) return;
           const file = new File([blob], 'conquista-la-bandera.png', { type: 'image/png' });
           if (navigator.canShare && navigator.canShare({ files: [file] })) {
             try { await navigator.share({ title: 'Conquista la Bandera', files: [file] }); return; } catch (_) {}
@@ -2835,6 +2901,7 @@
 
       document.getElementById('profileEditForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (!sb || !state.user) return notify("No hay sesión activa.", "error");
         const fullName = document.getElementById('editFullName').value.trim();
         const btn = document.getElementById('btnSaveProfile');
         btn.disabled = true; btn.textContent = "Guardando...";
