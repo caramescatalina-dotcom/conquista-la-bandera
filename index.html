@@ -1183,7 +1183,8 @@
         setAuthError(null);
         if (!sb) return setAuthError("No se pudo conectar con Supabase.");
 
-        const identifier = document.getElementById('loginIdentifier').value.trim().toLowerCase();
+        const rawIdentifier = document.getElementById('loginIdentifier').value.trim().toLowerCase();
+        const identifier = rawIdentifier.startsWith('@') ? rawIdentifier.slice(1) : rawIdentifier;
         const password = document.getElementById('loginPassword').value;
         const btn = document.getElementById('btnLogin');
 
@@ -1282,7 +1283,8 @@
         setAuthError(null);
         if (!sb) return setAuthError("No se pudo conectar con Supabase.");
 
-        const username = document.getElementById('regUsername').value.trim().toLowerCase();
+        const rawUsername = document.getElementById('regUsername').value.trim().toLowerCase();
+        const username = rawUsername.startsWith('@') ? rawUsername.slice(1) : rawUsername;
         const email = document.getElementById('regEmail').value.trim().toLowerCase();
         const password = document.getElementById('regPassword').value;
         const btn = document.getElementById('btnSignup');
@@ -1294,8 +1296,11 @@
         btn.disabled = true; btn.textContent = "Procesando...";
 
         try {
-          const { data: existing } = await sb.from('profiles').select('username').eq('username', username).maybeSingle();
-          if (existing) throw new Error("Ese nombre de usuario no está disponible.");
+          const { data: existingUser } = await sb.from('profiles').select('username').ilike('username', username).maybeSingle();
+          if (existingUser) throw new Error("Ese nombre de usuario no está disponible.");
+
+          const { data: existingEmail } = await sb.from('profiles').select('email').ilike('email', email).maybeSingle();
+          if (existingEmail) throw new Error("Ese correo electrónico ya tiene una cuenta registrada.");
 
           const storageKey = `clb_pending_signup_${CONFIG.ENV_NAME}`;
           localStorage.setItem(storageKey, JSON.stringify({ username, email, password }));
@@ -1342,8 +1347,25 @@
             if (raw) {
               try {
                 const pending = JSON.parse(raw);
-                await sb.auth.updateUser({ password: pending.password, data: { username: pending.username } });
-                await sb.from('profiles').upsert({ id: session.user.id, username: pending.username, email: pending.email });
+                const sameEmail =
+                  pending.email &&
+                  session.user.email &&
+                  pending.email.trim().toLowerCase() === session.user.email.trim().toLowerCase();
+
+                if (sameEmail && pending.username) {
+                  const cleanUser = pending.username.trim().toLowerCase();
+                  const cleanEmail = pending.email.trim().toLowerCase();
+                  if (pending.password) {
+                    await sb.auth.updateUser({ password: pending.password, data: { username: cleanUser } });
+                  } else {
+                    await sb.auth.updateUser({ data: { username: cleanUser } });
+                  }
+                  await sb.from('profiles').upsert({
+                    id: session.user.id,
+                    username: cleanUser,
+                    email: cleanEmail
+                  });
+                }
                 localStorage.removeItem(storageKey);
               } catch (_) {}
             }
@@ -1408,10 +1430,23 @@
           state.myClubId = mem ? mem.club_id : null;
 
           if (profile) {
-            if (!profile.email && state.user.email) {
-              const cleanEmail = state.user.email.trim().toLowerCase();
-              await sb.from('profiles').update({ email: cleanEmail }).eq('id', state.user.id);
-              profile.email = cleanEmail;
+            const cleanUserEmail = state.user.email ? state.user.email.trim().toLowerCase() : null;
+            if (!profile.email && cleanUserEmail) {
+              await sb.from('profiles').update({ email: cleanUserEmail }).eq('id', state.user.id);
+              profile.email = cleanUserEmail;
+            }
+
+            const metaUsername =
+              state.user.user_metadata && state.user.user_metadata.username
+                ? String(state.user.user_metadata.username).trim().toLowerCase()
+                : null;
+
+            if ((!profile.username || profile.username.trim() === '') && metaUsername) {
+              const { error: uErr } = await sb
+                .from('profiles')
+                .update({ username: metaUsername })
+                .eq('id', state.user.id);
+              if (!uErr) profile.username = metaUsername;
             }
 
             const todayStr = new Date().toISOString().split('T')[0];
@@ -1426,7 +1461,7 @@
             }
 
             state.profile = { ...profile, streak_days: streak };
-            const uname = profile.username || 'jugador';
+            const uname = profile.username || metaUsername || 'jugador';
             const displayName = profile.full_name || uname;
             document.getElementById('headerUsername').textContent = `@${uname}`;
             document.getElementById('profileHandle').textContent = `@${uname}`;
@@ -2788,6 +2823,7 @@
       });
       document.getElementById('btnLogout').addEventListener('click', async () => {
         resetMatchUI();
+        localStorage.removeItem(`clb_pending_signup_${CONFIG.ENV_NAME}`);
         if (state.gpsWatchId !== null && navigator.geolocation) {
           navigator.geolocation.clearWatch(state.gpsWatchId);
           state.gpsWatchId = null;
