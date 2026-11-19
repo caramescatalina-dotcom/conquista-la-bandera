@@ -1223,7 +1223,10 @@
 
         try {
           let emailToUse = identifier;
+          let resolvedFromUsername = false;
+
           if (!identifier.includes('@')) {
+            resolvedFromUsername = true;
             const { data: rpcEmail, error: rpcErr } = await sb
               .rpc('get_email_by_username', { p_username: identifier });
 
@@ -1247,7 +1250,22 @@
           }
 
           const { data, error } = await sb.auth.signInWithPassword({ email: emailToUse, password });
-          if (error || !data.user) throw new Error("Usuario/correo o clave incorrectos.");
+          if (error || !data.user) {
+            throw new Error(
+              resolvedFromUsername
+                ? "Usuario o clave incorrectos."
+                : "Correo o clave incorrectos."
+            );
+          }
+
+          if (data.user.email) {
+            await sb
+              .from('profiles')
+              .update({ email: data.user.email.trim().toLowerCase() })
+              .eq('id', data.user.id)
+              .is('email', null);
+          }
+
           AudioEngine.tap();
           bootApp(data.user);
         } catch (err) {
