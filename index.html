@@ -908,6 +908,33 @@
         return state.mode === 'live_duel' ? "Crear sala privada de duelo" : "Generar bandera libre";
       }
 
+      function syncSetupButtonsWithState() {
+        document.querySelectorAll('#categoryGroup .cat-btn').forEach(btn => {
+          const active = btn.dataset.cat === state.category;
+          btn.className = active
+            ? 'cat-btn bg-[#FF7900] text-white font-bold py-2 px-1.5 rounded-xl text-[11px] btn-press shadow-sm'
+            : 'cat-btn btn-choice-inactive font-semibold py-2 px-1.5 rounded-xl text-[11px] btn-press';
+        });
+
+        document.querySelectorAll('#distanceGroup .dist-btn').forEach(btn => {
+          const active = btn.dataset.dist === state.distance;
+          btn.className = active
+            ? 'dist-btn bg-[#FF7900] text-white font-bold py-2 rounded-xl text-[11px] btn-press shadow-sm'
+            : 'dist-btn btn-choice-inactive font-semibold py-2 rounded-xl text-[11px] btn-press';
+        });
+
+        document.querySelectorAll('#modeGroup .mode-btn').forEach(btn => {
+          const active = btn.dataset.mode === state.mode;
+          btn.className = active
+            ? 'mode-btn bg-[#FF7900]/15 border border-[#FF7900] text-[#FF7900] font-bold py-2 rounded-xl text-[11px] btn-press'
+            : 'mode-btn btn-choice-inactive font-semibold py-2 rounded-xl text-[11px] btn-press';
+        });
+
+        const isDuel = state.mode === 'live_duel';
+        document.getElementById('duelJoinBox').classList.toggle('hidden', !isDuel);
+        document.getElementById('btnGenerateFlag').textContent = getDefaultGenerateButtonText();
+      }
+
       function refreshMapLayout() {
         if (state.map) {
           requestAnimationFrame(() => state.map.invalidateSize());
@@ -1029,6 +1056,8 @@
           const saved = JSON.parse(raw);
           if (!saved || !saved.activeMatch || !saved.activeMatch.flag) return;
 
+          if (!state.map) initMap();
+
           state.activeMatch = saved.activeMatch;
           state.duelStarted = !!saved.duelStarted;
           state.category = saved.category || 'walk_run';
@@ -1040,6 +1069,7 @@
           state.matchStartTime = saved.matchStartTime || Date.now();
           state.duelExpiresAt = saved.duelExpiresAt || null;
 
+          syncSetupButtonsWithState();
           renderMatchOnMapAndHud(state.duelStarted);
           notify("Se restauró tu partida en curso.", "info");
         } catch (_) {
@@ -2662,7 +2692,7 @@
         document.getElementById('myProgressBar').style.width = '2%';
         document.getElementById('rivalProgressPct').textContent = '0%';
         document.getElementById('rivalProgressBar').style.width = '2%';
-        document.getElementById('btnGenerateFlag').textContent = getDefaultGenerateButtonText();
+        syncSetupButtonsWithState();
 
         document.getElementById('activeHud').classList.add('hidden');
         document.getElementById('mapWaitingOverlay').classList.add('hidden');
@@ -2860,40 +2890,29 @@
       document.getElementById('btnFlashEvent').addEventListener('click', () => {
         state.isFlashEvent = true;
         state.distance = '1km';
+        syncSetupButtonsWithState();
         generateMatch(false, false);
       });
 
       document.querySelectorAll('#categoryGroup .cat-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           state.category = btn.dataset.cat;
-          document.querySelectorAll('#categoryGroup .cat-btn').forEach(b => {
-            b.className = 'cat-btn btn-choice-inactive font-semibold py-2 px-1.5 rounded-xl text-[11px] btn-press';
-          });
-          btn.className = 'cat-btn bg-[#FF7900] text-white font-bold py-2 px-1.5 rounded-xl text-[11px] btn-press shadow-sm';
+          syncSetupButtonsWithState();
         });
       });
 
       document.querySelectorAll('#distanceGroup .dist-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           state.distance = btn.dataset.dist;
-          document.querySelectorAll('#distanceGroup .dist-btn').forEach(b => {
-            b.className = 'dist-btn btn-choice-inactive font-semibold py-2 rounded-xl text-[11px] btn-press';
-          });
-          btn.className = 'dist-btn bg-[#FF7900] text-white font-bold py-2 rounded-xl text-[11px] btn-press shadow-sm';
+          syncSetupButtonsWithState();
         });
       });
 
       document.querySelectorAll('#modeGroup .mode-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           state.mode = btn.dataset.mode;
-          document.querySelectorAll('#modeGroup .mode-btn').forEach(b => {
-            b.className = 'mode-btn btn-choice-inactive font-semibold py-2 rounded-xl text-[11px] btn-press';
-          });
-          btn.className = 'mode-btn bg-[#FF7900]/15 border border-[#FF7900] text-[#FF7900] font-bold py-2 rounded-xl text-[11px] btn-press';
-          const isDuel = state.mode === 'live_duel';
-          if (!isDuel) stopMatchmakingLobby();
-          document.getElementById('duelJoinBox').classList.toggle('hidden', !isDuel);
-          document.getElementById('btnGenerateFlag').textContent = getDefaultGenerateButtonText();
+          if (state.mode !== 'live_duel') stopMatchmakingLobby();
+          syncSetupButtonsWithState();
           refreshMapLayout();
         });
       });
