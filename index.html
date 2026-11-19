@@ -772,38 +772,32 @@
   <script>
     (function initAppearanceSelector() {
       const THEME_KEY = 'clb_theme_pref';
-      const ORDER = ['auto', 'light', 'dark'];
-      const LABELS = { auto: 'Auto', light: 'Claro', dark: 'Oscuro' };
+      const ORDER = ['light', 'dark'];
+      const LABELS = { light: 'Claro', dark: 'Oscuro' };
       const ICONS = {
         light: '<svg class="w-3.5 h-3.5 text-[#FF7900]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>',
-        dark: '<svg class="w-3.5 h-3.5 text-[#75C894]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
-        auto: '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18V3z" fill="currentColor"/></svg>'
+        dark: '<svg class="w-3.5 h-3.5 text-[#75C894]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
       };
 
       const htmlEl = document.documentElement;
       const metaTheme = document.getElementById('metaThemeColor');
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: light)');
       const cycleBtn = document.getElementById('btnCycleTheme');
       const iconSlot = document.getElementById('themeIconSlot');
       const labelText = document.getElementById('themeLabelText');
 
       function applyTheme(pref) {
-        const effectiveLight = pref === 'light' || (pref === 'auto' && mediaQuery.matches);
-        htmlEl.classList.toggle('theme-light', effectiveLight);
-        htmlEl.classList.toggle('theme-dark', !effectiveLight);
-        if (metaTheme) metaTheme.setAttribute('content', effectiveLight ? '#F4F2EB' : '#171D1A');
-        if (iconSlot) iconSlot.innerHTML = ICONS[pref] || ICONS.auto;
-        if (labelText) labelText.textContent = LABELS[pref] || 'Auto';
+        const isDark = pref === 'dark';
+        htmlEl.classList.toggle('theme-light', !isDark);
+        htmlEl.classList.toggle('theme-dark', isDark);
+        if (metaTheme) metaTheme.setAttribute('content', isDark ? '#171D1A' : '#F4F2EB');
+        if (iconSlot) iconSlot.innerHTML = ICONS[pref] || ICONS.light;
+        if (labelText) labelText.textContent = LABELS[pref] || 'Claro';
         if (cycleBtn) cycleBtn.title = `Tema: ${LABELS[pref]} (tocá para cambiar)`;
       }
 
-      let currentPref = localStorage.getItem(THEME_KEY) || 'auto';
-      if (!ORDER.includes(currentPref)) currentPref = 'auto';
+      let currentPref = localStorage.getItem(THEME_KEY) || 'light';
+      if (!ORDER.includes(currentPref)) currentPref = 'light';
       applyTheme(currentPref);
-
-      mediaQuery.addEventListener('change', () => {
-        if ((localStorage.getItem(THEME_KEY) || 'auto') === 'auto') applyTheme('auto');
-      });
 
       if (cycleBtn) {
         cycleBtn.addEventListener('click', () => {
