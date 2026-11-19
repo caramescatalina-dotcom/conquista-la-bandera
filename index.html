@@ -191,9 +191,8 @@
     <p class="text-xs text-[#F2F1E9]/80 mt-6 max-w-xs">¡Preparate! El cronómetro arrancará para los dos al mismo tiempo.</p>
   </div>
 
- <!-- HEADER COMPACTO Y RESPONSIVE -->
+  <!-- HEADER COMPACTO Y RESPONSIVE -->
   <header class="app-header px-3 py-2 flex justify-between items-center gap-2 shrink-0 z-30 backdrop-blur-xl">
-    <!-- Izquierda: Logo + Título + División -->
     <div class="flex items-center gap-2 min-w-0">
       <div class="w-8 h-8 rounded-xl badge-green-brand flex items-center justify-center shrink-0 shadow-sm">
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none">
@@ -219,21 +218,17 @@
       </div>
     </div>
 
-    <!-- Derecha: Controles compactos -->
     <div class="flex items-center gap-1.5 shrink-0">
-      <!-- Botón único cíclico de Tema (Auto -> Claro -> Oscuro) -->
       <button id="btnCycleTheme" type="button" title="Cambiar tema" aria-label="Cambiar tema" class="h-7 px-2 rounded-lg surface-card-elevated text-main flex items-center gap-1 text-[10px] font-bold btn-press">
         <span id="themeIconSlot" class="flex items-center justify-center"></span>
         <span id="themeLabelText" class="hidden sm:inline">Auto</span>
       </button>
 
-      <!-- Botón Sonido -->
       <button id="btnSoundToggle" type="button" aria-label="Alternar audio" class="w-7 h-7 rounded-lg surface-card-elevated text-main flex items-center justify-center btn-press">
         <svg id="iconSoundOn" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 010 7.07"/></svg>
         <svg id="iconSoundOff" class="w-3.5 h-3.5 hidden text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/></svg>
       </button>
 
-      <!-- Usuario y Salir -->
       <div id="userBadge" class="hidden items-center gap-1.5 surface-card-elevated h-7 px-2 rounded-lg text-[11px]">
         <span id="headerUsername" class="font-semibold text-main max-w-[68px] truncate">@jugador</span>
         <span class="text-border-subtle opacity-40">|</span>
@@ -775,7 +770,7 @@
   </nav>
 
   <script>
-   (function initAppearanceSelector() {
+    (function initAppearanceSelector() {
       const THEME_KEY = 'clb_theme_pref';
       const ORDER = ['auto', 'light', 'dark'];
       const LABELS = { auto: 'Auto', light: 'Claro', dark: 'Oscuro' };
@@ -818,22 +813,6 @@
           applyTheme(currentPref);
         });
       }
-    })();
-
-      const saved = localStorage.getItem(THEME_KEY) || 'auto';
-      applyTheme(saved);
-
-      mediaQuery.addEventListener('change', () => {
-        if ((localStorage.getItem(THEME_KEY) || 'auto') === 'auto') applyTheme('auto');
-      });
-
-      document.querySelectorAll('.theme-opt-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const val = btn.getAttribute('data-theme-val');
-          localStorage.setItem(THEME_KEY, val);
-          applyTheme(val);
-        });
-      });
     })();
 
     document.addEventListener('DOMContentLoaded', () => {
