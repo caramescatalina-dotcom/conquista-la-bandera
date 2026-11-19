@@ -166,11 +166,10 @@
   <div id="splashScreen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center p-6 transition-opacity duration-500" style="background-color: var(--bg-base);">
     <div class="w-20 h-20 rounded-3xl card-green-accent flex items-center justify-center relative mb-5">
       <div class="absolute inset-0 rounded-3xl border border-[#75C894]/40 sonar-ring" style="--pulse-speed: 2s"></div>
-      <svg class="w-12 h-12 relative z-10" viewBox="0 0 64 64" fill="none">
-        <path d="M22 48L20 32L30 24L42 28L46 20" stroke="#FF7900" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="36" cy="14" r="5" fill="#FF7900"/>
-        <path d="M20 28L14 36M32 38L28 52" stroke="#FF7900" stroke-width="4" stroke-linecap="round"/>
-        <path d="M42 16V40L54 28L42 16Z" fill="#75C894"/>
+      <svg class="w-11 h-11 relative z-10" viewBox="0 0 24 24" fill="none">
+        <path d="M5 20V4" stroke="#75C894" stroke-width="2.4" stroke-linecap="round"/>
+        <path d="M5 5L19 8.5L15.5 12L19 15.5L5 12V5Z" fill="#FF7900" stroke="#FF7900" stroke-width="1.5" stroke-linejoin="round"/>
+        <circle cx="17" cy="18.5" r="2.2" fill="#75C894"/>
       </svg>
     </div>
     <h1 class="font-display font-bold text-xl text-main tracking-wide text-center">CONQUISTA <span class="text-[#FF7900]">LA BANDERA</span></h1>
@@ -196,8 +195,10 @@
   <header class="app-header px-3.5 py-2 flex justify-between items-center shrink-0 z-30 backdrop-blur-xl">
     <div class="flex items-center gap-2 min-w-0">
       <div class="w-8 h-8 rounded-xl badge-green-brand flex items-center justify-center shrink-0 shadow-sm">
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 21V4m0 0l11 3-3 5 3 5-11-3" />
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none">
+          <path d="M5 20V4" stroke="#75C894" stroke-width="2.4" stroke-linecap="round"/>
+          <path d="M5 5L19 8.5L15.5 12L19 15.5L5 12V5Z" fill="#FF7900" stroke="#FF7900" stroke-width="1.5" stroke-linejoin="round"/>
+          <circle cx="17" cy="18.5" r="2.2" fill="#75C894"/>
         </svg>
       </div>
       <div class="min-w-0">
@@ -771,7 +772,6 @@
   </nav>
 
   <script>
-    // APARIENCIA CLARO / OSCURO / AUTO
     (function initAppearanceSelector() {
       const THEME_KEY = 'clb_theme_pref';
       const htmlEl = document.documentElement;
@@ -1193,10 +1193,28 @@
         try {
           let emailToUse = identifier;
           if (!identifier.includes('@')) {
-            const { data: perfil } = await sb.from('profiles').select('email').eq('username', identifier).maybeSingle();
-            if (!perfil || !perfil.email) throw new Error("Usuario o clave incorrectos.");
-            emailToUse = perfil.email;
+            const { data: rpcEmail, error: rpcErr } = await sb
+              .rpc('get_email_by_username', { p_username: identifier });
+
+            if (!rpcErr && rpcEmail) {
+              emailToUse = String(rpcEmail).trim().toLowerCase();
+            } else {
+              const { data: perfil, error: selErr } = await sb
+                .from('profiles')
+                .select('email')
+                .ilike('username', identifier)
+                .maybeSingle();
+
+              if (selErr || !perfil) {
+                throw new Error("No se encontró ese nombre de usuario.");
+              }
+              if (!perfil.email) {
+                throw new Error("Tu perfil no tiene correo registrado para ingresar con usuario. Probá con tu correo.");
+              }
+              emailToUse = perfil.email.trim().toLowerCase();
+            }
           }
+
           const { data, error } = await sb.auth.signInWithPassword({ email: emailToUse, password });
           if (error || !data.user) throw new Error("Usuario o clave incorrectos.");
           AudioEngine.tap();
@@ -1515,7 +1533,7 @@
       }
 
       function startGpsTracking() {
-        if (!("geolocation" in navigator)) return;
+        if (!("geolocation" in navigator)) return updateGpsIndicator('error', 'Sin soporte GPS');
         requestCompassPermission();
         const btn = document.getElementById('btnConfirmGpsPermission');
         const btnText = document.getElementById('btnConfirmGpsText');
@@ -1687,7 +1705,6 @@
         } catch (_) {}
       }
 
-      // MATCHMAKING AUTOMÁTICO EN VIVO + POLLING DE RESPALDO EN DB
       let matchmakingChannel = null;
       let duelPollInterval = null;
 
@@ -2771,7 +2788,22 @@
         if (sb) await sb.auth.signOut().catch(() => {});
         location.reload();
       });
-      document.getElementById('btnConfirmGpsPermission').addEventListener('click', () => { AudioEngine.tap(); checkAndManageGpsPermission(); });
+
+      document.getElementById('btnConfirmGpsPermission').addEventListener('click', async () => {
+        AudioEngine.tap();
+        if (navigator.permissions && typeof navigator.permissions.query === 'function') {
+          try {
+            const perm = await navigator.permissions.query({ name: 'geolocation' });
+            if (perm.state === 'denied') {
+              updateGpsIndicator('error', 'Ubicación bloqueada');
+              showGpsPermissionCard('denied');
+              return;
+            }
+          } catch (_) {}
+        }
+        startGpsTracking();
+      });
+
       document.getElementById('btnSoundToggle').addEventListener('click', () => {
         state.soundEnabled = !state.soundEnabled;
         document.getElementById('iconSoundOn').classList.toggle('hidden', !state.soundEnabled);
