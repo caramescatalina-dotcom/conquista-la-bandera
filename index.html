@@ -191,8 +191,9 @@
     <p class="text-xs text-[#F2F1E9]/80 mt-6 max-w-xs">¡Preparate! El cronómetro arrancará para los dos al mismo tiempo.</p>
   </div>
 
-  <!-- HEADER COMPACTO -->
-  <header class="app-header px-3.5 py-2 flex justify-between items-center shrink-0 z-30 backdrop-blur-xl">
+ <!-- HEADER COMPACTO Y RESPONSIVE -->
+  <header class="app-header px-3 py-2 flex justify-between items-center gap-2 shrink-0 z-30 backdrop-blur-xl">
+    <!-- Izquierda: Logo + Título + División -->
     <div class="flex items-center gap-2 min-w-0">
       <div class="w-8 h-8 rounded-xl badge-green-brand flex items-center justify-center shrink-0 shadow-sm">
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none">
@@ -203,12 +204,14 @@
       </div>
       <div class="min-w-0">
         <div class="flex items-center gap-1.5">
-          <h1 class="font-display font-bold text-xs sm:text-sm leading-none text-main tracking-wide truncate">CONQUISTA <span class="text-[#FF7900]">LA BANDERA</span></h1>
-          <span id="devEnvBadge" class="hidden text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded bg-[#FF7900]/15 text-[#FF7900] border border-[#FF7900]/30 shrink-0">DEV</span>
+          <h1 class="font-display font-bold text-[11px] sm:text-sm leading-tight text-main tracking-tight">
+            CONQUISTA <span class="text-[#FF7900] block sm:inline">LA BANDERA</span>
+          </h1>
+          <span id="devEnvBadge" class="hidden text-[8px] font-mono font-bold uppercase px-1 py-0.5 rounded bg-[#FF7900]/15 text-[#FF7900] border border-[#FF7900]/30 shrink-0">DEV</span>
         </div>
-        <div class="flex items-center gap-1.5 mt-0.5">
-          <span id="userLeagueBadge" class="text-[9px] font-bold uppercase tracking-widest text-green-brand">División Inicial</span>
-          <span id="streakBadge" class="hidden items-center gap-1 text-[9px] font-semibold text-[#FF7900]">
+        <div class="flex items-center gap-1 mt-0.5 whitespace-nowrap">
+          <span id="userLeagueBadge" class="text-[9px] font-bold uppercase tracking-wider text-green-brand">División Inicial</span>
+          <span id="streakBadge" class="hidden items-center gap-1 text-[9px] font-bold text-[#FF7900]">
             <span>•</span>
             <span id="streakCount">1</span>d
           </span>
@@ -216,25 +219,25 @@
       </div>
     </div>
 
+    <!-- Derecha: Controles compactos -->
     <div class="flex items-center gap-1.5 shrink-0">
-      <div class="surface-card-elevated p-0.5 rounded-lg flex items-center text-[10px] font-bold" role="group" aria-label="Selector de tema">
-        <button type="button" data-theme-val="light" title="Modo claro" class="theme-opt-btn px-1.5 py-1 rounded-md text-muted hover:text-main transition">
-          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
-        </button>
-        <button type="button" data-theme-val="dark" title="Modo oscuro" class="theme-opt-btn px-1.5 py-1 rounded-md text-muted hover:text-main transition">
-          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-        </button>
-        <button type="button" data-theme-val="auto" title="Automático" class="theme-opt-btn px-1.5 py-1 rounded-md text-muted hover:text-main transition">Auto</button>
-      </div>
+      <!-- Botón único cíclico de Tema (Auto -> Claro -> Oscuro) -->
+      <button id="btnCycleTheme" type="button" title="Cambiar tema" aria-label="Cambiar tema" class="h-7 px-2 rounded-lg surface-card-elevated text-main flex items-center gap-1 text-[10px] font-bold btn-press">
+        <span id="themeIconSlot" class="flex items-center justify-center"></span>
+        <span id="themeLabelText" class="hidden sm:inline">Auto</span>
+      </button>
 
-      <button id="btnSoundToggle" type="button" aria-label="Alternar audio" class="p-1.5 rounded-lg surface-card-elevated text-main btn-press">
+      <!-- Botón Sonido -->
+      <button id="btnSoundToggle" type="button" aria-label="Alternar audio" class="w-7 h-7 rounded-lg surface-card-elevated text-main flex items-center justify-center btn-press">
         <svg id="iconSoundOn" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 010 7.07"/></svg>
         <svg id="iconSoundOff" class="w-3.5 h-3.5 hidden text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/></svg>
       </button>
 
-      <div id="userBadge" class="hidden items-center gap-1.5 surface-card-elevated px-2 py-1 rounded-lg text-[11px]">
-        <span id="headerUsername" class="font-semibold text-main max-w-[70px] truncate">@jugador</span>
-        <button id="btnLogout" type="button" class="text-muted hover:text-rose-500 text-[10px] font-semibold transition">Salir</button>
+      <!-- Usuario y Salir -->
+      <div id="userBadge" class="hidden items-center gap-1.5 surface-card-elevated h-7 px-2 rounded-lg text-[11px]">
+        <span id="headerUsername" class="font-semibold text-main max-w-[68px] truncate">@jugador</span>
+        <span class="text-border-subtle opacity-40">|</span>
+        <button id="btnLogout" type="button" class="text-muted hover:text-rose-500 text-[10px] font-bold transition">Salir</button>
       </div>
     </div>
   </header>
@@ -772,25 +775,50 @@
   </nav>
 
   <script>
-    (function initAppearanceSelector() {
+   (function initAppearanceSelector() {
       const THEME_KEY = 'clb_theme_pref';
+      const ORDER = ['auto', 'light', 'dark'];
+      const LABELS = { auto: 'Auto', light: 'Claro', dark: 'Oscuro' };
+      const ICONS = {
+        light: '<svg class="w-3.5 h-3.5 text-[#FF7900]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>',
+        dark: '<svg class="w-3.5 h-3.5 text-[#75C894]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+        auto: '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18V3z" fill="currentColor"/></svg>'
+      };
+
       const htmlEl = document.documentElement;
       const metaTheme = document.getElementById('metaThemeColor');
       const mediaQuery = window.matchMedia('(prefers-color-scheme: light)');
+      const cycleBtn = document.getElementById('btnCycleTheme');
+      const iconSlot = document.getElementById('themeIconSlot');
+      const labelText = document.getElementById('themeLabelText');
 
       function applyTheme(pref) {
         const effectiveLight = pref === 'light' || (pref === 'auto' && mediaQuery.matches);
         htmlEl.classList.toggle('theme-light', effectiveLight);
         htmlEl.classList.toggle('theme-dark', !effectiveLight);
         if (metaTheme) metaTheme.setAttribute('content', effectiveLight ? '#F4F2EB' : '#171D1A');
+        if (iconSlot) iconSlot.innerHTML = ICONS[pref] || ICONS.auto;
+        if (labelText) labelText.textContent = LABELS[pref] || 'Auto';
+        if (cycleBtn) cycleBtn.title = `Tema: ${LABELS[pref]} (tocá para cambiar)`;
+      }
 
-        document.querySelectorAll('.theme-opt-btn').forEach(btn => {
-          const active = btn.getAttribute('data-theme-val') === pref;
-          btn.className = active
-            ? 'theme-opt-btn px-1.5 py-1 rounded-md bg-[#FF7900] text-white shadow-sm transition'
-            : 'theme-opt-btn px-1.5 py-1 rounded-md text-muted hover:text-main transition';
+      let currentPref = localStorage.getItem(THEME_KEY) || 'auto';
+      if (!ORDER.includes(currentPref)) currentPref = 'auto';
+      applyTheme(currentPref);
+
+      mediaQuery.addEventListener('change', () => {
+        if ((localStorage.getItem(THEME_KEY) || 'auto') === 'auto') applyTheme('auto');
+      });
+
+      if (cycleBtn) {
+        cycleBtn.addEventListener('click', () => {
+          const nextIdx = (ORDER.indexOf(currentPref) + 1) % ORDER.length;
+          currentPref = ORDER[nextIdx];
+          localStorage.setItem(THEME_KEY, currentPref);
+          applyTheme(currentPref);
         });
       }
+    })();
 
       const saved = localStorage.getItem(THEME_KEY) || 'auto';
       applyTheme(saved);
