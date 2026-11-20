@@ -845,6 +845,8 @@
         USERNAME_REGEX: /^[a-z0-9._]{3,20}$/,
         PASSWORD_REGEX: /^(?=.*[A-Z])(?=.*\d).{6,64}$/,
         CAPTURE_RADIUS_METERS: 35,
+        MAX_TRACK_ACCURACY_METERS: 35,
+        MIN_PATH_STEP_METERS: 6,
         ACTIVE_MATCH_STORAGE_KEY: `clb_active_match_${ENV_CONFIG.ENV_NAME.toLowerCase()}`
       });
 
@@ -857,7 +859,6 @@
         if (simBtn) simBtn.remove();
       }
 
-      // Storage seguro para Safari iOS (evita errores silenciosos si localStorage está restringido o en privado)
       const safeStorage = (() => {
         const memoryFallback = {};
         return {
@@ -988,6 +989,13 @@
           .replace(/>/g, '&gt;')
           .replace(/"/g, '&quot;')
           .replace(/'/g, '&#39;');
+      }
+
+      function sanitizeSafeUrl(url) {
+        if (!url || typeof url !== 'string') return null;
+        const trimmed = url.trim();
+        if (trimmed.startsWith('https://')) return trimmed;
+        return null;
       }
 
       let lastToastMsg = '';
@@ -1239,7 +1247,6 @@
       }
 
       async function resolveEmailFromUsername(cleanUsername) {
-        // 1. Intento vía RPC oficial
         try {
           const { data: rpcEmail, error: rpcErr } = await sb.rpc('get_email_by_username', { p_username: cleanUsername });
           if (!rpcErr && rpcEmail) {
@@ -1247,7 +1254,6 @@
           }
         } catch (_) {}
 
-        // 2. Fallback directo por REST fetch (evita bloqueos puntuales en Safari iOS)
         try {
           const res = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/rpc/get_email_by_username`, {
             method: 'POST',
@@ -1266,7 +1272,6 @@
           }
         } catch (_) {}
 
-        // 3. Fallback consulta directa a tabla profiles
         try {
           const { data: perfil } = await sb
             .from('profiles')
@@ -1797,12 +1802,20 @@
           state.map.panTo([newLat, newLng]);
         }
 
-        if (state.activeMatch && state.duelStarted) {
+        if (state.activeMatch && state.duelStarted && state.map) {
           const lastPt = state.recordedPath[state.recordedPath.length - 1];
-          if (!lastPt || state.map.distance([lastPt[1], lastPt[0]], [newLat, newLng]) >= 3) {
+          const canRecordAccuratePoint = accuracy <= CONFIG.MAX_TRACK_ACCURACY_METERS;
+          if (!lastPt && canRecordAccuratePoint) {
             state.recordedPath.push([newLng, newLat]);
             renderRecordedRouteOnMap();
             saveActiveMatchState();
+          } else if (lastPt && canRecordAccuratePoint) {
+            const movedMeters = state.map.distance([lastPt[1], lastPt[0]], [newLat, newLng]);
+            if (movedMeters >= CONFIG.MIN_PATH_STEP_METERS) {
+              state.recordedPath.push([newLng, newLat]);
+              renderRecordedRouteOnMap();
+              saveActiveMatchState();
+            }
           }
           updateProgress();
         }
@@ -1972,6 +1985,7 @@
 
       async function generateMatch(isJoining = false, isPublicQueue = false, onCreatedCallback = null) {
         if (!state.hasRealGps || !state.userPos) {
+          state.isFlashEvent = false;
           showGpsPermissionCard('prompt');
           return notify("Confirmá tu ubicación GPS arriba.", "error");
         }
@@ -1986,6 +2000,7 @@
 
         const duelCode = isJoining ? document.getElementById('duelCodeInput').value.trim().toUpperCase() : null;
         if (isJoining && !duelCode) {
+          state.isFlashEvent = false;
           btn.disabled = false;
           btn.textContent = getDefaultGenerateButtonText();
           return notify("Ingresá un código de sala.", "error");
@@ -1996,7 +2011,15 @@
           const res = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/generate-match`, {
             method: 'POST',
             headers,
-            body: JSON.stringify({ lat: state.userPos.lat, lng: state.userPos.lng, distance: state.distance, category: state.category, mode: state.mode, duelCode })
+            body: JSON.stringify({
+              lat: state.userPos.lat,
+              lng: state.userPos.lng,
+              distance: state.distance,
+              category: state.category,
+              mode: state.mode,
+              duelCode,
+              isFlashEvent: state.isFlashEvent
+            })
           });
           const data = await res.json();
           if (!res.ok || data.error) throw new Error(data.error || "No se pudo generar la bandera.");
@@ -2022,6 +2045,7 @@
             await onCreatedCallback(data);
           }
         } catch (err) {
+          state.isFlashEvent = false;
           notify(err.message, "error");
         } finally {
           btn.disabled = false;
@@ -2355,18 +2379,46 @@
         return (toDeg(Math.atan2(y, x)) + 360) % 360;
       }
 
-      function initAR3DScene() {
-        const canvas = document.getElementById('ar3dCanvas');
-        if (!canvas || !window.THREE) return;
-
+      function disposeAR3DScene() {
         if (AR3D.animId) {
           cancelAnimationFrame(AR3D.animId);
           AR3D.animId = null;
         }
+        if (AR3D.scene) {
+          AR3D.scene.traverse((obj) => {
+            if (obj.geometry) obj.geometry.dispose();
+            if (obj.material) {
+              if (Array.isArray(obj.material)) {
+                obj.material.forEach(mat => {
+                  if (mat.map) mat.map.dispose();
+                  mat.dispose();
+                });
+              } else {
+                if (obj.material.map) obj.material.map.dispose();
+                obj.material.dispose();
+              }
+            }
+          });
+        }
         if (AR3D.renderer) {
           AR3D.renderer.dispose();
+          if (typeof AR3D.renderer.forceContextLoss === 'function') {
+            AR3D.renderer.forceContextLoss();
+          }
           AR3D.renderer = null;
         }
+        AR3D.scene = null;
+        AR3D.camera = null;
+        AR3D.flagGroup = null;
+        AR3D.clothGeo = null;
+        AR3D.clothBasePos = null;
+      }
+
+      function initAR3DScene() {
+        const canvas = document.getElementById('ar3dCanvas');
+        if (!canvas || !window.THREE) return;
+
+        disposeAR3DScene();
 
         const w = window.innerWidth;
         const h = window.innerHeight;
@@ -2447,6 +2499,7 @@
 
         const clock = new THREE.Clock();
         function animate() {
+          if (!AR3D.renderer || !AR3D.scene || !AR3D.camera || !AR3D.clothGeo) return;
           AR3D.animId = requestAnimationFrame(animate);
           const t = clock.getElapsedTime();
 
@@ -2536,29 +2589,58 @@
         }
       }
 
+      function drawVideoObjectCover(ctx, video, destW, destH) {
+        const vw = video.videoWidth;
+        const vh = video.videoHeight;
+        if (!vw || !vh) {
+          ctx.fillStyle = '#171D1A';
+          ctx.fillRect(0, 0, destW, destH);
+          return;
+        }
+        const videoRatio = vw / vh;
+        const destRatio = destW / destH;
+        let sx = 0, sy = 0, sw = vw, sh = vh;
+
+        if (videoRatio > destRatio) {
+          sw = vh * destRatio;
+          sx = (vw - sw) / 2;
+        } else {
+          sh = vw / destRatio;
+          sy = (vh - sh) / 2;
+        }
+        ctx.drawImage(video, sx, sy, sw, sh, 0, 0, destW, destH);
+      }
+
       function takeCapturePhoto() {
         const video = document.getElementById('arVideo');
         const canvas = document.getElementById('arPhotoCanvas');
         const canvas3d = document.getElementById('ar3dCanvas');
         const ctx = canvas.getContext('2d');
 
+        const viewW = Math.max(1, window.innerWidth);
+        const viewH = Math.max(1, window.innerHeight);
         const targetW = 720;
-        const ratio = (video.videoHeight && video.videoWidth) ? (video.videoHeight / video.videoWidth) : 1.33;
+        const targetH = Math.round(targetW * (viewH / viewW));
+
         canvas.width = targetW;
-        canvas.height = Math.round(targetW * ratio);
+        canvas.height = targetH;
 
-        if (video.readyState >= 2) ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        else { ctx.fillStyle = '#171D1A'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+        if (video.readyState >= 2) {
+          drawVideoObjectCover(ctx, video, targetW, targetH);
+        } else {
+          ctx.fillStyle = '#171D1A';
+          ctx.fillRect(0, 0, targetW, targetH);
+        }
 
-        if (canvas3d) {
-          ctx.drawImage(canvas3d, 0, 0, canvas.width, canvas.height);
+        if (canvas3d && canvas3d.width > 0 && canvas3d.height > 0) {
+          ctx.drawImage(canvas3d, 0, 0, targetW, targetH);
         }
 
         ctx.fillStyle = 'rgba(23, 29, 26, 0.85)';
-        ctx.fillRect(0, canvas.height - 56, canvas.width, 56);
+        ctx.fillRect(0, targetH - 56, targetW, 56);
         ctx.fillStyle = '#75C894';
         ctx.font = 'bold 16px "Space Grotesk", sans-serif';
-        ctx.fillText(`CONQUISTA LA BANDERA • ${new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}`, 22, canvas.height - 22);
+        ctx.fillText(`CONQUISTA LA BANDERA • ${new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}`, 22, targetH - 22);
 
         state.capturedPhotoDataUrl = canvas.toDataURL('image/jpeg', 0.75);
         video.classList.add('hidden');
@@ -2573,10 +2655,7 @@
       function closeARCamera() {
         document.getElementById('arModal').classList.add('hidden');
         window.removeEventListener('deviceorientation', onCompassMove);
-        if (AR3D.animId) {
-          cancelAnimationFrame(AR3D.animId);
-          AR3D.animId = null;
-        }
+        disposeAR3DScene();
         if (state.videoStream) {
           state.videoStream.getTracks().forEach(t => t.stop());
           state.videoStream = null;
@@ -2592,7 +2671,7 @@
           const { error } = await sb.storage.from('captures').upload(filePath, blob, { contentType: 'image/jpeg', upsert: true });
           if (error) return null;
           const { data } = sb.storage.from('captures').getPublicUrl(filePath);
-          return data ? data.publicUrl : null;
+          return sanitizeSafeUrl(data ? data.publicUrl : null);
         } catch (_) {
           return null;
         }
@@ -2624,29 +2703,25 @@
             }
           }
 
-          let points = state.isFlashEvent ? 300 : 100;
-          let verifiedByServer = false;
+          const headers = await getAuthHeaders();
+          const res = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/verify-capture`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+              matchId: state.activeMatch.matchId,
+              currentLat: state.userPos.lat,
+              currentLng: state.userPos.lng,
+              isSimulated: state.isSimulated,
+              isFlashEvent: state.isFlashEvent
+            })
+          });
+          const result = await res.json().catch(() => ({}));
+          if (!res.ok || result.error) {
+            throw new Error(result.error || "No se pudo validar la conquista en el servidor.");
+          }
 
-          try {
-            const headers = await getAuthHeaders();
-            const res = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/verify-capture`, {
-              method: 'POST', headers,
-              body: JSON.stringify({
-                matchId: state.activeMatch.matchId,
-                currentLat: state.userPos.lat,
-                currentLng: state.userPos.lng,
-                isSimulated: state.isSimulated,
-                isFlashEvent: state.isFlashEvent
-              })
-            });
-            if (res.ok) {
-              const result = await res.json();
-              if (result.error) throw new Error(result.error);
-              points = result.pointsEarned || points;
-              avgSpeed = result.avgSpeedKmh || avgSpeed;
-              verifiedByServer = true;
-            }
-          } catch (_) {}
+          const points = Number(result.pointsEarned || (state.isFlashEvent ? 300 : 100));
+          avgSpeed = Number(result.avgSpeedKmh || avgSpeed);
 
           const photoUrl = await uploadCapturePhotoToStorage(state.activeMatch.matchId);
           const matchFlag = state.activeMatch.flag;
@@ -2655,26 +2730,16 @@
           const pathSnapshot = [...state.recordedPath];
           const wasFlash = state.isFlashEvent;
 
-          if (sb && state.user) {
-            if (matchId) {
-              const updatePayload = {
-                status: 'completed',
-                points_earned: points,
-                distance_meters: distMeters,
-                flag_lat: matchFlag.lat,
-                flag_lng: matchFlag.lng
-              };
-              if (photoUrl) updatePayload.capture_photo_url = photoUrl;
-              await sb.from('matches').update(updatePayload).eq('id', matchId);
-            }
-
-            if (!verifiedByServer) {
-              await sb.rpc('award_capture_points', {
-                p_user_id: state.user.id,
-                p_category: state.category,
-                p_points: points
-              });
-            }
+          if (sb && state.user && matchId) {
+            const updatePayload = {
+              status: 'completed',
+              points_earned: points,
+              distance_meters: distMeters,
+              flag_lat: matchFlag.lat,
+              flag_lng: matchFlag.lng
+            };
+            if (photoUrl) updatePayload.capture_photo_url = photoUrl;
+            await sb.from('matches').update(updatePayload).eq('id', matchId);
           }
 
           const handle = document.getElementById('headerUsername').textContent;
@@ -2857,14 +2922,17 @@
             .order('created_at', { ascending: false })
             .limit(6);
 
-          if (photos && photos.length > 0) {
-            feedContainer.innerHTML = photos.map(p => {
+          const safePhotos = (photos || []).filter(p => Boolean(sanitizeSafeUrl(p.capture_photo_url)));
+
+          if (safePhotos.length > 0) {
+            feedContainer.innerHTML = safePhotos.map(p => {
               const owner = (members || []).find(m => m.user_id === p.user_id);
               const uname = escapeHTML((owner && owner.profiles && owner.profiles.username) || 'jugador');
               const dist = p.distance_meters ? `${(p.distance_meters / 1000).toFixed(1)} km` : 'Ruta';
+              const safeSrc = escapeHTML(sanitizeSafeUrl(p.capture_photo_url));
               return `
                 <div class="surface-inset rounded-xl overflow-hidden border border-[#75C894]/25">
-                  <img src="${escapeHTML(p.capture_photo_url)}" alt="Conquista" loading="lazy" class="w-full h-24 object-cover" />
+                  <img src="${safeSrc}" alt="Conquista" loading="lazy" class="w-full h-24 object-cover" />
                   <div class="p-1.5 flex justify-between items-center text-[10px]">
                     <span class="font-bold text-main truncate">@${uname}</span>
                     <span class="text-green-brand font-mono font-bold shrink-0">${dist}</span>
@@ -2911,7 +2979,7 @@
           container.innerHTML = data.map(m => {
             const dateStr = new Date(m.created_at).toLocaleDateString('es-AR', { day: '2-digit', month: 'short' });
             const dist = m.distance_meters ? `${(m.distance_meters / 1000).toFixed(2)} km` : 'Ruta';
-            const pts = m.points_earned || 100;
+            const pts = Number(m.points_earned || 100);
             return `
               <div class="surface-inset flex items-center justify-between px-3.5 py-2.5 rounded-xl">
                 <div>
@@ -3012,9 +3080,15 @@
         });
       });
 
-      document.getElementById('btnGenerateFlag').addEventListener('click', () => generateMatch(false, false));
+      document.getElementById('btnGenerateFlag').addEventListener('click', () => {
+        state.isFlashEvent = false;
+        generateMatch(false, false);
+      });
       document.getElementById('btnAutoMatchmaking').addEventListener('click', startAutoMatchmaking);
-      document.getElementById('btnJoinDuel').addEventListener('click', () => generateMatch(true, false));
+      document.getElementById('btnJoinDuel').addEventListener('click', () => {
+        state.isFlashEvent = false;
+        generateMatch(true, false);
+      });
       document.getElementById('btnCancelMatch').addEventListener('click', cancelActiveMatch);
       document.getElementById('btnOpenAR').addEventListener('click', openARCamera);
       document.getElementById('btnCloseAR').addEventListener('click', closeARCamera);
