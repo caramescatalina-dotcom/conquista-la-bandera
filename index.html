@@ -188,7 +188,7 @@
     <div id="duelCountdownNumber" class="font-display font-extrabold text-8xl text-[#FF7900] drop-shadow-[0_0_25px_rgba(255,121,0,0.4)]">
       3
     </div>
-    <p class="text-xs text-[#F2F1E9]/80 mt-6 max-w-xs">¡Preparate! El cronómetro arrancará para los dos al mismo tiempo.</p>
+    <p id="duelCountdownWagerNote" class="text-xs text-[#F2F1E9]/80 mt-6 max-w-xs">¡Preparate! El cronómetro arrancará para los dos al mismo tiempo.</p>
   </div>
 
   <!-- HEADER COMPACTO Y RESPONSIVE -->
@@ -423,6 +423,11 @@
         </div>
 
         <div id="duelJoinBox" class="hidden surface-inset p-2.5 rounded-xl space-y-2">
+          <div class="flex items-center justify-between text-[10px]">
+            <span id="duelWagerPreview" class="font-bold text-[#FF7900]">Apuesta base: 50 pts</span>
+            <span class="text-muted">Máx. 1 apuesta/día por rival</span>
+          </div>
+
           <button id="btnAutoMatchmaking" type="button" class="w-full btn-brand-green font-bold py-2.5 rounded-xl text-[11px] btn-press flex items-center justify-center gap-1.5 shadow-sm">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
             Buscar rival automático en vivo
@@ -441,12 +446,12 @@
 
       <!-- HUD PARTIDA ACTIVA COMPACTO -->
       <div id="activeHud" class="hidden shrink-0 card-green-accent p-3 rounded-2xl space-y-2.5">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-1.5">
-            <span id="wakeLockIndicator" class="text-[10px] font-semibold badge-green-brand px-2 py-0.5 rounded-md">Pantalla activa</span>
-            <span id="matchStatusBadge" class="text-[10px] font-bold bg-[#FF7900]/15 text-[#FF7900] border border-[#FF7900]/30 px-2 py-0.5 rounded-md">Recorrido libre</span>
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span id="wakeLockIndicator" class="text-[10px] font-semibold badge-green-brand px-2 py-0.5 rounded-md shrink-0">Pantalla activa</span>
+            <span id="matchStatusBadge" class="text-[10px] font-bold bg-[#FF7900]/15 text-[#FF7900] border border-[#FF7900]/30 px-2 py-0.5 rounded-md truncate">Recorrido libre</span>
           </div>
-          <button id="btnCancelMatch" type="button" class="text-[10px] font-semibold text-muted hover:text-rose-500 px-2 py-0.5 rounded-md surface-inset transition btn-press">
+          <button id="btnCancelMatch" type="button" class="text-[10px] font-semibold text-muted hover:text-rose-500 px-2 py-0.5 rounded-md surface-inset transition btn-press shrink-0">
             Cancelar
           </button>
         </div>
@@ -459,7 +464,7 @@
                 <span class="w-2 h-2 rounded-full bg-[#FF7900] animate-ping shrink-0"></span>
                 <p class="text-[11px] font-bold text-[#FF7900] truncate">Esperando rival online</p>
               </div>
-              <p id="duelTimeoutText" class="text-[10px] text-muted mt-0.5 font-mono">Expira en 05:00</p>
+              <p id="duelWaitingWagerText" class="text-[10px] text-muted mt-0.5 font-medium truncate">Apuesta en juego: 50 pts (1/1 hoy)</p>
             </div>
             <div class="text-right shrink-0">
               <span class="text-[9px] uppercase font-bold text-muted block">Código</span>
@@ -816,6 +821,13 @@
     document.addEventListener('DOMContentLoaded', () => {
       'use strict';
 
+      const DUEL_WAGERS = Object.freeze({
+        '1km': 50,
+        '3km': 100,
+        '5km': 150,
+        '10km': 250
+      });
+
       const host = window.location.hostname.toLowerCase();
       const params = new URLSearchParams(window.location.search);
       const IS_DEV = host.includes('dev') || host === 'localhost' || host === '127.0.0.1' || params.get('env') === 'dev';
@@ -847,6 +859,7 @@
         CAPTURE_RADIUS_METERS: 35,
         MAX_TRACK_ACCURACY_METERS: 35,
         MIN_PATH_STEP_METERS: 6,
+        FORFEIT_GRACE_MS: 15000,
         ACTIVE_MATCH_STORAGE_KEY: `clb_active_match_${ENV_CONFIG.ENV_NAME.toLowerCase()}`
       });
 
@@ -911,22 +924,99 @@
         distance: '1km',
         mode: 'async_record',
         activeMatch: null,
+        duelWager: 0,
         duelStarted: false,
         duelStarting: false,
+        duelResolving: false,
         countdownInterval: null,
+        forfeitGraceTimer: null,
         isFlashEvent: false,
         initialDistance: 1000,
         recordedPath: [],
         matchStartTime: null,
         matchChannel: null,
-        duelTimeoutInterval: null,
-        duelExpiresAt: null,
         wakeLock: null,
         soundEnabled: true,
         lastVibrateTime: 0,
         videoStream: null,
         capturedPhotoDataUrl: null
       };
+
+      function getBaseWagerForDistance(distKey) {
+        return DUEL_WAGERS[distKey] || 50;
+      }
+
+      function getCategoryPoints(catKey = state.category) {
+        if (!state.profile) return 0;
+        return Number(state.profile[`points_${catKey}`] || 0);
+      }
+
+      function getArgentinaDayStartIso() {
+        const now = new Date();
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'America/Argentina/Buenos_Aires',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        });
+        const ymd = formatter.format(now);
+        return `${ymd}T00:00:00-03:00`;
+      }
+
+      async function hasWageredTodayWithRival(rivalId) {
+        if (!sb || !state.user || !rivalId || rivalId === state.user.id) return false;
+        try {
+          const dayStartIso = getArgentinaDayStartIso();
+          const { data, error } = await sb
+            .from('matches')
+            .select('id')
+            .eq('mode', 'live_duel')
+            .in('status', ['completed', 'forfeit'])
+            .gt('points_earned', 0)
+            .gte('created_at', dayStartIso)
+            .or(
+              `and(user_id.eq.${state.user.id},rival_id.eq.${rivalId}),and(user_id.eq.${rivalId},rival_id.eq.${state.user.id})`
+            )
+            .limit(1);
+
+          if (error) return false;
+          return Array.isArray(data) && data.length > 0;
+        } catch (_) {
+          return false;
+        }
+      }
+
+      function updateDuelWagerLabels() {
+        const baseWager = getBaseWagerForDistance(state.distance);
+        const previewEl = document.getElementById('duelWagerPreview');
+        if (previewEl) {
+          previewEl.textContent = `Apuesta base: ${baseWager} pts (${state.distance})`;
+        }
+
+        const waitTextEl = document.getElementById('duelWaitingWagerText');
+        const badgeEl = document.getElementById('matchStatusBadge');
+        const countdownNoteEl = document.getElementById('duelCountdownWagerNote');
+
+        const isDuel = state.mode === 'live_duel' || (state.activeMatch && state.activeMatch.mode === 'live_duel');
+        if (!isDuel) return;
+
+        if (!state.duelStarted) {
+          if (waitTextEl) {
+            waitTextEl.textContent = `Apuesta inicial: ${baseWager} pts (amistoso si ya apostaron hoy)`;
+          }
+          if (badgeEl) {
+            badgeEl.textContent = `Duelo 1v1 • Hasta ${baseWager} pts`;
+          }
+        } else {
+          if (state.duelWager > 0) {
+            if (badgeEl) badgeEl.textContent = `Duelo 1v1 • Apuesta ${state.duelWager} pts`;
+            if (countdownNoteEl) countdownNoteEl.textContent = `En juego: ${state.duelWager} pts. Si ganás o el rival abandona, te los llevás.`;
+          } else {
+            if (badgeEl) badgeEl.textContent = `Duelo 1v1 • Amistoso (0 pts)`;
+            if (countdownNoteEl) countdownNoteEl.textContent = `Duelo amistoso sin apuesta (ya apostaron hoy). ¡A correr por la victoria!`;
+          }
+        }
+      }
 
       function getDefaultGenerateButtonText() {
         return state.mode === 'live_duel' ? "Crear sala privada de duelo" : "Generar bandera libre";
@@ -957,6 +1047,7 @@
         const isDuel = state.mode === 'live_duel';
         document.getElementById('duelJoinBox').classList.toggle('hidden', !isDuel);
         document.getElementById('btnGenerateFlag').textContent = getDefaultGenerateButtonText();
+        updateDuelWagerLabels();
       }
 
       function refreshMapLayout() {
@@ -1020,7 +1111,7 @@
         setTimeout(() => {
           el.style.opacity = '0';
           setTimeout(() => el.remove(), 300);
-        }, 3200);
+        }, 3600);
       }
 
       async function getAuthHeaders() {
@@ -1067,6 +1158,7 @@
         try {
           safeStorage.setItem(CONFIG.ACTIVE_MATCH_STORAGE_KEY, JSON.stringify({
             activeMatch: state.activeMatch,
+            duelWager: state.duelWager,
             duelStarted: state.duelStarted,
             category: state.category,
             distance: state.distance,
@@ -1074,8 +1166,7 @@
             isFlashEvent: state.isFlashEvent,
             initialDistance: state.initialDistance,
             recordedPath: state.recordedPath,
-            matchStartTime: state.matchStartTime,
-            duelExpiresAt: state.duelExpiresAt
+            matchStartTime: state.matchStartTime
           }));
         } catch (_) {}
       }
@@ -1090,6 +1181,7 @@
           if (!state.map) initMap();
 
           state.activeMatch = saved.activeMatch;
+          state.duelWager = Number(saved.duelWager || 0);
           state.duelStarted = !!saved.duelStarted;
           state.category = saved.category || 'walk_run';
           state.distance = saved.distance || '1km';
@@ -1098,7 +1190,6 @@
           state.initialDistance = saved.initialDistance || 1000;
           state.recordedPath = Array.isArray(saved.recordedPath) ? saved.recordedPath : [];
           state.matchStartTime = saved.matchStartTime || Date.now();
-          state.duelExpiresAt = saved.duelExpiresAt || null;
 
           syncSetupButtonsWithState();
           renderMatchOnMapAndHud(state.duelStarted);
@@ -1524,32 +1615,6 @@
         return "División Inicial";
       }
 
-      async function bootApp(user) {
-        if (state.user && state.user.id === user.id) {
-          hideSplashScreen();
-          return;
-        }
-        state.user = user;
-
-        document.getElementById('authScreen').classList.add('hidden');
-        document.getElementById('appContainer').classList.remove('hidden');
-        document.getElementById('bottomNav').classList.remove('hidden');
-        const badge = document.getElementById('userBadge');
-        badge.classList.remove('hidden');
-        badge.classList.add('flex');
-
-        const fallback = (user.user_metadata && user.user_metadata.username) || (user.email && user.email.split('@')[0]) || 'jugador';
-        document.getElementById('headerUsername').textContent = `@${fallback}`;
-
-        initMap();
-        await loadUserProfile();
-        await syncGlobalEvents();
-        await checkAndManageGpsPermission();
-        restoreActiveMatchIfAny();
-        refreshMapLayout();
-        hideSplashScreen();
-      }
-
       async function loadUserProfile() {
         if (!sb || !state.user) return;
         try {
@@ -1616,6 +1681,33 @@
             document.getElementById('statStreak').textContent = `${streak}d`;
           }
         } catch (_) {}
+      }
+
+      async function bootApp(user) {
+        if (state.user && state.user.id === user.id) {
+          hideSplashScreen();
+          return;
+        }
+        state.user = user;
+
+        document.getElementById('authScreen').classList.add('hidden');
+        document.getElementById('appContainer').classList.remove('hidden');
+        document.getElementById('bottomNav').classList.remove('hidden');
+        const badge = document.getElementById('userBadge');
+        badge.classList.remove('hidden');
+        badge.classList.add('flex');
+
+        const fallback = (user.user_metadata && user.user_metadata.username) || (user.email && user.email.split('@')[0]) || 'jugador';
+        document.getElementById('headerUsername').textContent = `@${fallback}`;
+
+        initMap();
+        await loadUserProfile();
+        syncSetupButtonsWithState();
+        await syncGlobalEvents();
+        await checkAndManageGpsPermission();
+        restoreActiveMatchIfAny();
+        refreshMapLayout();
+        hideSplashScreen();
       }
 
       function onDeviceHeadingChange(e) {
@@ -1833,7 +1925,7 @@
           const { data: recentWins } = await sb
             .from('matches')
             .select('user_id, flag_lat, flag_lng')
-            .eq('status', 'completed')
+            .in('status', ['completed', 'forfeit'])
             .gte('created_at', sevenDaysAgo)
             .gte('flag_lat', lat - latDelta)
             .lte('flag_lat', lat + latDelta)
@@ -1900,12 +1992,63 @@
         }
       }
 
+      async function resolveRivalIdFromMatch(matchId) {
+        if (!sb || !state.user || !matchId) return null;
+        try {
+          const { data } = await sb
+            .from('matches')
+            .select('user_id, rival_id')
+            .eq('id', matchId)
+            .maybeSingle();
+          if (!data) return null;
+          if (data.user_id && data.user_id !== state.user.id) return data.user_id;
+          if (data.rival_id && data.rival_id !== state.user.id) return data.rival_id;
+          return null;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      async function computeEffectiveDuelWager(rivalId) {
+        const isDuel = state.mode === 'live_duel' || (state.activeMatch && state.activeMatch.mode === 'live_duel');
+        if (!isDuel || state.isFlashEvent) return 0;
+
+        const baseWager = getBaseWagerForDistance(state.distance);
+        if (!rivalId) return baseWager;
+
+        const alreadyWageredToday = await hasWageredTodayWithRival(rivalId);
+        return alreadyWageredToday ? 0 : baseWager;
+      }
+
+      async function applyDuelOutcomeRpc({ matchId, winnerId, loserId, wager, outcome = 'completed' }) {
+        if (!sb || !matchId || !winnerId) return;
+        const safeWager = Math.max(0, Number(wager) || 0);
+        try {
+          await sb.rpc('resolve_duel_outcome', {
+            p_match_id: matchId,
+            p_winner_id: winnerId,
+            p_loser_id: loserId || null,
+            p_category: state.category,
+            p_wager: safeWager,
+            p_outcome: outcome
+          });
+        } catch (_) {}
+      }
+
       async function startAutoMatchmaking() {
         if (!state.hasRealGps || !state.userPos) {
           showGpsPermissionCard('prompt');
           return notify("Confirmá tu ubicación GPS arriba.", "error");
         }
         if (!sb || !state.user) return;
+
+        if (state.mode === 'live_duel') {
+          const baseWager = getBaseWagerForDistance(state.distance);
+          const myPts = getCategoryPoints(state.category);
+          if (myPts < baseWager) {
+            return notify(`Necesitás al menos ${baseWager} pts en esta categoría para jugar un duelo de ${state.distance}.`, "error");
+          }
+        }
 
         const btn = document.getElementById('btnAutoMatchmaking');
 
@@ -2006,6 +2149,17 @@
           return notify("Ingresá un código de sala.", "error");
         }
 
+        if (state.mode === 'live_duel' && !state.isFlashEvent) {
+          const baseWager = getBaseWagerForDistance(state.distance);
+          const myPts = getCategoryPoints(state.category);
+          if (myPts < baseWager) {
+            state.isFlashEvent = false;
+            btn.disabled = false;
+            btn.textContent = getDefaultGenerateButtonText();
+            return notify(`Necesitás al menos ${baseWager} pts en esta categoría para apostar en ${state.distance}.`, "error");
+          }
+        }
+
         try {
           const headers = await getAuthHeaders();
           const res = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/generate-match`, {
@@ -2028,6 +2182,8 @@
 
           state.isSimulated = false;
           state.activeMatch = data;
+          state.duelResolving = false;
+          state.duelWager = isDuel ? getBaseWagerForDistance(state.distance) : 0;
           state.duelStarted = !isDuel;
           state.duelStarting = false;
           state.matchStartTime = Date.now();
@@ -2057,7 +2213,6 @@
         if (state.duelStarted || state.duelStarting || !state.activeMatch) return;
         state.duelStarting = true;
 
-        if (state.duelTimeoutInterval) { clearInterval(state.duelTimeoutInterval); state.duelTimeoutInterval = null; }
         if (state.countdownInterval) { clearInterval(state.countdownInterval); state.countdownInterval = null; }
         if (duelPollInterval) { clearInterval(duelPollInterval); duelPollInterval = null; }
 
@@ -2112,11 +2267,16 @@
               renderRecordedRouteOnMap();
               state.initialDistance = Math.max(100, state.map.distance([state.userPos.lat, state.userPos.lng], [state.activeMatch.flag.lat, state.activeMatch.flag.lng]));
             }
-            document.getElementById('matchStatusBadge').textContent = "Duelo 1v1 en vivo";
+            updateDuelWagerLabels();
             saveActiveMatchState();
             updateProgress();
             refreshMapLayout();
-            notify("¡Duelo iniciado! Corré hacia la bandera.", "success");
+            notify(
+              state.duelWager > 0
+                ? `¡Duelo iniciado! Apuesta en juego: ${state.duelWager} pts.`
+                : "¡Duelo amistoso iniciado! (0 pts en juego)",
+              "success"
+            );
           }
         }, 1000);
       }
@@ -2148,10 +2308,11 @@
         if (isDuel) {
           const matchStatus = data.status || (isJoining ? 'active' : 'pending');
           document.getElementById('rivalProgressContainer').classList.remove('hidden');
-          document.getElementById('matchStatusBadge').textContent = state.duelStarted ? "Duelo 1v1 en vivo" : "Esperando rival";
+          updateDuelWagerLabels();
           setupDuelChannel(data.matchId, matchStatus, data.duelCode);
         } else {
           state.duelStarted = true;
+          state.duelWager = 0;
           document.getElementById('matchStatusBadge').textContent = "Recorrido libre";
           document.getElementById('rivalProgressContainer').classList.add('hidden');
           document.getElementById('duelWaitingBanner').classList.add('hidden');
@@ -2162,19 +2323,72 @@
         refreshMapLayout();
       }
 
+      async function handleForfeitByMe(reason = 'cancel') {
+        if (!state.activeMatch || state.duelResolving) return;
+        state.duelResolving = true;
+
+        const matchId = state.activeMatch.matchId;
+        const rivalId = await resolveRivalIdFromMatch(matchId);
+        const effectiveWager = rivalId ? await computeEffectiveDuelWager(rivalId) : 0;
+        const handle = document.getElementById('headerUsername').textContent;
+        const myPct = parseInt(document.getElementById('myProgressPct')?.textContent || '0', 10) || 0;
+
+        if (rivalId) {
+          await applyDuelOutcomeRpc({
+            matchId,
+            winnerId: rivalId,
+            loserId: state.user.id,
+            wager: effectiveWager,
+            outcome: 'forfeit'
+          });
+        } else if (sb && matchId) {
+          try { await sb.from('matches').update({ status: 'cancelled' }).eq('id', matchId); } catch (_) {}
+        }
+
+        if (state.matchChannel) {
+          await state.matchChannel.send({
+            type: 'broadcast',
+            event: 'duel_forfeit',
+            payload: {
+              leaverId: state.user.id,
+              leaverName: handle,
+              wagerPoints: effectiveWager
+            }
+          });
+        }
+
+        resetMatchUI();
+        await loadUserProfile();
+
+        if (rivalId && effectiveWager > 0) {
+          notify(`Abandonaste el duelo (${myPct}%) y perdiste ${effectiveWager} pts. El rival se llevó la apuesta.`, "error");
+        } else if (rivalId) {
+          notify(`Saliste del duelo amistoso (${myPct}%). Sin pérdida de puntos.`, "info");
+        } else {
+          notify("Partida cancelada.", "info");
+        }
+      }
+
       async function cancelActiveMatch() {
         if (!state.activeMatch) return;
+        const isDuel = state.activeMatch.mode === 'live_duel' || state.mode === 'live_duel';
+
+        if (isDuel && state.duelStarted) {
+          await handleForfeitByMe('cancel');
+          return;
+        }
+
         const matchId = state.activeMatch.matchId;
         if (sb && matchId) {
           try { await sb.from('matches').update({ status: 'cancelled' }).eq('id', matchId); } catch (_) {}
         }
-        notify("Partida cancelada.", "info");
+        notify("Sala cancelada antes de iniciar.", "info");
         resetMatchUI();
       }
 
       function setupDuelChannel(matchId, status = 'pending', duelCode = '') {
         if (state.matchChannel && sb) { sb.removeChannel(state.matchChannel); state.matchChannel = null; }
-        if (state.duelTimeoutInterval) { clearInterval(state.duelTimeoutInterval); state.duelTimeoutInterval = null; }
+        if (state.forfeitGraceTimer) { clearTimeout(state.forfeitGraceTimer); state.forfeitGraceTimer = null; }
         if (duelPollInterval) { clearInterval(duelPollInterval); duelPollInterval = null; }
         if (!sb || !matchId) return;
 
@@ -2185,35 +2399,24 @@
           document.getElementById('mapWaitingOverlay').classList.remove('hidden');
           document.getElementById('activeRaceControls').classList.add('hidden');
           document.getElementById('displayDuelCode').textContent = duelCode || '----';
-
-          state.duelExpiresAt = Date.now() + 5 * 60 * 1000;
-          state.duelTimeoutInterval = setInterval(() => {
-            if (!state.duelExpiresAt) return;
-            const rem = state.duelExpiresAt - Date.now();
-            if (rem <= 0) {
-              clearInterval(state.duelTimeoutInterval);
-              state.duelTimeoutInterval = null;
-              notify("La sala de duelo expiró por falta de rivales.", "error");
-              cancelActiveMatch();
-              return;
-            }
-            const m = String(Math.floor(rem / 60000)).padStart(2, '0');
-            const s = String(Math.floor((rem % 60000) / 1000)).padStart(2, '0');
-            const tEl = document.getElementById('duelTimeoutText');
-            if (tEl) tEl.textContent = `Expira en ${m}:${s}`;
-          }, 1000);
+          updateDuelWagerLabels();
         } else {
           document.getElementById('duelWaitingBanner').classList.add('hidden');
           document.getElementById('mapWaitingOverlay').classList.add('hidden');
           document.getElementById('activeRaceControls').classList.remove('hidden');
         }
 
-        const triggerSyncedStart = () => {
-          if (state.duelStarted || state.duelStarting || !state.activeMatch) return;
+        const triggerSyncedStart = async () => {
+          if (state.duelStarted || state.duelStarting || !state.activeMatch || state.duelResolving) return;
           if (duelPollInterval) {
             clearInterval(duelPollInterval);
             duelPollInterval = null;
           }
+          const rivalId = await resolveRivalIdFromMatch(matchId);
+          state.duelWager = await computeEffectiveDuelWager(rivalId);
+          updateDuelWagerLabels();
+          saveActiveMatchState();
+
           if (state.matchChannel) {
             state.matchChannel.send({ type: 'broadcast', event: 'duel_start', payload: { matchId } });
           }
@@ -2222,7 +2425,7 @@
 
         if (!state.duelStarted && !state.duelStarting) {
           duelPollInterval = setInterval(async () => {
-            if (state.duelStarted || state.duelStarting || !state.activeMatch) {
+            if (state.duelStarted || state.duelStarting || !state.activeMatch || state.duelResolving) {
               clearInterval(duelPollInterval);
               duelPollInterval = null;
               return;
@@ -2235,7 +2438,7 @@
                 .maybeSingle();
 
               if (mRow && (mRow.status === 'active' || mRow.rival_id)) {
-                triggerSyncedStart();
+                await triggerSyncedStart();
               } else if (mRow && mRow.status === 'cancelled') {
                 clearInterval(duelPollInterval);
                 duelPollInterval = null;
@@ -2254,42 +2457,104 @@
         });
 
         state.matchChannel
-          .on('presence', { event: 'sync' }, () => {
-            if (!state.matchChannel) return;
+          .on('presence', { event: 'sync' }, async () => {
+            if (!state.matchChannel || !state.activeMatch || state.duelResolving) return;
             const presenceState = state.matchChannel.presenceState();
             const onlineUsers = Object.keys(presenceState);
             const dot = document.getElementById('rivalOnlineDot');
 
             if (onlineUsers.length >= 2) {
+              if (state.forfeitGraceTimer) {
+                clearTimeout(state.forfeitGraceTimer);
+                state.forfeitGraceTimer = null;
+              }
               if (dot) dot.className = "w-1.5 h-1.5 rounded-full bg-[#75C894]";
-              triggerSyncedStart();
+              if (!state.duelStarted && !state.duelStarting) {
+                await triggerSyncedStart();
+              }
             } else {
               if (dot) dot.className = "w-1.5 h-1.5 rounded-full bg-rose-500";
+              if (state.duelStarted && !state.forfeitGraceTimer) {
+                notify("El rival perdió conexión. Esperando reconexión...", "info");
+                state.forfeitGraceTimer = setTimeout(async () => {
+                  state.forfeitGraceTimer = null;
+                  if (!state.activeMatch || state.duelResolving || !state.matchChannel) return;
+                  const stillOnline = Object.keys(state.matchChannel.presenceState());
+                  if (stillOnline.length < 2) {
+                    const rivalId = await resolveRivalIdFromMatch(matchId);
+                    const wager = rivalId ? await computeEffectiveDuelWager(rivalId) : 0;
+                    state.duelResolving = true;
+                    if (rivalId) {
+                      await applyDuelOutcomeRpc({
+                        matchId,
+                        winnerId: state.user.id,
+                        loserId: rivalId,
+                        wager,
+                        outcome: 'forfeit'
+                      });
+                    }
+                    resetMatchUI();
+                    await loadUserProfile();
+                    notify(
+                      wager > 0
+                        ? `¡Ganaste por abandono! El rival no volvió y te llevaste +${wager} pts.`
+                        : "¡Ganaste el duelo amistoso porque el rival abandonó!",
+                      "success"
+                    );
+                  }
+                }, CONFIG.FORFEIT_GRACE_MS);
+              }
             }
           })
-          .on('broadcast', { event: 'duel_start' }, () => {
-            triggerSyncedStart();
+          .on('broadcast', { event: 'duel_start' }, async () => {
+            await triggerSyncedStart();
           })
-          .on('broadcast', { event: 'rival_progress' }, ({ payload }) => {
-            if (!state.activeMatch) return;
-            if (!state.duelStarted && !state.duelStarting) triggerSyncedStart();
+          .on('broadcast', { event: 'rival_progress' }, async ({ payload }) => {
+            if (!state.activeMatch || state.duelResolving) return;
+            if (!state.duelStarted && !state.duelStarting) await triggerSyncedStart();
             const pct = Math.max(0, Math.min(100, Number(payload && payload.percent) || 0));
             document.getElementById('rivalProgressPct').textContent = `${pct}%`;
             document.getElementById('rivalProgressBar').style.width = `${Math.max(2, pct)}%`;
           })
-          .on('broadcast', { event: 'duel_won' }, ({ payload }) => {
-            if (!state.activeMatch) return;
+          .on('broadcast', { event: 'duel_won' }, async ({ payload }) => {
+            if (!state.activeMatch || state.duelResolving) return;
+            state.duelResolving = true;
             const winnerName = (payload && payload.winnerName) ? payload.winnerName : 'El rival';
-            notify(`${escapeHTML(winnerName)} capturó su bandera primero.`, "info");
+            const lostPts = Number((payload && payload.wagerPoints) || 0);
+            const myPct = parseInt(document.getElementById('myProgressPct')?.textContent || '0', 10) || 0;
+
             resetMatchUI();
+            await loadUserProfile();
+
+            if (lostPts > 0) {
+              notify(`Perdiste el duelo (${myPct}%): ${winnerName} llegó primero y se quedó con tus ${lostPts} pts.`, "error");
+            } else {
+              notify(`Duelo amistoso finalizado (${myPct}%): ${winnerName} conquistó primero (0 pts apostados).`, "info");
+            }
+          })
+          .on('broadcast', { event: 'duel_forfeit' }, async ({ payload }) => {
+            if (!state.activeMatch || state.duelResolving) return;
+            if (payload && payload.leaverId === state.user.id) return;
+            state.duelResolving = true;
+            const wonPts = Number((payload && payload.wagerPoints) || state.duelWager || 0);
+            const leaverName = (payload && payload.leaverName) ? payload.leaverName : 'El rival';
+
+            resetMatchUI();
+            await loadUserProfile();
+
+            if (wonPts > 0) {
+              notify(`¡Ganaste por abandono! ${leaverName} salió del duelo y perdiste/ganaste? ¡Sumaste +${wonPts} pts!`, "success");
+            } else {
+              notify(`¡Ganaste el duelo amistoso! ${leaverName} abandonó la partida (0 pts en juego).`, "success");
+            }
           })
           .on(
             'postgres_changes',
             { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${matchId}` },
-            (payload) => {
+            async (payload) => {
               if (payload.new && (payload.new.status === 'active' || payload.new.rival_id)) {
-                triggerSyncedStart();
-              } else if (payload.new && payload.new.status === 'cancelled') {
+                await triggerSyncedStart();
+              } else if (payload.new && payload.new.status === 'cancelled' && !state.duelResolving) {
                 notify("La sala fue cancelada.", "info");
                 resetMatchUI();
               }
@@ -2303,7 +2568,7 @@
               });
               const currentUsers = Object.keys(state.matchChannel.presenceState());
               if (currentUsers.length >= 2) {
-                triggerSyncedStart();
+                await triggerSyncedStart();
               }
             }
           });
@@ -2703,6 +2968,10 @@
             }
           }
 
+          const isDuel = state.activeMatch.mode === 'live_duel' || state.mode === 'live_duel';
+          const rivalId = isDuel ? await resolveRivalIdFromMatch(state.activeMatch.matchId) : null;
+          const effectiveWager = isDuel ? await computeEffectiveDuelWager(rivalId) : 0;
+
           const headers = await getAuthHeaders();
           const res = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/verify-capture`, {
             method: 'POST',
@@ -2720,17 +2989,26 @@
             throw new Error(result.error || "No se pudo validar la conquista en el servidor.");
           }
 
-          const points = Number(result.pointsEarned || (state.isFlashEvent ? 300 : 100));
+          let points = Number(result.pointsEarned || (state.isFlashEvent ? 300 : 100));
           avgSpeed = Number(result.avgSpeedKmh || avgSpeed);
 
           const photoUrl = await uploadCapturePhotoToStorage(state.activeMatch.matchId);
           const matchFlag = state.activeMatch.flag;
           const matchId = state.activeMatch.matchId;
-          const isDuel = state.activeMatch.mode === 'live_duel' || state.mode === 'live_duel';
           const pathSnapshot = [...state.recordedPath];
           const wasFlash = state.isFlashEvent;
 
-          if (sb && state.user && matchId) {
+          if (isDuel && rivalId) {
+            state.duelResolving = true;
+            points = effectiveWager;
+            await applyDuelOutcomeRpc({
+              matchId,
+              winnerId: state.user.id,
+              loserId: rivalId,
+              wager: effectiveWager,
+              outcome: 'completed'
+            });
+          } else if (sb && state.user && matchId) {
             const updatePayload = {
               status: 'completed',
               points_earned: points,
@@ -2742,9 +3020,25 @@
             await sb.from('matches').update(updatePayload).eq('id', matchId);
           }
 
+          if (photoUrl && sb && matchId) {
+            await sb.from('matches').update({
+              capture_photo_url: photoUrl,
+              distance_meters: distMeters,
+              flag_lat: matchFlag.lat,
+              flag_lng: matchFlag.lng
+            }).eq('id', matchId);
+          }
+
           const handle = document.getElementById('headerUsername').textContent;
           if (state.matchChannel && isDuel) {
-            await state.matchChannel.send({ type: 'broadcast', event: 'duel_won', payload: { winnerName: handle } });
+            await state.matchChannel.send({
+              type: 'broadcast',
+              event: 'duel_won',
+              payload: {
+                winnerName: handle,
+                wagerPoints: effectiveWager
+              }
+            });
           }
 
           closeARCamera();
@@ -2756,6 +3050,7 @@
           await loadUserProfile();
           if (state.userPos) renderRealTerritoryZones(state.userPos.lat, state.userPos.lng);
         } catch (err) {
+          state.duelResolving = false;
           notify(err.message, "error");
         } finally {
           btn.disabled = false;
@@ -2829,13 +3124,14 @@
 
       function resetMatchUI() {
         state.activeMatch = null;
+        state.duelWager = 0;
         state.duelStarted = false;
         state.duelStarting = false;
+        state.duelResolving = false;
         state.isFlashEvent = false;
         state.isSimulated = false;
         state.recordedPath = [];
-        state.duelExpiresAt = null;
-        if (state.duelTimeoutInterval) { clearInterval(state.duelTimeoutInterval); state.duelTimeoutInterval = null; }
+        if (state.forfeitGraceTimer) { clearTimeout(state.forfeitGraceTimer); state.forfeitGraceTimer = null; }
         if (state.countdownInterval) { clearInterval(state.countdownInterval); state.countdownInterval = null; }
         if (duelPollInterval) { clearInterval(duelPollInterval); duelPollInterval = null; }
         safeStorage.removeItem(CONFIG.ACTIVE_MATCH_STORAGE_KEY);
@@ -2917,7 +3213,7 @@
             .from('matches')
             .select('user_id, capture_photo_url, distance_meters, created_at')
             .in('user_id', memberIds)
-            .eq('status', 'completed')
+            .in('status', ['completed', 'forfeit'])
             .not('capture_photo_url', 'is', null)
             .order('created_at', { ascending: false })
             .limit(6);
@@ -2970,23 +3266,50 @@
         const container = document.getElementById('matchHistoryList');
         if (!sb || !state.user) return;
         try {
-          const { data, error } = await sb.from('matches').select('*').eq('user_id', state.user.id).eq('status', 'completed').order('created_at', { ascending: false }).limit(15);
+          const { data, error } = await sb
+            .from('matches')
+            .select('*')
+            .or(`user_id.eq.${state.user.id},rival_id.eq.${state.user.id},winner_id.eq.${state.user.id}`)
+            .in('status', ['completed', 'forfeit'])
+            .order('created_at', { ascending: false })
+            .limit(15);
+
           if (error) throw error;
           if (!data || data.length === 0) {
             container.innerHTML = `<p class="text-xs text-muted text-center py-3">Todavía no registraste conquistas.</p>`;
             return;
           }
+
           container.innerHTML = data.map(m => {
             const dateStr = new Date(m.created_at).toLocaleDateString('es-AR', { day: '2-digit', month: 'short' });
             const dist = m.distance_meters ? `${(m.distance_meters / 1000).toFixed(2)} km` : 'Ruta';
-            const pts = Number(m.points_earned || 100);
+            const rawPts = Number(m.points_earned || 100);
+
+            if (m.mode === 'live_duel' && m.winner_id) {
+              const iWon = m.winner_id === state.user.id;
+              const titleText = iWon
+                ? (m.status === 'forfeit' ? `Victoria por abandono • ${escapeHTML(dist)}` : `Duelo ganado • ${escapeHTML(dist)}`)
+                : (m.status === 'forfeit' ? `Abandono en duelo • ${escapeHTML(dist)}` : `Duelo perdido • ${escapeHTML(dist)}`);
+              const sign = iWon ? '+' : '-';
+              const ptsColor = rawPts === 0 ? 'text-muted' : (iWon ? 'text-green-brand' : 'text-rose-500');
+              return `
+                <div class="surface-inset flex items-center justify-between px-3.5 py-2.5 rounded-xl">
+                  <div>
+                    <p class="text-xs font-semibold text-main">${titleText}</p>
+                    <p class="text-[10px] text-muted mt-0.5">${escapeHTML(dateStr)}</p>
+                  </div>
+                  <span class="font-mono text-xs font-bold ${ptsColor}">${sign}${rawPts} pts</span>
+                </div>
+              `;
+            }
+
             return `
               <div class="surface-inset flex items-center justify-between px-3.5 py-2.5 rounded-xl">
                 <div>
                   <p class="text-xs font-semibold text-main">Bandera conquistada • ${escapeHTML(dist)}</p>
                   <p class="text-[10px] text-muted mt-0.5">${escapeHTML(dateStr)}</p>
                 </div>
-                <span class="font-mono text-xs font-bold text-green-brand">+${pts} pts</span>
+                <span class="font-mono text-xs font-bold text-green-brand">+${rawPts} pts</span>
               </div>
             `;
           }).join('');
@@ -3016,7 +3339,11 @@
         switchAuthTab('login');
       });
       document.getElementById('btnLogout').addEventListener('click', async () => {
-        resetMatchUI();
+        if (state.activeMatch && (state.activeMatch.mode === 'live_duel' || state.mode === 'live_duel') && state.duelStarted) {
+          await handleForfeitByMe('logout');
+        } else {
+          resetMatchUI();
+        }
         if (state.gpsWatchId !== null && navigator.geolocation) {
           navigator.geolocation.clearWatch(state.gpsWatchId);
           state.gpsWatchId = null;
@@ -3126,9 +3453,12 @@
 
       const simBtnEl = document.getElementById('btnSimulate');
       if (simBtnEl && IS_DEV) {
-        simBtnEl.addEventListener('click', () => {
+        simBtnEl.addEventListener('click', async () => {
           if (!state.activeMatch) return;
           if (!state.duelStarted && !state.duelStarting) {
+            const rivalId = await resolveRivalIdFromMatch(state.activeMatch.matchId);
+            state.duelWager = await computeEffectiveDuelWager(rivalId);
+            updateDuelWagerLabels();
             unlockDuelAndStartCountdown();
             return;
           }
