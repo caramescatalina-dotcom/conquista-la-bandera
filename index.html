@@ -249,7 +249,7 @@
       <form id="loginFormView" class="space-y-3.5">
         <div>
           <h2 class="font-display text-lg font-bold text-main tracking-tight">Bienvenido de nuevo</h2>
-          <p class="text-xs text-muted mt-0.5">Ingresá con tu usuario o correo electrónico.</p>
+          <p class="text-xs text-muted mt-0.5">Ingresá con tu usuario o correo electrónico y tu clave.</p>
         </div>
         <div>
           <label for="loginIdentifier" class="text-xs font-semibold text-main">Usuario o correo electrónico</label>
@@ -318,7 +318,7 @@
       <form id="signupFormView" class="hidden space-y-3.5">
         <div>
           <h2 class="font-display text-lg font-bold text-main tracking-tight">Crear cuenta</h2>
-          <p class="text-xs text-muted mt-0.5">Te enviaremos un enlace de confirmación a tu correo.</p>
+          <p class="text-xs text-muted mt-0.5">Registrate con tu usuario, correo y contraseña.</p>
         </div>
         <div>
           <label for="regUsername" class="text-xs font-semibold text-main">Nombre de usuario</label>
@@ -341,7 +341,7 @@
         <button id="btnSignup" type="submit" class="w-full btn-brand-orange font-bold py-3 rounded-xl text-sm btn-press">Registrarme</button>
       </form>
 
-      <!-- VERIFICACIÓN OTP -->
+      <!-- VERIFICACIÓN / ENLACE ENVIADO -->
       <div id="otpVerifyView" class="hidden space-y-3.5 py-2">
         <div class="w-11 h-11 rounded-2xl badge-green-brand flex items-center justify-center">
           <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
@@ -795,7 +795,8 @@
         if (cycleBtn) cycleBtn.title = `Tema: ${LABELS[pref]} (tocá para cambiar)`;
       }
 
-      let currentPref = 'light';
+      let currentPref = localStorage.getItem(THEME_KEY) || 'light';
+      if (!ORDER.includes(currentPref)) currentPref = 'light';
       applyTheme(currentPref);
 
       if (cycleBtn) {
@@ -859,6 +860,7 @@
             auth: {
               persistSession: true,
               autoRefreshToken: true,
+              detectSessionInUrl: true,
               storageKey: `clb-auth-${CONFIG.ENV_NAME.toLowerCase()}`
             }
           });
@@ -1208,6 +1210,35 @@
           : 'text-muted hover:text-main font-semibold py-2 rounded-xl text-xs transition cursor-pointer';
       }
 
+      async function syncProfileOnLogin(user) {
+        if (!sb || !user) return;
+        const cleanEmail = user.email ? user.email.trim().toLowerCase() : null;
+        const metaUser = (user.user_metadata && user.user_metadata.username)
+          ? String(user.user_metadata.username).trim().toLowerCase()
+          : (cleanEmail ? cleanEmail.split('@')[0].replace(/[^a-z0-9._]/g, '').slice(0, 20) : null);
+
+        try {
+          const { data: existing } = await sb.from('profiles').select('id, username, email').eq('id', user.id).maybeSingle();
+          if (existing) {
+            const patch = {};
+            if (cleanEmail && existing.email !== cleanEmail) patch.email = cleanEmail;
+            if ((!existing.username || !existing.username.trim()) && metaUser) patch.username = metaUser;
+            if (Object.keys(patch).length > 0) {
+              await sb.from('profiles').update(patch).eq('id', user.id);
+            }
+          } else if (cleanEmail) {
+            const safeUsername = metaUser && metaUser.length >= 3
+              ? metaUser
+              : `jugador_${String(user.id).replace(/-/g, '').slice(0, 8)}`;
+            await sb.from('profiles').upsert({
+              id: user.id,
+              email: cleanEmail,
+              username: safeUsername
+            }, { onConflict: 'id' });
+          }
+        } catch (_) {}
+      }
+
       async function handleLogin(e) {
         if (e) e.preventDefault();
         setAuthError(null);
@@ -1218,7 +1249,7 @@
         const password = document.getElementById('loginPassword').value;
         const btn = document.getElementById('btnLogin');
 
-        if (!identifier || !password) return setAuthError("Completá ambos campos.");
+        if (!identifier || !password) return setAuthError("Completá tu usuario o correo y tu contraseña.");
         btn.disabled = true; btn.textContent = "Verificando...";
 
         try {
@@ -1227,45 +1258,41 @@
 
           if (!identifier.includes('@')) {
             resolvedFromUsername = true;
+            let foundEmail = null;
+
             const { data: rpcEmail, error: rpcErr } = await sb
               .rpc('get_email_by_username', { p_username: identifier });
 
             if (!rpcErr && rpcEmail) {
-              emailToUse = String(rpcEmail).trim().toLowerCase();
+              foundEmail = String(rpcEmail).trim().toLowerCase();
             } else {
-              const { data: perfil, error: selErr } = await sb
+              const { data: perfil } = await sb
                 .from('profiles')
                 .select('email')
                 .ilike('username', identifier)
                 .maybeSingle();
 
-              if (selErr || !perfil) {
-                throw new Error("No encontramos ese usuario. Probá ingresando con tu correo electrónico.");
+              if (perfil && perfil.email) {
+                foundEmail = String(perfil.email).trim().toLowerCase();
               }
-              if (!perfil.email) {
-                throw new Error("Tu perfil aún no tiene correo vinculado para entrar con usuario. Ingresá con tu correo y se vinculará automáticamente.");
-              }
-              emailToUse = perfil.email.trim().toLowerCase();
             }
+
+            if (!foundEmail) {
+              throw new Error("No encontramos ese usuario. Probá ingresando con tu correo electrónico y clave.");
+            }
+            emailToUse = foundEmail;
           }
 
           const { data, error } = await sb.auth.signInWithPassword({ email: emailToUse, password });
           if (error || !data.user) {
             throw new Error(
               resolvedFromUsername
-                ? "Usuario o clave incorrectos."
-                : "Correo o clave incorrectos."
+                ? "Usuario o contraseña incorrectos. Si olvidaste tu clave, tocá '¿Olvidaste tu contraseña?'."
+                : "Correo o contraseña incorrectos. Si olvidaste tu clave, tocá '¿Olvidaste tu contraseña?'."
             );
           }
 
-          if (data.user.email) {
-            await sb
-              .from('profiles')
-              .update({ email: data.user.email.trim().toLowerCase() })
-              .eq('id', data.user.id)
-              .is('email', null);
-          }
-
+          await syncProfileOnLogin(data.user);
           AudioEngine.tap();
           bootApp(data.user);
         } catch (err) {
@@ -1315,10 +1342,13 @@
           const { data, error } = await sb.auth.updateUser({ password: p1 });
           if (error) throw error;
           notify("Contraseña actualizada correctamente.", "success");
-          if (window.location.hash.includes('type=recovery')) {
+          if (window.location.hash.includes('type=recovery') || window.location.hash.includes('access_token')) {
             history.replaceState(null, '', getAuthRedirectUrl());
           }
-          if (data && data.user) bootApp(data.user);
+          if (data && data.user) {
+            await syncProfileOnLogin(data.user);
+            bootApp(data.user);
+          }
         } catch (err) {
           setAuthError(err.message || "No se pudo actualizar la contraseña.");
         } finally {
@@ -1341,34 +1371,44 @@
         if (!email || !email.includes('@')) return setAuthError("Ingresá un correo electrónico válido.");
         if (!CONFIG.PASSWORD_REGEX.test(password)) return setAuthError("La clave requiere al menos 6 caracteres, una mayúscula y un número.");
 
-        btn.disabled = true; btn.textContent = "Procesando...";
+        btn.disabled = true; btn.textContent = "Registrando...";
 
         try {
-          const { data: existingUser } = await sb.from('profiles').select('username').ilike('username', username).maybeSingle();
+          const { data: existingUser } = await sb.from('profiles').select('id').ilike('username', username).maybeSingle();
           if (existingUser) throw new Error("Ese nombre de usuario no está disponible.");
 
-          const { data: existingEmail } = await sb.from('profiles').select('email').ilike('email', email).maybeSingle();
+          const { data: existingEmail } = await sb.from('profiles').select('id').ilike('email', email).maybeSingle();
           if (existingEmail) throw new Error("Ese correo electrónico ya tiene una cuenta registrada.");
 
-          const storageKey = `clb_pending_signup_${CONFIG.ENV_NAME}`;
-          localStorage.setItem(storageKey, JSON.stringify({ username, email, password }));
-
-          const { error } = await sb.auth.signInWithOtp({
+          const { data, error } = await sb.auth.signUp({
             email,
+            password,
             options: {
-              shouldCreateUser: true,
               emailRedirectTo: getAuthRedirectUrl(),
               data: { username }
             }
           });
           if (error) throw error;
 
-          document.getElementById('authTabs').classList.add('hidden');
-          hideAllAuthViews();
-          document.getElementById('otpTargetEmail').textContent = email;
-          document.getElementById('otpVerifyView').classList.remove('hidden');
+          if (data && data.user) {
+            await sb.from('profiles').upsert({
+              id: data.user.id,
+              username,
+              email
+            }, { onConflict: 'id' });
+          }
+
+          if (data && data.session && data.user) {
+            notify("¡Cuenta creada con éxito!", "success");
+            AudioEngine.tap();
+            bootApp(data.user);
+          } else {
+            document.getElementById('authTabs').classList.add('hidden');
+            hideAllAuthViews();
+            document.getElementById('otpTargetEmail').textContent = email;
+            document.getElementById('otpVerifyView').classList.remove('hidden');
+          }
         } catch (err) {
-          localStorage.removeItem(`clb_pending_signup_${CONFIG.ENV_NAME}`);
           setAuthError(err.message || "No se pudo completar el registro.");
         } finally {
           btn.disabled = false; btn.textContent = "Registrarme";
@@ -1390,33 +1430,7 @@
             return;
           }
           if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session && session.user) {
-            const storageKey = `clb_pending_signup_${CONFIG.ENV_NAME}`;
-            const raw = localStorage.getItem(storageKey);
-            if (raw) {
-              try {
-                const pending = JSON.parse(raw);
-                const sameEmail =
-                  pending.email &&
-                  session.user.email &&
-                  pending.email.trim().toLowerCase() === session.user.email.trim().toLowerCase();
-
-                if (sameEmail && pending.username) {
-                  const cleanUser = pending.username.trim().toLowerCase();
-                  const cleanEmail = pending.email.trim().toLowerCase();
-                  if (pending.password) {
-                    await sb.auth.updateUser({ password: pending.password, data: { username: cleanUser } });
-                  } else {
-                    await sb.auth.updateUser({ data: { username: cleanUser } });
-                  }
-                  await sb.from('profiles').upsert({
-                    id: session.user.id,
-                    username: cleanUser,
-                    email: cleanEmail
-                  });
-                }
-                localStorage.removeItem(storageKey);
-              } catch (_) {}
-            }
+            await syncProfileOnLogin(session.user);
             if (window.location.hash.includes('access_token')) {
               history.replaceState(null, '', getAuthRedirectUrl());
             }
@@ -2858,6 +2872,10 @@
       document.getElementById('signupFormView').addEventListener('submit', handleSignup);
       document.getElementById('btnForgotPassword').addEventListener('click', () => {
         setAuthError(null);
+        const currentLoginVal = document.getElementById('loginIdentifier').value.trim().toLowerCase();
+        if (currentLoginVal.includes('@')) {
+          document.getElementById('forgotEmail').value = currentLoginVal;
+        }
         document.getElementById('authTabs').classList.add('hidden');
         hideAllAuthViews();
         document.getElementById('forgotFormView').classList.remove('hidden');
@@ -2866,12 +2884,10 @@
       document.getElementById('forgotFormView').addEventListener('submit', handleForgotPassword);
       document.getElementById('resetPasswordView').addEventListener('submit', handleUpdatePassword);
       document.getElementById('btnCancelOtp').addEventListener('click', () => {
-        localStorage.removeItem(`clb_pending_signup_${CONFIG.ENV_NAME}`);
         switchAuthTab('login');
       });
       document.getElementById('btnLogout').addEventListener('click', async () => {
         resetMatchUI();
-        localStorage.removeItem(`clb_pending_signup_${CONFIG.ENV_NAME}`);
         if (state.gpsWatchId !== null && navigator.geolocation) {
           navigator.geolocation.clearWatch(state.gpsWatchId);
           state.gpsWatchId = null;
