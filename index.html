@@ -253,7 +253,7 @@
         </div>
         <div>
           <label for="loginIdentifier" class="text-xs font-semibold text-main">Usuario o correo electrónico</label>
-          <input id="loginIdentifier" type="text" autocomplete="username" placeholder="tu_usuario o nombre@gmail.com" class="theme-input w-full mt-1 px-3.5 py-2.5 rounded-xl text-sm transition" />
+          <input id="loginIdentifier" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="tu_usuario o nombre@gmail.com" class="theme-input w-full mt-1 px-3.5 py-2.5 rounded-xl text-sm transition" />
         </div>
         <div>
           <div class="flex items-center justify-between">
@@ -279,7 +279,7 @@
         </div>
         <div>
           <label for="forgotEmail" class="text-xs font-semibold text-main">Correo electrónico de tu cuenta</label>
-          <input id="forgotEmail" type="email" autocomplete="email" placeholder="nombre@gmail.com" class="theme-input w-full mt-1 px-3.5 py-2.5 rounded-xl text-sm transition" />
+          <input id="forgotEmail" type="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="nombre@gmail.com" class="theme-input w-full mt-1 px-3.5 py-2.5 rounded-xl text-sm transition" />
         </div>
         <button id="btnSendReset" type="submit" class="w-full btn-brand-orange font-bold py-3 rounded-xl text-sm btn-press">Enviar enlace de recuperación</button>
         <button id="btnBackToLogin" type="button" class="w-full text-xs font-semibold text-muted hover:text-main transition pt-1">← Volver al inicio de sesión</button>
@@ -322,11 +322,11 @@
         </div>
         <div>
           <label for="regUsername" class="text-xs font-semibold text-main">Nombre de usuario</label>
-          <input id="regUsername" type="text" autocomplete="off" placeholder="ej. chachi.run" class="theme-input w-full mt-1 px-3.5 py-2.5 rounded-xl text-sm transition" />
+          <input id="regUsername" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="ej. chachi.run" class="theme-input w-full mt-1 px-3.5 py-2.5 rounded-xl text-sm transition" />
         </div>
         <div>
           <label for="regEmail" class="text-xs font-semibold text-main">Correo electrónico</label>
-          <input id="regEmail" type="email" autocomplete="email" placeholder="nombre@gmail.com" class="theme-input w-full mt-1 px-3.5 py-2.5 rounded-xl text-sm transition" />
+          <input id="regEmail" type="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="nombre@gmail.com" class="theme-input w-full mt-1 px-3.5 py-2.5 rounded-xl text-sm transition" />
         </div>
         <div>
           <label for="regPassword" class="text-xs font-semibold text-main">Contraseña</label>
@@ -785,6 +785,12 @@
       const iconSlot = document.getElementById('themeIconSlot');
       const labelText = document.getElementById('themeLabelText');
 
+      let currentPref = 'light';
+      try {
+        const stored = localStorage.getItem(THEME_KEY);
+        if (stored && ORDER.includes(stored)) currentPref = stored;
+      } catch (_) {}
+
       function applyTheme(pref) {
         const isDark = pref === 'dark';
         htmlEl.classList.toggle('theme-light', !isDark);
@@ -795,15 +801,13 @@
         if (cycleBtn) cycleBtn.title = `Tema: ${LABELS[pref]} (tocá para cambiar)`;
       }
 
-      let currentPref = localStorage.getItem(THEME_KEY) || 'light';
-      if (!ORDER.includes(currentPref)) currentPref = 'light';
       applyTheme(currentPref);
 
       if (cycleBtn) {
         cycleBtn.addEventListener('click', () => {
           const nextIdx = (ORDER.indexOf(currentPref) + 1) % ORDER.length;
           currentPref = ORDER[nextIdx];
-          localStorage.setItem(THEME_KEY, currentPref);
+          try { localStorage.setItem(THEME_KEY, currentPref); } catch (_) {}
           applyTheme(currentPref);
         });
       }
@@ -853,6 +857,22 @@
         if (simBtn) simBtn.remove();
       }
 
+      // Storage seguro para Safari iOS (evita errores silenciosos si localStorage está restringido o en privado)
+      const safeStorage = (() => {
+        const memoryFallback = {};
+        return {
+          getItem: (key) => {
+            try { return window.localStorage.getItem(key); } catch (_) { return memoryFallback[key] || null; }
+          },
+          setItem: (key, value) => {
+            try { window.localStorage.setItem(key, value); } catch (_) { memoryFallback[key] = value; }
+          },
+          removeItem: (key) => {
+            try { window.localStorage.removeItem(key); } catch (_) { delete memoryFallback[key]; }
+          }
+        };
+      })();
+
       let sb = null;
       try {
         if (window.supabase && typeof window.supabase.createClient === 'function') {
@@ -861,6 +881,7 @@
               persistSession: true,
               autoRefreshToken: true,
               detectSessionInUrl: true,
+              storage: safeStorage,
               storageKey: `clb-auth-${CONFIG.ENV_NAME.toLowerCase()}`
             }
           });
@@ -1032,11 +1053,11 @@
 
       function saveActiveMatchState() {
         if (!state.activeMatch) {
-          localStorage.removeItem(CONFIG.ACTIVE_MATCH_STORAGE_KEY);
+          safeStorage.removeItem(CONFIG.ACTIVE_MATCH_STORAGE_KEY);
           return;
         }
         try {
-          localStorage.setItem(CONFIG.ACTIVE_MATCH_STORAGE_KEY, JSON.stringify({
+          safeStorage.setItem(CONFIG.ACTIVE_MATCH_STORAGE_KEY, JSON.stringify({
             activeMatch: state.activeMatch,
             duelStarted: state.duelStarted,
             category: state.category,
@@ -1053,7 +1074,7 @@
 
       function restoreActiveMatchIfAny() {
         try {
-          const raw = localStorage.getItem(CONFIG.ACTIVE_MATCH_STORAGE_KEY);
+          const raw = safeStorage.getItem(CONFIG.ACTIVE_MATCH_STORAGE_KEY);
           if (!raw) return;
           const saved = JSON.parse(raw);
           if (!saved || !saved.activeMatch || !saved.activeMatch.flag) return;
@@ -1075,7 +1096,7 @@
           renderMatchOnMapAndHud(state.duelStarted);
           notify("Se restauró tu partida en curso.", "info");
         } catch (_) {
-          localStorage.removeItem(CONFIG.ACTIVE_MATCH_STORAGE_KEY);
+          safeStorage.removeItem(CONFIG.ACTIVE_MATCH_STORAGE_KEY);
         }
       }
 
@@ -1210,11 +1231,62 @@
           : 'text-muted hover:text-main font-semibold py-2 rounded-xl text-xs transition cursor-pointer';
       }
 
+      function cleanInputIdentifier(val) {
+        return String(val || '')
+          .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '')
+          .trim()
+          .toLowerCase();
+      }
+
+      async function resolveEmailFromUsername(cleanUsername) {
+        // 1. Intento vía RPC oficial
+        try {
+          const { data: rpcEmail, error: rpcErr } = await sb.rpc('get_email_by_username', { p_username: cleanUsername });
+          if (!rpcErr && rpcEmail) {
+            return cleanInputIdentifier(rpcEmail);
+          }
+        } catch (_) {}
+
+        // 2. Fallback directo por REST fetch (evita bloqueos puntuales en Safari iOS)
+        try {
+          const res = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/rpc/get_email_by_username`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            },
+            body: JSON.stringify({ p_username: cleanUsername })
+          });
+          if (res.ok) {
+            const txt = await res.json();
+            if (txt && typeof txt === 'string' && txt.includes('@')) {
+              return cleanInputIdentifier(txt);
+            }
+          }
+        } catch (_) {}
+
+        // 3. Fallback consulta directa a tabla profiles
+        try {
+          const { data: perfil } = await sb
+            .from('profiles')
+            .select('email')
+            .ilike('username', cleanUsername)
+            .maybeSingle();
+
+          if (perfil && perfil.email) {
+            return cleanInputIdentifier(perfil.email);
+          }
+        } catch (_) {}
+
+        return null;
+      }
+
       async function syncProfileOnLogin(user) {
         if (!sb || !user) return;
-        const cleanEmail = user.email ? user.email.trim().toLowerCase() : null;
+        const cleanEmail = user.email ? cleanInputIdentifier(user.email) : null;
         const metaUser = (user.user_metadata && user.user_metadata.username)
-          ? String(user.user_metadata.username).trim().toLowerCase()
+          ? cleanInputIdentifier(user.user_metadata.username)
           : (cleanEmail ? cleanEmail.split('@')[0].replace(/[^a-z0-9._]/g, '').slice(0, 20) : null);
 
         try {
@@ -1244,7 +1316,7 @@
         setAuthError(null);
         if (!sb) return setAuthError("No se pudo conectar con Supabase.");
 
-        const rawIdentifier = document.getElementById('loginIdentifier').value.trim().toLowerCase();
+        const rawIdentifier = cleanInputIdentifier(document.getElementById('loginIdentifier').value);
         const identifier = rawIdentifier.startsWith('@') ? rawIdentifier.slice(1) : rawIdentifier;
         const password = document.getElementById('loginPassword').value;
         const btn = document.getElementById('btnLogin');
@@ -1258,33 +1330,22 @@
 
           if (!identifier.includes('@')) {
             resolvedFromUsername = true;
-            let foundEmail = null;
-
-            const { data: rpcEmail, error: rpcErr } = await sb
-              .rpc('get_email_by_username', { p_username: identifier });
-
-            if (!rpcErr && rpcEmail) {
-              foundEmail = String(rpcEmail).trim().toLowerCase();
-            } else {
-              const { data: perfil } = await sb
-                .from('profiles')
-                .select('email')
-                .ilike('username', identifier)
-                .maybeSingle();
-
-              if (perfil && perfil.email) {
-                foundEmail = String(perfil.email).trim().toLowerCase();
-              }
-            }
-
+            const foundEmail = await resolveEmailFromUsername(identifier);
             if (!foundEmail) {
-              throw new Error("No encontramos ese usuario. Probá ingresando con tu correo electrónico y clave.");
+              throw new Error("No encontramos ese usuario. Verificá que esté bien escrito o ingresá con tu correo electrónico.");
             }
             emailToUse = foundEmail;
           }
 
           const { data, error } = await sb.auth.signInWithPassword({ email: emailToUse, password });
-          if (error || !data.user) {
+          if (error || !data || !data.user) {
+            const errMsg = (error && error.message) ? error.message.toLowerCase() : '';
+            if (errMsg.includes('email not confirmed')) {
+              throw new Error("Tu correo aún no fue confirmado. Revisá tu bandeja de entrada.");
+            }
+            if (errMsg.includes('fetch') || errMsg.includes('network')) {
+              throw new Error("Error de red en el navegador. Verificá tu conexión o desactivá bloqueadores.");
+            }
             throw new Error(
               resolvedFromUsername
                 ? "Usuario o contraseña incorrectos. Si olvidaste tu clave, tocá '¿Olvidaste tu contraseña?'."
@@ -1306,7 +1367,7 @@
         e.preventDefault();
         setAuthError(null);
         if (!sb) return setAuthError("No se pudo conectar con Supabase.");
-        const email = document.getElementById('forgotEmail').value.trim().toLowerCase();
+        const email = cleanInputIdentifier(document.getElementById('forgotEmail').value);
         if (!email || !email.includes('@')) return setAuthError("Ingresá un correo electrónico válido.");
 
         const btn = document.getElementById('btnSendReset');
@@ -1361,9 +1422,9 @@
         setAuthError(null);
         if (!sb) return setAuthError("No se pudo conectar con Supabase.");
 
-        const rawUsername = document.getElementById('regUsername').value.trim().toLowerCase();
+        const rawUsername = cleanInputIdentifier(document.getElementById('regUsername').value);
         const username = rawUsername.startsWith('@') ? rawUsername.slice(1) : rawUsername;
-        const email = document.getElementById('regEmail').value.trim().toLowerCase();
+        const email = cleanInputIdentifier(document.getElementById('regEmail').value);
         const password = document.getElementById('regPassword').value;
         const btn = document.getElementById('btnSignup');
 
@@ -1374,8 +1435,8 @@
         btn.disabled = true; btn.textContent = "Registrando...";
 
         try {
-          const { data: existingUser } = await sb.from('profiles').select('id').ilike('username', username).maybeSingle();
-          if (existingUser) throw new Error("Ese nombre de usuario no está disponible.");
+          const existingEmailForUsername = await resolveEmailFromUsername(username);
+          if (existingEmailForUsername) throw new Error("Ese nombre de usuario no está disponible.");
 
           const { data: existingEmail } = await sb.from('profiles').select('id').ilike('email', email).maybeSingle();
           if (existingEmail) throw new Error("Ese correo electrónico ya tiene una cuenta registrada.");
@@ -1492,7 +1553,7 @@
           state.myClubId = mem ? mem.club_id : null;
 
           if (profile) {
-            const cleanUserEmail = state.user.email ? state.user.email.trim().toLowerCase() : null;
+            const cleanUserEmail = state.user.email ? cleanInputIdentifier(state.user.email) : null;
             if (!profile.email && cleanUserEmail) {
               await sb.from('profiles').update({ email: cleanUserEmail }).eq('id', state.user.id);
               profile.email = cleanUserEmail;
@@ -1500,7 +1561,7 @@
 
             const metaUsername =
               state.user.user_metadata && state.user.user_metadata.username
-                ? String(state.user.user_metadata.username).trim().toLowerCase()
+                ? cleanInputIdentifier(state.user.user_metadata.username)
                 : null;
 
             if ((!profile.username || profile.username.trim() === '') && metaUsername) {
@@ -2712,7 +2773,7 @@
         if (state.duelTimeoutInterval) { clearInterval(state.duelTimeoutInterval); state.duelTimeoutInterval = null; }
         if (state.countdownInterval) { clearInterval(state.countdownInterval); state.countdownInterval = null; }
         if (duelPollInterval) { clearInterval(duelPollInterval); duelPollInterval = null; }
-        localStorage.removeItem(CONFIG.ACTIVE_MATCH_STORAGE_KEY);
+        safeStorage.removeItem(CONFIG.ACTIVE_MATCH_STORAGE_KEY);
         releaseScreenWakeLock();
 
         stopMatchmakingLobby();
@@ -2872,7 +2933,7 @@
       document.getElementById('signupFormView').addEventListener('submit', handleSignup);
       document.getElementById('btnForgotPassword').addEventListener('click', () => {
         setAuthError(null);
-        const currentLoginVal = document.getElementById('loginIdentifier').value.trim().toLowerCase();
+        const currentLoginVal = cleanInputIdentifier(document.getElementById('loginIdentifier').value);
         if (currentLoginVal.includes('@')) {
           document.getElementById('forgotEmail').value = currentLoginVal;
         }
